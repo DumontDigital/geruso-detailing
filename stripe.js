@@ -1,11 +1,27 @@
-const Stripe = require('stripe');
 require('dotenv').config();
 
-console.log('[Stripe Config] Initializing Stripe...');
-console.log('[Stripe Config] STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
-console.log('[Stripe Config] STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT SET');
+console.log('[Stripe Config] Stripe module loaded');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+let stripe = null;
+let stripeInitialized = false;
+
+function initializeStripe() {
+  if (stripeInitialized) return stripe;
+
+  try {
+    const Stripe = require('stripe');
+    console.log('[Stripe Config] Initializing Stripe...');
+    console.log('[Stripe Config] STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET');
+    console.log('[Stripe Config] STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT SET');
+
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+    stripeInitialized = true;
+    return stripe;
+  } catch (error) {
+    console.error('[Stripe Config] Failed to initialize Stripe:', error.message);
+    throw error;
+  }
+}
 
 const DEPOSIT_AMOUNT_CENTS = parseInt(process.env.DEPOSIT_AMOUNT_CENTS || '2500', 10); // $25.00 default
 
@@ -13,7 +29,8 @@ async function createCheckoutSession(bookingData) {
   try {
     console.log('[Stripe] Creating checkout session for booking:', bookingData.id);
 
-    const session = await stripe.checkout.sessions.create({
+    const stripeClient = initializeStripe();
+    const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: [
@@ -54,7 +71,8 @@ async function createCheckoutSession(bookingData) {
 function handleWebhook(rawBody, signature) {
   try {
     console.log('[Stripe Webhook] Verifying signature...');
-    const event = stripe.webhooks.constructEvent(
+    const stripeClient = initializeStripe();
+    const event = stripeClient.webhooks.constructEvent(
       rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
@@ -88,7 +106,8 @@ function handleWebhook(rawBody, signature) {
 async function retrieveSession(sessionId) {
   try {
     console.log('[Stripe] Retrieving session:', sessionId);
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const stripeClient = initializeStripe();
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
     return session;
   } catch (error) {
     console.error('[Stripe] Error retrieving session:', error.message);
@@ -97,9 +116,9 @@ async function retrieveSession(sessionId) {
 }
 
 module.exports = {
-  stripe,
   createCheckoutSession,
   handleWebhook,
   retrieveSession,
+  initializeStripe,
   DEPOSIT_AMOUNT_CENTS,
 };
