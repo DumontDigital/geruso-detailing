@@ -9,12 +9,25 @@ const router = express.Router();
 // Create booking (public)
 router.post('/', async (req, res) => {
   try {
+    console.log('[Bookings API] POST / called');
+    console.log('[Bookings API] Request body:', JSON.stringify(req.body, null, 2));
+
     const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto } = req.body;
 
     // Validate required fields
     if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime) {
+      console.warn('[Bookings API] Validation failed - Missing required fields');
+      console.warn('[Bookings API] customerName:', customerName);
+      console.warn('[Bookings API] customerEmail:', customerEmail);
+      console.warn('[Bookings API] customerPhone:', customerPhone);
+      console.warn('[Bookings API] serviceAddress:', serviceAddress);
+      console.warn('[Bookings API] serviceType:', serviceType);
+      console.warn('[Bookings API] bookingDate:', bookingDate);
+      console.warn('[Bookings API] bookingTime:', bookingTime);
       return res.status(400).json({ error: 'All required fields must be filled' });
     }
+
+    console.log('[Bookings API] Validation passed');
 
     // Insert booking
     const bookingId = uuidv4();
@@ -26,12 +39,14 @@ router.post('/', async (req, res) => {
     );
 
     const booking = result.rows[0];
+    console.log('[Bookings API] Booking created successfully:', booking.id);
 
     // Extract price from service type string if it exists
     const priceMatch = serviceType.match(/\$(\d+)/);
     const price = priceMatch ? priceMatch[1] : '0';
 
     // Send confirmation email to customer
+    console.log('[Bookings API] Sending confirmation email to:', customerEmail);
     const emailResult = await sendBookingConfirmation({
       customerName,
       customerEmail,
@@ -44,18 +59,22 @@ router.post('/', async (req, res) => {
     });
 
     if (!emailResult.success) {
-      console.error('Failed to send booking confirmation email:', emailResult.error);
+      console.error('[Bookings API] Failed to send booking confirmation email:', emailResult.error);
       // Don't fail the booking if email fails, but log it
+    } else {
+      console.log('[Bookings API] Confirmation email sent successfully');
     }
 
+    console.log('[Bookings API] SUCCESS - Returning booking response');
     res.json({
       success: true,
       message: 'Booking confirmed! Check your email for details.',
       booking
     });
   } catch (error) {
-    console.error('Booking creation error:', error);
-    res.status(500).json({ error: 'Failed to create booking' });
+    console.error('[Bookings API] FATAL ERROR - Booking creation failed:', error.message);
+    console.error('[Bookings API] Stack trace:', error.stack);
+    res.status(500).json({ error: 'Failed to create booking: ' + error.message });
   }
 });
 

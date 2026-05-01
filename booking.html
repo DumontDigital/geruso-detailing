@@ -507,6 +507,17 @@
   // Load booked times when page loads
   loadBookedTimeSlots();
 
+  // Update booking summary when service is selected
+  document.querySelector('select[name="serviceType"]').addEventListener('change', (e) => {
+    const serviceValue = e.target.value;
+    const summaryElement = document.getElementById('summaryService');
+    if (serviceValue) {
+      summaryElement.textContent = serviceValue;
+    } else {
+      summaryElement.textContent = 'Not selected';
+    }
+  });
+
   function generateTimeSlots(dayOfWeek) {
     const hours = businessHours[dayOfWeek];
     if (!hours) return [];
@@ -673,8 +684,24 @@
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Validation checks
     if (!selectedDate || !selectedTime) {
       showMessage('Please select a date and time', 'error');
+      return;
+    }
+
+    const serviceType = document.querySelector('select[name="serviceType"]').value;
+    if (!serviceType) {
+      showMessage('Please select a service type', 'error');
+      return;
+    }
+
+    const customerName = document.querySelector('input[name="customerName"]').value.trim();
+    const customerEmail = document.querySelector('input[name="customerEmail"]').value.trim();
+    const customerPhone = document.querySelector('input[name="customerPhone"]').value.trim();
+
+    if (!customerName || !customerEmail || !customerPhone) {
+      showMessage('Please fill in all required fields (name, email, phone)', 'error');
       return;
     }
 
@@ -693,14 +720,25 @@
       finalAddress = 'Mapleville Location'; // Use location name for Sat/Sun
     }
 
-    const formData = new FormData(e.target);
+    // Build booking data with all required fields
     const bookingData = {
-      ...Object.fromEntries(formData),
+      customerName,
+      customerEmail,
+      customerPhone,
       serviceAddress: finalAddress,
+      serviceType,
       bookingDate: selectedDate.toISOString().split('T')[0],
       bookingTime: selectedTime,
+      vehicleType: document.querySelector('select[name="vehicleType"]').value,
+      notes: document.querySelector('textarea[name="notes"]').value,
       vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
     };
+
+    // Debug: Log the payload before submission
+    console.log('[Booking Submission] Payload:', bookingData);
+    console.log('[Booking Submission] selectedDate:', selectedDate.toISOString().split('T')[0]);
+    console.log('[Booking Submission] selectedTime:', selectedTime);
+    console.log('[Booking Submission] vehiclePhoto included:', !!vehiclePhotoBase64);
 
     document.getElementById('submitBtn').disabled = true;
     document.getElementById('submitBtn').innerHTML = '<span class="loading"></span> Booking...';
@@ -714,19 +752,28 @@
 
       const data = await response.json();
 
+      console.log('[Booking Response] Status:', response.status, 'Data:', data);
+
       if (response.ok) {
         showMessage('Booking confirmed! Check your email for details.', 'success');
         e.target.reset();
+        vehiclePhotoBase64 = null;
         selectedDate = null;
         selectedTime = null;
         document.getElementById('bookingSummary').style.display = 'none';
+        document.getElementById('photoPreview').style.display = 'none';
         renderCalendar();
       } else {
-        showMessage(data.error || 'Booking failed. Please try again.', 'error');
+        // Show actual backend error message
+        const errorMessage = data.error || data.message || 'Booking failed. Please try again.';
+        showMessage(errorMessage, 'error');
+        console.error('[Booking Error] Backend error:', errorMessage);
       }
     } catch (error) {
-      showMessage('Error submitting booking. Please try again.', 'error');
-      console.error('Booking error:', error);
+      // Show more specific error information
+      const errorMsg = `Error submitting booking: ${error.message}`;
+      showMessage(errorMsg, 'error');
+      console.error('[Booking Error] Network/Fetch error:', error);
     } finally {
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('submitBtn').innerHTML = 'Complete Booking';
