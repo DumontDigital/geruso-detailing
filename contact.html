@@ -299,21 +299,23 @@
         const data = await response.json();
         console.log('[Quote Form] Response data:', data);
 
-        if (response.ok) {
-          console.log('[Quote Form] SUCCESS');
+        if (response.ok && data.success) {
+          console.log('[Quote Form] SUCCESS - Email sent');
           successMsg.style.display = 'block';
           successMsg.className = 'success-msg success';
-          successMsg.textContent = 'Quote request sent! We\'ll contact you within 24 hours.';
+          successMsg.textContent = '✓ Quote request sent! We\'ll contact you within 24 hours.';
+          successMsg.setAttribute('style', 'display: block !important; padding: 16px !important; margin-bottom: 18px !important; background: rgba(16,185,129,0.15) !important; border: 1px solid rgba(16,185,129,0.4) !important; border-radius: 8px !important; color: #10b981 !important; font-weight: 600 !important;');
           quoteForm.reset();
           submitBtn.textContent = originalText;
           submitBtn.disabled = false;
 
-          // Auto-hide success message after 5 seconds
+          // Keep success message visible for 8 seconds
           setTimeout(() => {
             successMsg.style.display = 'none';
-          }, 5000);
+          }, 8000);
         } else {
-          console.error('[Quote Form] Server returned error:', data.error);
+          console.error('[Quote Form] Server returned error:', data.error || 'Unknown error');
+          console.error('[Quote Form] Full response:', data);
           showError(data.error || 'Failed to send quote. Please try again.');
           submitBtn.textContent = originalText;
           submitBtn.disabled = false;
@@ -338,11 +340,16 @@
       console.error('[Quote Form] ERROR:', message);
       const errorDiv = document.createElement('div');
       errorDiv.className = 'success-msg error';
-      errorDiv.textContent = message;
+      errorDiv.textContent = '✗ ' + message;
+      errorDiv.setAttribute('style', 'display: block !important; padding: 16px !important; margin-bottom: 18px !important; background: rgba(239,68,68,0.15) !important; border: 1px solid rgba(239,68,68,0.4) !important; border-radius: 8px !important; color: #ef4444 !important; font-weight: 600 !important;');
       quoteForm.insertBefore(errorDiv, quoteForm.firstChild);
 
-      // Auto-remove error after 5 seconds
-      setTimeout(() => errorDiv.remove(), 5000);
+      // Keep error visible for 10 seconds, then fade out
+      setTimeout(() => {
+        errorDiv.style.opacity = '0.5';
+      }, 8000);
+
+      setTimeout(() => errorDiv.remove(), 10000);
     }
   });
 </script></body></html>
