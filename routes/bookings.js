@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
 const { verifyToken } = require('../middleware/auth');
+const { createCheckoutSession } = require('../stripe');
 
 const router = express.Router();
 
@@ -34,7 +35,69 @@ router.get('/public/booked-slots', async (req, res) => {
   }
 });
 
-// Create booking (public)
+// Create Stripe checkout session for booking (public)
+router.post('/checkout', async (req, res) => {
+  try {
+    console.log('[Bookings API] POST /checkout called');
+    console.log('[Bookings API] Request body:', JSON.stringify(req.body, null, 2));
+
+    const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto } = req.body;
+
+    // Validate required fields
+    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime) {
+      console.warn('[Bookings API] Validation failed - Missing required fields');
+      return res.status(400).json({ error: 'All required fields must be filled' });
+    }
+
+    console.log('[Bookings API] Validation passed');
+
+    // Create booking with unpaid status
+    const bookingId = uuidv4();
+    const result = await pool.query(
+      `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto || null, 'pending', 'unpaid']
+    );
+
+    const booking = result.rows[0];
+    console.log('[Bookings API] Booking created (unpaid):', booking.id);
+
+    // Create Stripe checkout session
+    const stripeSession = await createCheckoutSession(booking);
+
+    // Update booking with Stripe session ID
+    await pool.query(
+      'UPDATE bookings SET stripe_session_id = $1 WHERE id = $2',
+      [stripeSession.id, bookingId]
+    );
+
+    console.log('[Bookings API] Stripe session created:', stripeSession.id);
+
+    // Return checkout URL
+    res.json({
+      success: true,
+      checkoutUrl: stripeSession.url,
+      bookingId: booking.id
+    });
+
+  } catch (error) {
+    console.error('[Bookings API] Error creating checkout session:', error.message);
+
+    // Handle unique constraint violation (double booking)
+    if (error.code === '23505') {
+      console.warn('[Bookings API] ⚠️ DOUBLE BOOKING ATTEMPT DETECTED!');
+      return res.status(409).json({
+        error: 'This time was just booked. Please choose another slot.',
+        code: 'TIME_SLOT_TAKEN'
+      });
+    }
+
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+// Create booking (public) - kept for backward compatibility
 router.post('/', async (req, res) => {
   try {
     console.log('[Bookings API] POST / called');

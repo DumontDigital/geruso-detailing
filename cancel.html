@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Cancelled - Geruso Detailing</title>
+  <style>
+    :root {
+      --primary: #00FF41;
+      --primary-dark: #00DD33;
+      --primary-light: #33FF66;
+      --white: #ffffff;
+      --light-bg: #0a0a0a;
+      --light-bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --text-light: #888888;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--light-bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--light-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 70px;
+      box-shadow: 0 2px 8px rgba(0,255,65,0.1);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+    }
+
+    .nav-logo {
+      width: 48px;
+      height: 48px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .nav-brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .nav-brand-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    .nav-brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .container {
+      margin-top: 70px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .warning-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      background: var(--warning);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+    }
+
+    h1 {
+      font-size: 42px;
+      color: var(--warning);
+      margin-bottom: 16px;
+      text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .message-box {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .message-box h2 {
+      font-size: 16px;
+      color: var(--warning);
+      margin-bottom: 12px;
+    }
+
+    .message-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .message-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      flex-direction: column;
+    }
+
+    .btn {
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 255, 65, 0.1);
+      box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    }
+
+    .contact-info {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 32px;
+    }
+
+    .contact-info p {
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .contact-info a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .contact-info a:hover {
+      text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    }
+
+    @media (max-width: 960px) {
+      nav {
+        padding: 0 20px;
+      }
+      .container {
+        margin-top: 80px;
+        padding: 20px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-brand">
+      <div class="nav-logo"></div>
+      <div class="nav-brand-text">
+        <span class="nav-brand-name">Geruso Detailing</span>
+        <span class="nav-brand-sub">Mapleville, RI</span>
+      </div>
+    </a>
+  </nav>
+
+  <div class="container">
+    <div class="warning-icon">!</div>
+    <h1>Payment Cancelled</h1>
+    <p class="subtitle">Your booking was not completed</p>
+
+    <div class="message-box">
+      <h2>What Happened</h2>
+      <p>Your payment was cancelled and your booking is on hold. You can retry payment or contact us for assistance.</p>
+      <p><strong>Your booking data has been saved</strong> so you can complete checkout anytime.</p>
+    </div>
+
+    <div class="info-box">
+      <strong>Next Steps:</strong><br>
+      You can return to the booking page and try your payment again, or contact us to assist with your reservation.
+    </div>
+
+    <div class="button-group">
+      <a href="/booking" class="btn btn-primary">Return to Booking</a>
+      <a href="/" class="btn btn-secondary">Go Home</a>
+    </div>
+
+    <div class="contact-info">
+      <p><strong>Need Help?</strong></p>
+      <p>
+        Call us: <a href="tel:4014901236">(401) 490-1236</a><br>
+        Or: <a href="mailto:contact@gerusodetailing.com">contact@gerusodetailing.com</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
+
+    // Clear any booking session data on cancel
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get('booking_id');
+
+    if (bookingId) {
+      console.log('Booking cancelled:', bookingId);
+      // Optionally mark booking as cancelled in database via API
+      fetch(`/api/bookings/${bookingId}/cancel`, { method: 'POST' }).catch(err => {
+        console.error('Error marking booking as cancelled:', err);
+      });
+    }
+  </script>
+</body>
+</html>

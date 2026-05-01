@@ -44,6 +44,8 @@ app.get('/booking', (req, res) => {
 });
 app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'admin-login.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'admin-dashboard.html')));
+app.get('/success', (req, res) => res.sendFile(path.join(__dirname, 'success.html')));
+app.get('/cancel', (req, res) => res.sendFile(path.join(__dirname, 'cancel.html')));
 
 // API: Handle quote requests
 app.post('/api/quote', async (req, res) => {
@@ -89,6 +91,104 @@ app.post('/api/quote', async (req, res) => {
       success: false,
       error: 'Server error: ' + error.message
     });
+  }
+});
+
+// Stripe webhook handler
+const { handleWebhook, retrieveSession } = require('./stripe');
+const pool = require('./db');
+
+// Must use raw body for Stripe webhook verification
+app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (req, res) => {
+  try {
+    console.log('[Stripe Webhook] Received webhook');
+
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      console.warn('[Stripe Webhook] No signature provided');
+      return res.status(400).send('No signature');
+    }
+
+    const webhookResult = handleWebhook(req.body, signature);
+    console.log('[Stripe Webhook] Result:', webhookResult.type);
+
+    if (webhookResult.type === 'payment_succeeded') {
+      const session = webhookResult.data;
+      console.log('[Stripe Webhook] Session:', session.id);
+
+      // Update booking payment status
+      try {
+        const result = await pool.query(
+          'UPDATE bookings SET payment_status = $1, stripe_payment_intent_id = $2 WHERE stripe_session_id = $3 RETURNING *',
+          ['paid', session.payment_intent, session.id]
+        );
+
+        if (result.rows.length > 0) {
+          const booking = result.rows[0];
+          console.log('[Stripe Webhook] Booking marked as paid:', booking.id);
+
+          // Send confirmation email now that payment is confirmed
+          const { sendBookingConfirmation } = require('./email');
+          await sendBookingConfirmation({
+            customerName: booking.customer_name,
+            customerEmail: booking.customer_email,
+            bookingDate: booking.booking_date,
+            bookingTime: booking.booking_time,
+            serviceType: booking.service_type,
+            serviceAddress: booking.service_address,
+            hasPhoto: !!booking.vehicle_photo
+          });
+
+          console.log('[Stripe Webhook] Confirmation email sent');
+        }
+      } catch (dbError) {
+        console.error('[Stripe Webhook] Error updating booking:', dbError.message);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('[Stripe Webhook] Error:', error.message);
+    res.status(400).send('Webhook error: ' + error.message);
+  }
+});
+
+// API endpoint to get payment status
+app.get('/api/payment-status/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    console.log('[Payment Status] Checking payment status for booking:', bookingId);
+
+    const result = await pool.query(
+      'SELECT payment_status, stripe_session_id FROM bookings WHERE id = $1',
+      [bookingId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = result.rows[0];
+
+    // If session exists, verify with Stripe
+    if (booking.stripe_session_id) {
+      try {
+        const session = await retrieveSession(booking.stripe_session_id);
+        console.log('[Payment Status] Session status:', session.payment_status);
+
+        return res.json({
+          paymentStatus: booking.payment_status,
+          sessionStatus: session.payment_status
+        });
+      } catch (stripeError) {
+        console.error('[Payment Status] Error retrieving Stripe session:', stripeError.message);
+      }
+    }
+
+    res.json({ paymentStatus: booking.payment_status });
+  } catch (error) {
+    console.error('[Payment Status] Error:', error.message);
+    res.status(500).json({ error: 'Failed to get payment status' });
   }
 });
 

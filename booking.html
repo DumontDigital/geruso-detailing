@@ -303,7 +303,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" id="submitBtn">Complete Booking</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Book & Pay Deposit</button>
         </form>
       </div>
     </div>
@@ -779,10 +779,11 @@
     console.log('[Booking Submission] vehiclePhoto included:', !!vehiclePhotoBase64);
 
     document.getElementById('submitBtn').disabled = true;
-    document.getElementById('submitBtn').innerHTML = '<span class="loading"></span> Booking...';
+    document.getElementById('submitBtn').innerHTML = '<span class="loading"></span> Processing...';
 
     try {
-      const response = await fetch('/api/bookings', {
+      // Create booking with Stripe checkout
+      const response = await fetch('/api/bookings/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingData)
@@ -792,28 +793,14 @@
 
       console.log('[Booking Response] Status:', response.status, 'Data:', data);
 
-      if (response.ok) {
-        showMessage('Booking confirmed! Check your email for details.', 'success');
+      if (response.ok && data.checkoutUrl) {
+        console.log('[Booking Success] Redirecting to Stripe Checkout...');
+        showMessage('Redirecting to payment...', 'success');
 
-        // Reload booked time slots from server to reflect the new booking immediately
-        console.log('[Booking Success] Reloading booked time slots...');
-        await loadBookedTimeSlots();
-
-        e.target.reset();
-        vehiclePhotoBase64 = null;
-        document.getElementById('bookingSummary').style.display = 'none';
-        document.getElementById('photoPreview').style.display = 'none';
-
-        // Re-render calendar and time slots to show the newly booked slot
-        renderCalendar();
-        if (selectedDate) {
-          const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
-          renderTimeSlots(dayOfWeek, selectedDate);
-        }
-
-        // Clear selection after re-render
-        selectedDate = null;
-        selectedTime = null;
+        // Redirect to Stripe Checkout
+        setTimeout(() => {
+          window.location.href = data.checkoutUrl;
+        }, 500);
       } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
         // Handle double booking - time slot was just taken
         showMessage('This time was just booked. Please choose another slot.', 'error');
@@ -841,7 +828,7 @@
       console.error('[Booking Error] Network/Fetch error:', error);
     } finally {
       document.getElementById('submitBtn').disabled = false;
-      document.getElementById('submitBtn').innerHTML = 'Complete Booking';
+      document.getElementById('submitBtn').innerHTML = 'Book & Pay Deposit';
     }
   });
 
