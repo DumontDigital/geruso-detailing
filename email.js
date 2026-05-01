@@ -33,6 +33,22 @@ const sendQuoteEmail = async (quoteData) => {
   console.log('[Quote Email] Sending quote email:', { firstName, lastName, email, phone, service });
   console.log('[Quote Email] Recipient (OWNER_EMAIL):', process.env.OWNER_EMAIL);
   console.log('[Quote Email] From (FROM_EMAIL):', process.env.FROM_EMAIL);
+  console.log('[Quote Email] SMTP_HOST:', process.env.SMTP_HOST);
+  console.log('[Quote Email] SMTP_USER:', process.env.SMTP_USER);
+
+  // Check if environment variables are set
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('[Quote Email] FAILED - Missing SMTP configuration');
+    console.error('[Quote Email] SMTP_HOST:', process.env.SMTP_HOST ? 'SET' : 'NOT SET');
+    console.error('[Quote Email] SMTP_USER:', process.env.SMTP_USER ? 'SET' : 'NOT SET');
+    console.error('[Quote Email] SMTP_PASS:', process.env.SMTP_PASS ? 'SET' : 'NOT SET');
+    return { success: false, error: 'Email configuration missing. Please contact support.' };
+  }
+
+  if (!process.env.OWNER_EMAIL) {
+    console.error('[Quote Email] FAILED - OWNER_EMAIL not configured');
+    return { success: false, error: 'Email configuration missing. Please contact support.' };
+  }
 
   const htmlContent = `
     <h2>New Quote Request from Geruso Detailing Website</h2>
@@ -47,17 +63,25 @@ const sendQuoteEmail = async (quoteData) => {
   `;
 
   try {
-    const info = await transporter.sendMail({
+    // Create a promise with a 10-second timeout
+    const emailPromise = transporter.sendMail({
       from: process.env.FROM_EMAIL,
       to: process.env.OWNER_EMAIL,
       subject: `New Quote Request - ${firstName} ${lastName}`,
       html: htmlContent,
     });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Email send timeout - SMTP server not responding')), 10000)
+    );
+
+    const info = await Promise.race([emailPromise, timeoutPromise]);
     console.log('[Quote Email] SUCCESS - Message ID:', info.messageId);
     return { success: true };
   } catch (error) {
     console.error('[Quote Email] FAILED - Error:', error.message);
-    console.error('[Quote Email] Full error:', error);
+    console.error('[Quote Email] Error code:', error.code);
+    console.error('[Quote Email] Error response:', error.response);
     return { success: false, error: error.message };
   }
 };

@@ -282,12 +282,19 @@
 
       try {
         console.log('[Quote Form] Sending to /api/quote...');
+
+        // Create fetch with 15-second timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const response = await fetch('/api/quote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formDataObj)
+          body: JSON.stringify(formDataObj),
+          signal: controller.signal
         });
 
+        clearTimeout(timeoutId);
         console.log('[Quote Form] Response status:', response.status);
         const data = await response.json();
         console.log('[Quote Form] Response data:', data);
@@ -296,6 +303,7 @@
           console.log('[Quote Form] SUCCESS');
           successMsg.style.display = 'block';
           successMsg.className = 'success-msg success';
+          successMsg.textContent = 'Quote request sent! We\'ll contact you within 24 hours.';
           quoteForm.reset();
           submitBtn.textContent = originalText;
           submitBtn.disabled = false;
@@ -311,8 +319,16 @@
           submitBtn.disabled = false;
         }
       } catch (error) {
-        console.error('[Quote Form] Network/Fetch error:', error);
-        showError('Error submitting form: ' + error.message);
+        clearTimeout(timeoutId);
+        console.error('[Quote Form] Network/Fetch error:', error.message);
+
+        let errorMsg = 'Error submitting form: ' + error.message;
+        if (error.name === 'AbortError') {
+          errorMsg = 'Request timed out. Server is not responding. Please try again.';
+          console.error('[Quote Form] REQUEST TIMEOUT - Backend did not respond within 15 seconds');
+        }
+
+        showError(errorMsg);
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
       }

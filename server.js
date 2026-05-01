@@ -31,39 +31,49 @@ app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'adm
 
 // API: Handle quote requests
 app.post('/api/quote', async (req, res) => {
-  console.log('[Quote API] POST /api/quote called');
-  console.log('[Quote API] Request body:', req.body);
+  try {
+    console.log('[Quote API] POST /api/quote called');
+    console.log('[Quote API] Request body:', req.body);
 
-  const { firstName, lastName, email, phone, service, message } = req.body;
+    const { firstName, lastName, email, phone, service, message } = req.body;
 
-  // Validate
-  if (!firstName || !lastName || !email || !phone) {
-    console.warn('[Quote API] Validation failed - missing required fields');
-    return res.status(400).json({ error: 'All required fields must be filled' });
-  }
+    // Validate
+    if (!firstName || !lastName || !email || !phone) {
+      console.warn('[Quote API] Validation failed - missing required fields');
+      return res.status(400).json({ error: 'All required fields must be filled' });
+    }
 
-  const quoteData = { firstName, lastName, email, phone, service, message };
+    const quoteData = { firstName, lastName, email, phone, service, message };
 
-  // Send email notification
-  console.log('[Quote API] Calling sendQuoteEmail...');
-  const emailResult = await sendQuoteEmail(quoteData);
+    // Send email notification
+    console.log('[Quote API] Calling sendQuoteEmail...');
+    const emailResult = await sendQuoteEmail(quoteData);
 
-  if (!emailResult.success) {
-    console.error('[Quote API] Email send failed:', emailResult.error);
+    if (!emailResult.success) {
+      console.error('[Quote API] Email send failed:', emailResult.error);
+      return res.status(500).json({
+        success: false,
+        error: emailResult.error || 'Failed to send quote. Please try again or call us directly.'
+      });
+    }
+
+    // Log quote request
+    console.log('[Quote API] SUCCESS - Quote email sent:', { firstName, lastName, email, phone, service });
+
+    // Return success
+    return res.json({
+      success: true,
+      message: 'Quote request received! We\'ll contact you within 24 hours.',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[Quote API] UNEXPECTED ERROR:', error.message);
+    console.error('[Quote API] Stack trace:', error.stack);
     return res.status(500).json({
-      error: 'Failed to send quote. Please try again or call us directly.'
+      success: false,
+      error: 'Server error: ' + error.message
     });
   }
-
-  // Log quote request
-  console.log('[Quote API] SUCCESS - Quote email sent:', { firstName, lastName, email, phone, service });
-
-  // Return success
-  res.json({
-    success: true,
-    message: 'Quote request received! We\'ll contact you within 24 hours.',
-    timestamp: new Date().toISOString()
-  });
 });
 
 // Register API routes
