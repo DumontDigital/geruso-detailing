@@ -82,18 +82,20 @@
 
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 28px; }
     .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; background: var(--light-bg); }
-    .calendar-day:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.1); }
+    .calendar-day.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
+    .calendar-day:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
     .calendar-day.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-    .calendar-day.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; }
+    .calendar-day.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: var(--light-bg2); }
     .calendar-day.today { border-color: var(--primary); }
 
     .time-slots-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .time-slots-header { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
     .time-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
     .time-slot { padding: 14px 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; background: var(--light-bg); }
-    .time-slot:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.1); }
+    .time-slot.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
+    .time-slot:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
     .time-slot.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; }
+    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: var(--light-bg2); }
 
     .booking-form { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .form-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; }
@@ -232,11 +234,18 @@
             <input type="tel" class="form-input" name="customerPhone" placeholder="(401) 555-0000" required>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Service Address</label>
-            <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" required autocomplete="off">
+          <div class="form-group" id="addressFieldGroup" style="display: none;">
+            <label class="form-label">Service Address <span style="color: var(--error);">*</span></label>
+            <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" autocomplete="off">
             <div id="addressSuggestions" class="address-suggestions"></div>
             <input type="hidden" id="serviceAddressValue" name="serviceAddress" value="">
+          </div>
+
+          <div class="form-group" id="locationNoteGroup" style="display: none;">
+            <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
+              <strong style="color: var(--primary);">Location Service</strong><br>
+              Saturday and Sunday appointments are at our Mapleville location only. No address needed.
+            </div>
           </div>
 
           <div class="form-group">
@@ -407,17 +416,40 @@
   let currentDate = new Date();
   let selectedDate = null;
   let selectedTime = null;
+  let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const businessHours = {
-    'Thu': { start: 12, end: 18 }, // 12 PM - 6 PM
-    'Fri': { start: 12, end: 18 },
-    'Sat': { start: 6, end: 11 }, // 6 AM - 11 AM
-    'Sun': { start: 6, end: 11 },
+    'Thu': { start: 12, end: 18, type: 'mobile' }, // 12 PM - 6 PM (Mobile)
+    'Fri': { start: 12, end: 18, type: 'mobile' },
+    'Sat': { start: 6, end: 11, type: 'location' }, // 6 AM - 11 AM (Location only)
+    'Sun': { start: 6, end: 11, type: 'location' },
     'Mon': null,
     'Tue': null,
     'Wed': null
   };
+
+  // Fetch booked time slots on page load
+  async function loadBookedTimeSlots() {
+    try {
+      const response = await fetch('/api/bookings');
+      if (!response.ok) return;
+      const data = await response.json();
+
+      // Build a map of booked times
+      if (data.bookings) {
+        data.bookings.forEach(booking => {
+          const key = `${booking.booking_date} ${booking.booking_time}`;
+          bookedTimeSlots[key] = true;
+        });
+      }
+    } catch (error) {
+      console.warn('Could not load booked slots:', error);
+    }
+  }
+
+  // Load booked times when page loads
+  loadBookedTimeSlots();
 
   function generateTimeSlots(dayOfWeek) {
     const hours = businessHours[dayOfWeek];
@@ -469,6 +501,7 @@
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
       } else {
+        dayCell.classList.add('available'); // Mark available dates in light green
         dayCell.addEventListener('click', () => selectDate(cellDate));
       }
 
@@ -496,11 +529,34 @@
     document.getElementById('summaryDate').textContent = dayName;
     document.getElementById('bookingSummary').style.display = 'block';
 
+    // Show/hide Service Address field based on day of week
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+
+    if (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') {
+      // Mobile service days - show address field
+      addressFieldGroup.style.display = 'block';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = true;
+    } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+      // Location-only days - hide address field and show note
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'block';
+      serviceAddressInput.required = false;
+      serviceAddressInput.value = ''; // Clear any previously entered address
+    } else {
+      // Closed days
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+    }
+
     renderCalendar();
-    renderTimeSlots(dayOfWeek);
+    renderTimeSlots(dayOfWeek, date);
   }
 
-  function renderTimeSlots(dayOfWeek) {
+  function renderTimeSlots(dayOfWeek, date) {
     const slots = generateTimeSlots(dayOfWeek);
     const timeSlotsGrid = document.getElementById('timeSlotsGrid');
     const timeMessage = document.getElementById('timeMessage');
@@ -514,11 +570,25 @@
     timeMessage.style.display = 'none';
     timeSlotsGrid.innerHTML = '';
 
+    const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
     slots.forEach(slot => {
       const slotBtn = document.createElement('button');
       slotBtn.className = 'time-slot';
       slotBtn.textContent = slot;
       slotBtn.type = 'button';
+
+      // Check if this time slot is booked
+      const bookingKey = `${dateStr} ${slot}`;
+      const isBooked = bookedTimeSlots[bookingKey];
+
+      if (isBooked) {
+        slotBtn.classList.add('disabled');
+        slotBtn.disabled = true;
+        slotBtn.textContent = slot + ' (Booked)';
+      } else {
+        slotBtn.classList.add('available'); // Mark available times in light green
+      }
 
       if (selectedTime === slot) {
         slotBtn.classList.add('selected');
@@ -527,7 +597,7 @@
       slotBtn.addEventListener('click', () => {
         selectedTime = slot;
         document.getElementById('summaryTime').textContent = slot;
-        renderTimeSlots(dayOfWeek);
+        renderTimeSlots(dayOfWeek, date);
       });
 
       timeSlotsGrid.appendChild(slotBtn);
@@ -547,22 +617,30 @@
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
-
     if (!selectedDate || !selectedTime) {
       showMessage('Please select a date and time', 'error');
       return;
     }
 
-    if (!serviceAddress) {
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+    const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
+
+    // Only require service address for mobile service days (Thu/Fri)
+    if ((dayOfWeek === 'Thu' || dayOfWeek === 'Fri') && !serviceAddress) {
       showMessage('Please enter a service address', 'error');
       return;
+    }
+
+    // For location-only days (Sat/Sun), don't send address
+    let finalAddress = serviceAddress;
+    if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+      finalAddress = 'Mapleville Location'; // Use location name for Sat/Sun
     }
 
     const formData = new FormData(e.target);
     const bookingData = {
       ...Object.fromEntries(formData),
-      serviceAddress: serviceAddress,
+      serviceAddress: finalAddress,
       bookingDate: selectedDate.toISOString().split('T')[0],
       bookingTime: selectedTime,
     };
