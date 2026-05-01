@@ -23,7 +23,7 @@ function saveCart(cart) {
 /**
  * Add a service to the cart
  */
-function addToCart(serviceName, price) {
+function addToCart(serviceName, price, serviceTag, serviceType) {
   const cart = getCart();
 
   // Check if item already in cart
@@ -35,12 +35,15 @@ function addToCart(serviceName, price) {
       id: Math.random().toString(36).substr(2, 9),
       serviceName: serviceName,
       price: parseFloat(price),
+      serviceTag: serviceTag || 'MOBILE', // MOBILE, LOCATION ONLY, or EXTRA FEE
+      serviceType: serviceType || 'standard', // For future use
       addedAt: new Date().toISOString()
     });
   }
 
   saveCart(cart);
   updateNavCartBadge();
+  console.log('[Cart] Item added:', serviceName, 'Price:', price, 'Tag:', serviceTag);
   return cart;
 }
 
@@ -129,14 +132,18 @@ function updateCartModalDisplay() {
 
   let html = '';
   cart.items.forEach(item => {
+    const tagColor = item.serviceTag === 'LOCATION ONLY' ? 'rgba(100,200,255,0.1)' : item.serviceTag === 'EXTRA FEE' ? 'rgba(255,150,100,0.1)' : 'rgba(0,255,65,0.1)';
+    const tagTextColor = item.serviceTag === 'LOCATION ONLY' ? '#64c8ff' : item.serviceTag === 'EXTRA FEE' ? '#ff9664' : '#00FF41';
+
     html += `
-      <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+      <div class="cart-item" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid var(--border);">
         <div style="flex: 1;">
           <div style="font-weight: 600; color: var(--text);">${item.serviceName}</div>
+          <div style="font-size: 12px; padding: 4px 8px; background: ${tagColor}; color: ${tagTextColor}; border-radius: 4px; display: inline-block; margin-bottom: 6px; margin-top: 4px;">${item.serviceTag}</div>
           <div style="font-size: 13px; color: var(--text-muted);">$${item.price.toFixed(2)}</div>
         </div>
         <button onclick="removeFromCart('${item.id}'); updateCartModalDisplay(); updateNavCartBadge();"
-                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0 8px; font-size: 18px;">
+                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0 8px; font-size: 18px; flex-shrink: 0;">
           ×
         </button>
       </div>
