@@ -96,6 +96,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 Geruso Detailing server running on port ${PORT}`);
   console.log(`📍 Listening on 0.0.0.0:${PORT}`);
   console.log('[Startup] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[Startup] Email config loaded: SMTP_USER =', process.env.SMTP_USER);
+  console.log('[Startup] Email config loaded: RESEND_API_KEY =', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
   console.log('[Startup] Owner email destination: OWNER_EMAIL =', process.env.OWNER_EMAIL);
 });
