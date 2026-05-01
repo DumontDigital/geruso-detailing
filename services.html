@@ -42,19 +42,12 @@
 
   .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
   .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
 
   .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 8px rgba(0,255,65,0.3); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
+  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 24px; }
+  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.8; margin-bottom: 16px; }
   section { padding: 80px 48px; }
   .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
-
-  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
 
   footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
   .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
@@ -70,31 +63,59 @@
   @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
   #services { background: var(--light-bg); }
-  .packages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-  .pkg-tier { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
-  .pkg-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 12px; }
-  .pkg-amount { font-size: 48px; font-weight: 700; color: var(--primary); }
-  .pkg-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; min-height: 42px; }
-  .pkg-divider { height: 1px; background: var(--border); margin: 20px 0; }
-  .pkg-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; flex: 1; }
-  .pkg-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
-  .pkg-check { width: 16px; height: 16px; background: var(--primary); color: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
-  .btn-pkg { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid var(--border); background: transparent; color: var(--primary); text-decoration: none; display: block; text-align: center; transition: all 0.2s; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-pkg:hover { border-color: var(--primary); background: var(--primary); color: #000; box-shadow: 0 0 16px rgba(0,255,65,0.5); }
-  .btn-pkg.primary { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-  .btn-pkg.primary:hover { background: var(--primary-light); border-color: var(--primary-light); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
-  .pkg-secure-text { font-size: 12px; color: var(--text-light); text-align: center; margin-top: 8px; }
-  .packages-footer { margin-top: 40px; display: flex; gap: 0; border-top: 1px solid var(--border); padding-top: 28px; }
-  .pkg-footer-item { flex: 1; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-muted); }
-  .pkg-footer-icon { color: var(--primary); font-size: 16px; }
-  @media(max-width:960px){ .packages-grid{grid-template-columns:1fr} .packages-footer{flex-direction:column;gap:12px} }
+
+  /* Location & Info Notes */
+  .service-info { background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, transparent 100%); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 60px; }
+  .info-item { margin-bottom: 20px; }
+  .info-item:last-child { margin-bottom: 0; }
+  .info-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+  .info-text { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+  .info-text strong { color: var(--text); font-weight: 600; }
+
+  /* Services Grid */
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 32px; margin-top: 48px; }
+
+  .service-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; overflow: hidden; }
+  .service-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); opacity: 0; transition: opacity 0.3s; }
+  .service-card:hover { border-color: var(--primary); box-shadow: 0 8px 32px rgba(0,255,65,0.15), 0 0 20px rgba(0,255,65,0.1); transform: translateY(-6px); }
+  .service-card:hover::before { opacity: 1; }
+
+  .service-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 16px; line-height: 1.4; }
+  .service-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .service-time { display: flex; flex-direction: column; }
+  .service-time-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .service-time-value { font-size: 14px; color: var(--text-muted); }
+  .service-price { display: flex; flex-direction: column; }
+  .service-price-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .service-price-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .service-price-value small { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+  .service-description { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
+  .service-tag { display: inline-block; font-size: 10px; padding: 6px 12px; background: rgba(0,255,65,0.1); color: var(--primary); border-radius: 6px; margin-bottom: 20px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .btn-book { width: 100%; padding: 14px 24px; background: var(--primary); color: #000; font-weight: 700; font-size: 14px; border: none; border-radius: 8px; text-decoration: none; display: inline-block; text-align: center; transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-book:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+
+  /* Premium Disclaimers */
+  .disclaimers-section { margin-top: 80px; padding-top: 60px; border-top: 2px solid var(--border); }
+  .disclaimers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 32px; }
+  .disclaimer-card { background: linear-gradient(135deg, rgba(255,107,107,0.05) 0%, transparent 100%); border: 1px solid rgba(255,107,107,0.2); border-radius: 10px; padding: 24px; }
+  .disclaimer-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; letter-spacing: 0.5px; }
+  .disclaimer-text { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+  @media(max-width:960px) {
+    .services-grid { grid-template-columns: 1fr; gap: 24px; }
+    .service-meta { flex-direction: column; align-items: flex-start; }
+    .disclaimers-grid { grid-template-columns: 1fr; }
+    section { padding: 60px 24px; }
+  }
 </style></head><body>
 <nav>
   <a href="index.html" class="nav-brand">
     <div class="nav-logo"></div>
     <div class="nav-brand-text">
       <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">North Providence, RI</span>
+      <span class="nav-brand-sub">Mapleville, RI</span>
     </div>
   </a>
   <input type="checkbox" id="nav-toggle" class="nav-toggle">
@@ -117,58 +138,224 @@
 
 <section id="services">
   <div class="section-inner">
-    <div class="section-label">PRICING</div>
-    <h1 class="section-heading">Service Packages</h1>
-    <p class="section-sub">We offer specific pricing for different vehicle types. Choose the package that fits your needs. First-time customers receive 10% off.</p>
-    <div class="packages-grid">
-      <div class="card">
-        <div class="pkg-tier">Basic Package</div>
-        <div class="pkg-price"><span class="pkg-amount">$85</span></div>
-        <p class="pkg-desc">Essential washing, tire shine, and light cleaning for regular vehicle maintenance.</p>
-        <div class="pkg-divider"></div>
-        <ul class="pkg-features">
-          <li><span class="pkg-check">✓</span> Exterior wash & dry</li>
-          <li><span class="pkg-check">✓</span> Tire & trim shine</li>
-          <li><span class="pkg-check">✓</span> Windows cleaned</li>
-          <li><span class="pkg-check">✓</span> Quick vacuum</li>
-        </ul>
-        <a href="contact.html" class="btn-pkg">Get Started</a>
-        <div class="pkg-secure-text">Checkout securely with Stripe</div>
+    <div class="section-label">PREMIUM DETAILING</div>
+    <h1 class="section-heading">Professional Detailing Services</h1>
+    <p class="section-sub">Precision detailing tailored to your vehicle's needs. From quick wash services to comprehensive restorations, we deliver excellence at every level.</p>
+
+    <!-- Location & Service Info -->
+    <div class="service-info">
+      <div class="info-item">
+        <div class="info-label">📍 Service Location</div>
+        <div class="info-text"><strong>Business location is now based in Mapleville, RI.</strong> Mobile detailing available throughout all Rhode Island.</div>
       </div>
-      <div class="card featured">
-        <div class="card-badge">Most Popular</div>
-        <div class="pkg-tier">Premium Package</div>
-        <div class="pkg-price"><span class="pkg-amount">$170</span></div>
-        <p class="pkg-desc">Comprehensive washing, waxing, and cleaning for superior interior and exterior results.</p>
-        <div class="pkg-divider"></div>
-        <ul class="pkg-features">
-          <li><span class="pkg-check">✓</span> Full exterior detail</li>
-          <li><span class="pkg-check">✓</span> Interior vacuum & wipe</li>
-          <li><span class="pkg-check">✓</span> Tire & trim treatment</li>
-          <li><span class="pkg-check">✓</span> Ceramic coating available</li>
-        </ul>
-        <a href="contact.html" class="btn-pkg primary">Book Now</a>
-        <div class="pkg-secure-text">Checkout securely with Stripe</div>
+      <div class="info-item">
+        <div class="info-label">🔧 Important Service Note</div>
+        <div class="info-text">Services requiring polishing, waxing, paint correction, or ceramic coating must be completed at my location due to 6+ hour service time and the need for proper shade / controlled conditions.</div>
       </div>
-      <div class="card">
-        <div class="pkg-tier">Ultra Premium</div>
-        <div class="pkg-price"><span class="pkg-amount">$245</span></div>
-        <p class="pkg-desc">Professional washing, waxing, and comprehensive cleaning for complete transformation and maximum protection.</p>
-        <div class="pkg-divider"></div>
-        <ul class="pkg-features">
-          <li><span class="pkg-check">✓</span> Complete detail inside & out</li>
-          <li><span class="pkg-check">✓</span> Engine bay cleaning</li>
-          <li><span class="pkg-check">✓</span> Premium ceramic coating</li>
-          <li><span class="pkg-check">✓</span> Full interior protection</li>
-        </ul>
-        <a href="contact.html" class="btn-pkg">Get Started</a>
-        <div class="pkg-secure-text">Checkout securely with Stripe</div>
+      <div class="info-item">
+        <div class="info-label">➕ Add-On Services</div>
+        <div class="info-text">Individual add-on services are available separately. Contact us for custom service combinations.</div>
       </div>
     </div>
-    <div class="packages-footer">
-      <div class="pkg-footer-item"><span class="pkg-footer-icon">✓</span> Mobile service to your location — distance may add to final price</div>
-      <div class="pkg-footer-item"><span class="pkg-footer-icon">✓</span> Services for cars, motorcycles, SUVs, and trucks</div>
-      <div class="pkg-footer-item"><span class="pkg-footer-icon">✓</span> Owner-operated quality — Cameron handles every detail</div>
+
+    <!-- Services Grid -->
+    <div class="services-grid">
+      <!-- Service 1 -->
+      <div class="service-card">
+        <div class="service-name">Full Motorcycle Service</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">2 hours</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Price</div>
+            <div class="service-price-value">$70</div>
+          </div>
+        </div>
+        <div class="service-description">Complete motorcycle detailing including wash, wax, and interior cleaning for optimal protection and shine.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 2 -->
+      <div class="service-card">
+        <div class="service-name">Interior Detailing</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">2 hr 15 min</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$100</div>
+          </div>
+        </div>
+        <div class="service-description">Deep cleaning and conditioning of interior surfaces including seats, carpets, and dashboard.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 3 -->
+      <div class="service-card">
+        <div class="service-name">Car Wash</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">1 hr 35 min</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$85</div>
+          </div>
+        </div>
+        <div class="service-description">Professional exterior wash and dry with attention to detail for a pristine finish.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 4 -->
+      <div class="service-card">
+        <div class="service-tag">LOCATION ONLY</div>
+        <div class="service-name">Ceramic Coating</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">6 hours</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$400</div>
+          </div>
+        </div>
+        <div class="service-description">Professional-grade ceramic coating application for long-lasting paint protection and hydrophobic properties.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 5 -->
+      <div class="service-card">
+        <div class="service-name">Premium Package</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">4 hours</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$170</div>
+          </div>
+        </div>
+        <div class="service-description">Comprehensive exterior and interior detail including washing, waxing, and full cabin cleaning.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 6 -->
+      <div class="service-card">
+        <div class="service-name">Ultra Premium</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">4 hr 45 min</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$335</div>
+          </div>
+        </div>
+        <div class="service-description">Ultimate detailing experience with complete transformation including engine bay cleaning and premium protection.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 7 -->
+      <div class="service-card">
+        <div class="service-tag">ADD-ON</div>
+        <div class="service-name">Pet Hair / Odor Elimination</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">2 hours</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Price</div>
+            <div class="service-price-value">$50</div>
+          </div>
+        </div>
+        <div class="service-description">Specialized deep cleaning to remove pet hair and eliminate odors from interior surfaces.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 8 -->
+      <div class="service-card">
+        <div class="service-tag">ADD-ON</div>
+        <div class="service-name">Headlight Restoration</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">30 minutes</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Per headlight</div>
+            <div class="service-price-value">$50</div>
+          </div>
+        </div>
+        <div class="service-description">Restore clarity and brightness to oxidized or cloudy headlights with professional polishing.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 9 -->
+      <div class="service-card">
+        <div class="service-name">Engine Bay Cleaning</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">1 hr 20 min</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Price</div>
+            <div class="service-price-value">$75</div>
+          </div>
+        </div>
+        <div class="service-description">Professional engine bay detailing to remove built-up grime and restore visual appeal under the hood.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+
+      <!-- Service 10 -->
+      <div class="service-card">
+        <div class="service-tag">LOCATION ONLY</div>
+        <div class="service-name">Full Vehicle Polish</div>
+        <div class="service-meta">
+          <div class="service-time">
+            <div class="service-time-label">Time Required</div>
+            <div class="service-time-value">3 hr 15 min</div>
+          </div>
+          <div class="service-price">
+            <div class="service-price-label">Starting from</div>
+            <div class="service-price-value">$250</div>
+          </div>
+        </div>
+        <div class="service-description">Professional multi-stage polishing to remove swirls, scratches, and restore paint clarity and gloss.</div>
+        <a href="contact.html" class="btn-book">Book Now</a>
+      </div>
+    </div>
+
+    <!-- Disclaimers Section -->
+    <div class="disclaimers-section">
+      <div class="section-label">Important Information</div>
+      <h2 style="font-size: 24px; color: var(--text); margin-bottom: 32px;">Service Requirements & Policies</h2>
+
+      <div class="disclaimers-grid">
+        <div class="disclaimer-card">
+          <div class="disclaimer-title">⚠️ Biohazard Cleanup</div>
+          <div class="disclaimer-text">Any biological cleanup including vomit, pet waste, urine, or other hazardous contamination requires approval and signed consent form before service.</div>
+        </div>
+
+        <div class="disclaimer-card">
+          <div class="disclaimer-title">📍 Location Requirements</div>
+          <div class="disclaimer-text">Services requiring polishing, waxing, paint correction, or ceramic coating must be completed at our Mapleville location due to 6+ hour service time and the need for proper shade and controlled conditions.</div>
+        </div>
+
+        <div class="disclaimer-card">
+          <div class="disclaimer-title">🚗 Mobile Service</div>
+          <div class="disclaimer-text">Mobile detailing available throughout all Rhode Island for services that don't require location-based setup. Distance to drive may be added to final price.</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -183,10 +370,10 @@
     <div>
       <div class="footer-col-title">Services</div>
       <ul class="footer-links">
-        <li><a href="services.html">Basic Package</a></li>
+        <li><a href="services.html">Car Wash</a></li>
+        <li><a href="services.html">Interior Detailing</a></li>
+        <li><a href="services.html">Ceramic Coating</a></li>
         <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">Ultra Premium</a></li>
-        <li><a href="memberships.html">Memberships</a></li>
       </ul>
     </div>
     <div>
