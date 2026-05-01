@@ -1,81 +1,90 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memberships — Geruso Detailing</title><style>
   :root {
-    --primary: #00a8cc;
-    --primary-dark: #0088aa;
-    --primary-light: #33bde8;
+    --primary: #00FF41;
+    --primary-dark: #00DD33;
+    --primary-light: #33FF66;
     --white: #ffffff;
-    --light-bg: #f8f9fa;
-    --light-bg2: #f0f1f3;
-    --border: #e0e2e7;
-    --text: #1a1a1a;
-    --text-muted: #666666;
-    --text-light: #999999;
+    --light-bg: #0a0a0a;
+    --light-bg2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #ffffff;
+    --text-muted: #aaaaaa;
+    --text-light: #888888;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background: var(--white); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
 
-  nav { position: sticky; top: 0; z-index: 100; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
   .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
   .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
   .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--text); }
+  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
   .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+  .nav-toggle { display: none; }
+  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
+  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
   .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: color 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); }
+  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
+  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
+  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
   .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
-  .nav-phone:hover { color: var(--primary); }
-  .btn-quote-nav { background: var(--primary); color: white; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: background 0.2s, transform 0.15s; }
-  .btn-quote-nav:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
+  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
+  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
 
-  .btn-primary { background: var(--primary); color: white; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; }
-  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-  .btn-outline:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
+  .nav-toggle:checked ~ .nav-phone { display: block; }
 
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; }
+  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
+
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 8px rgba(0,255,65,0.3); }
   .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
   .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
   section { padding: 80px 48px; }
   .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
 
-  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.2s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 8px 24px rgba(0, 168, 204, 0.1); transform: translateY(-2px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0, 168, 204, 0.02) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; }
+  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
+  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
+  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
+  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
 
-  footer { background: var(--light-bg); border-top: 1px solid var(--border); padding: 60px 48px 0; }
+  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
   .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
   .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
   .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); margin-bottom: 16px; }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
   .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: color 0.2s; }
-  .footer-links a:hover { color: var(--primary); }
+  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
   .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
 
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-links { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
+  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
   #memberships { background: var(--light-bg); }
   .mem-layout { display: grid; grid-template-columns: 1fr 300px; gap: 60px; align-items: start; margin-bottom: 52px; }
-  .perks-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
-  .perks-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 18px; }
+  .perks-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+  .perks-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 18px; text-shadow: 0 0 8px rgba(0,255,65,0.3); }
   .perks-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
   .perks-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
-  .perks-check { width: 14px; height: 14px; background: var(--primary); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: white; font-weight: 700; flex-shrink: 0; }
+  .perks-check { width: 14px; height: 14px; background: var(--primary); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #000; font-weight: 700; flex-shrink: 0; }
   .mem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
   .mem-tier { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
   .mem-name { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
   .mem-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; flex: 1; }
-  .mem-cta { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid var(--border); background: var(--white); color: var(--primary); text-decoration: none; display: block; text-align: center; transition: all 0.2s; cursor: pointer; }
-  .mem-cta:hover { border-color: var(--primary); background: var(--primary); color: white; }
-  .mem-cta.primary { background: var(--primary); color: white; border-color: var(--primary); }
-  .mem-cta.primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
-  .mem-footer { margin-top: 40px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .mem-cta { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid var(--border); background: transparent; color: var(--primary); text-decoration: none; display: block; text-align: center; transition: all 0.2s; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+  .mem-cta:hover { border-color: var(--primary); background: var(--primary); color: #000; box-shadow: 0 0 16px rgba(0,255,65,0.5); }
+  .mem-cta.primary { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
+  .mem-cta.primary:hover { background: var(--primary-light); border-color: var(--primary-light); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+  .mem-footer { margin-top: 40px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
   .mem-footer h4 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
   .mem-footer p { font-size: 14px; color: var(--text-muted); }
   @media(max-width:960px){ .mem-layout{grid-template-columns:1fr} .mem-grid{grid-template-columns:1fr} .mem-footer{flex-direction:column;align-items:flex-start} }
@@ -88,10 +97,15 @@
       <span class="nav-brand-sub">North Providence, RI</span>
     </div>
   </a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle">
+  <label for="nav-toggle" class="nav-toggle-label">
+    <span></span>
+    <span></span>
+    <span></span>
+  </label>
   <ul class="nav-links">
     <li><a href="services.html" >Services</a></li>
     <li><a href="work.html" >Our Work</a></li>
-    <li><a href="memberships.html" class="active">Memberships</a></li>
     <li><a href="schedule.html" >Schedule</a></li>
     <li><a href="reviews.html" >Reviews</a></li>
   </ul>
@@ -103,50 +117,51 @@
 
 <section id="memberships">
   <div class="section-inner">
+    <div class="section-label">RECURRING SERVICE</div>
+    <h1 class="section-heading">Membership Plans</h1>
+    <p class="section-sub">Save with recurring monthly details. Cancel anytime, no lock-in required.</p>
+
     <div class="mem-layout">
-      <div>
-        <div class="section-label">MEMBERSHIPS</div>
-        <h1 class="section-heading">Keep it clean. On a schedule.</h1>
-        <p class="section-sub">Lock in a recurring slot and save. Members get priority booking, locked-in pricing, and no surprise fees.</p>
+      <div class="mem-grid">
+        <div class="card">
+          <div class="mem-tier">Monthly Basic</div>
+          <div class="mem-name">Maintenance</div>
+          <p class="mem-desc">Monthly wash & shine to keep your car looking fresh.</p>
+          <a href="contact.html" class="mem-cta">Choose Plan</a>
+        </div>
+        <div class="card featured">
+          <div class="card-badge">Popular</div>
+          <div class="mem-tier">Monthly Premium</div>
+          <div class="mem-name">Detail</div>
+          <p class="mem-desc">Full monthly detail. Interior vacuum, exterior shine, protection renewed.</p>
+          <a href="contact.html" class="mem-cta primary">Choose Plan</a>
+        </div>
+        <div class="card">
+          <div class="mem-tier">Quarterly Plus</div>
+          <div class="mem-name">Ultimate</div>
+          <p class="mem-desc">Quarterly deep detail with ceramic coating refresher.</p>
+          <a href="contact.html" class="mem-cta">Choose Plan</a>
+        </div>
       </div>
+
       <div class="perks-card">
         <div class="perks-title">Member Perks</div>
         <ul class="perks-list">
-          <li><span class="perks-check">✓</span>Priority scheduling</li>
-          <li><span class="perks-check">✓</span>Locked-in pricing</li>
-          <li><span class="perks-check">✓</span>No cancellation fees</li>
-          <li><span class="perks-check">✓</span>Free add-ons monthly</li>
-          <li><span class="perks-check">✓</span>Text-first response</li>
+          <li><span class="perks-check">✓</span> Save 20-25% off retail prices</li>
+          <li><span class="perks-check">✓</span> Priority scheduling</li>
+          <li><span class="perks-check">✓</span> Free touch-ups between visits</li>
+          <li><span class="perks-check">✓</span> Mobile service to your home</li>
+          <li><span class="perks-check">✓</span> Cancel anytime</li>
         </ul>
       </div>
     </div>
-    <div class="mem-grid">
-      <div class="card">
-        <div class="mem-tier">Monthly</div>
-        <div class="mem-name">Monthly Clean</div>
-        <div class="mem-desc">One full detail per month. Great for keeping your daily driver in top shape.</div>
-        <a href="contact.html" class="mem-cta">Get Started</a>
-      </div>
-      <div class="card featured">
-        <div class="card-badge">BEST VALUE</div>
-        <div class="mem-tier">Bi-Weekly</div>
-        <div class="mem-name">Bi-Weekly</div>
-        <div class="mem-desc">Two details per month. Most popular — always show-ready.</div>
-        <a href="contact.html" class="mem-cta primary">Get Started</a>
-      </div>
-      <div class="card">
-        <div class="mem-tier">Fleet</div>
-        <div class="mem-name">Fleet Plan</div>
-        <div class="mem-desc">Custom scheduling for businesses with multiple vehicles.</div>
-        <a href="contact.html" class="mem-cta">Get Started</a>
-      </div>
-    </div>
+
     <div class="mem-footer">
       <div>
-        <h4>Not sure which plan?</h4>
-        <p>Text us a photo and we'll recommend the right fit.</p>
+        <h4>Questions about memberships?</h4>
+        <p>Give us a call or send a message. We'll help you find the right plan.</p>
       </div>
-      <a href="sms:4014901236" class="btn-primary" style="white-space:nowrap;">Text Us</a>
+      <a href="contact.html" class="btn-primary">Contact Us</a>
     </div>
   </div>
 </section>
@@ -182,4 +197,4 @@
     <span>Professional Mobile Detailing</span>
   </div>
 </footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png'")</script></body></html>
+<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script></body></html>

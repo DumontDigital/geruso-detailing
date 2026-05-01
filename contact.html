@@ -1,87 +1,96 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Get a Quote — Geruso Detailing</title><style>
   :root {
-    --primary: #00a8cc;
-    --primary-dark: #0088aa;
-    --primary-light: #33bde8;
+    --primary: #00FF41;
+    --primary-dark: #00DD33;
+    --primary-light: #33FF66;
     --white: #ffffff;
-    --light-bg: #f8f9fa;
-    --light-bg2: #f0f1f3;
-    --border: #e0e2e7;
-    --text: #1a1a1a;
-    --text-muted: #666666;
-    --text-light: #999999;
+    --light-bg: #0a0a0a;
+    --light-bg2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #ffffff;
+    --text-muted: #aaaaaa;
+    --text-light: #888888;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background: var(--white); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
 
-  nav { position: sticky; top: 0; z-index: 100; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
   .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
   .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
   .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--text); }
+  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
   .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+  .nav-toggle { display: none; }
+  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
+  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
   .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: color 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); }
+  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
+  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
+  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
   .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
-  .nav-phone:hover { color: var(--primary); }
-  .btn-quote-nav { background: var(--primary); color: white; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: background 0.2s, transform 0.15s; }
-  .btn-quote-nav:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
+  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
+  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
 
-  .btn-primary { background: var(--primary); color: white; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; }
-  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-  .btn-outline:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
+  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
+  .nav-toggle:checked ~ .nav-phone { display: block; }
 
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; }
+  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
+
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 8px rgba(0,255,65,0.3); }
   .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
   .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
   section { padding: 80px 48px; }
   .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
 
-  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.2s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 8px 24px rgba(0, 168, 204, 0.1); transform: translateY(-2px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0, 168, 204, 0.02) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; }
+  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
+  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
+  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
+  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
 
-  footer { background: var(--light-bg); border-top: 1px solid var(--border); padding: 60px 48px 0; }
+  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
   .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
   .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
   .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); margin-bottom: 16px; }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
   .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: color 0.2s; }
-  .footer-links a:hover { color: var(--primary); }
+  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
   .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
 
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-links { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
+  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
   #contact { background: var(--light-bg); }
   .quote-layout { display: grid; grid-template-columns: 1fr 520px; gap: 60px; align-items: start; }
   .contact-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
-  .contact-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.2s; }
-  .contact-card:hover { border-color: var(--primary); background: var(--light-bg2); }
-  .contact-icon { width: 40px; height: 40px; background: rgba(0, 168, 204, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .contact-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.2s; }
+  .contact-card:hover { border-color: var(--primary); box-shadow: 0 0 16px rgba(0,255,65,0.2); }
+  .contact-icon { width: 40px; height: 40px; background: rgba(0,255,65,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; color: var(--primary); }
   .contact-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
   .contact-val { font-size: 15px; font-weight: 700; color: var(--text); }
-  .quote-form-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+  .quote-form-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
   .form-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
   .form-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
   .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
-  .form-input, .form-select, .form-textarea { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border 0.2s; width: 100%; }
+  .form-input, .form-select, .form-textarea { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border 0.2s; width: 100%; }
   .form-input::placeholder, .form-textarea::placeholder { color: var(--text-light); }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
-  .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+  .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
   .form-textarea { resize: vertical; min-height: 100px; }
-  .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 18px; transition: background 0.2s, transform 0.15s; }
-  .btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
-  .success-msg { display: none; background: rgba(0, 168, 204, 0.1); border: 1px solid rgba(0, 168, 204, 0.3); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--primary); margin-top: 14px; text-align: center; }
+  .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 18px; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+  .btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+  .success-msg { display: none; background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--primary); margin-top: 14px; text-align: center; }
   @media(max-width:960px){ .quote-layout{grid-template-columns:1fr} .form-row{grid-template-columns:1fr} }
 </style></head><body>
 <nav>
@@ -92,11 +101,17 @@
       <span class="nav-brand-sub">North Providence, RI</span>
     </div>
   </a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle">
+  <label for="nav-toggle" class="nav-toggle-label">
+    <span></span>
+    <span></span>
+    <span></span>
+  </label>
   <ul class="nav-links">
     <li><a href="services.html" >Services</a></li>
     <li><a href="work.html" >Our Work</a></li>
     <li><a href="schedule.html" >Schedule</a></li>
-    <li><a href="reviews.html" class="active">Reviews</a></li>
+    <li><a href="reviews.html" >Reviews</a></li>
   </ul>
   <div class="nav-actions">
     <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
@@ -106,74 +121,80 @@
 
 <section id="contact">
   <div class="section-inner">
+    <div class="section-label">CONTACT US</div>
+    <h1 class="section-heading">Get Your Free Quote</h1>
+    <p class="section-sub">Fill out the form or call us directly. We'll respond within 24 hours with a detailed quote and availability.</p>
+
     <div class="quote-layout">
       <div>
-        <div class="section-label">CONTACT</div>
-        <h1 class="section-heading">Get your free quote.</h1>
-        <p class="section-sub">Send us the details and we'll get back to you in under 30 minutes. Text us a photo of your vehicle for the most accurate quote.</p>
         <div class="contact-cards">
           <a href="tel:4014901236" class="contact-card">
-            <div class="contact-icon">📞</div>
-            <div><div class="contact-label">Call / Text</div><div class="contact-val">401-490-1236</div></div>
+            <div class="contact-icon">☎</div>
+            <div>
+              <div class="contact-label">Phone</div>
+              <div class="contact-val">401-490-1236</div>
+            </div>
           </a>
           <a href="sms:4014901236" class="contact-card">
-            <div class="contact-icon">💬</div>
-            <div><div class="contact-label">Quickest Response</div><div class="contact-val">Text a Photo</div></div>
+            <div class="contact-icon">✉</div>
+            <div>
+              <div class="contact-label">Text Message</div>
+              <div class="contact-val">401-490-1236</div>
+            </div>
           </a>
-          <div class="contact-card" style="cursor:default;">
+          <div class="contact-card">
             <div class="contact-icon">📍</div>
-            <div><div class="contact-label">Location</div><div class="contact-val">North Providence, RI</div></div>
+            <div>
+              <div class="contact-label">Location</div>
+              <div class="contact-val">North Providence, RI</div>
+            </div>
           </div>
         </div>
       </div>
+
       <div class="quote-form-card">
-        <div class="form-title">Request a Quote</div>
-        <div class="form-sub">We'll respond within 30 minutes.</div>
-        <form onsubmit="submitForm(event)">
+        <h3 class="form-title">Request a Quote</h3>
+        <p class="form-sub">Get a free estimate for your vehicle.</p>
+        <form id="quoteForm">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">First Name</label>
-              <input type="text" class="form-input" placeholder="Your name" required>
+              <input type="text" class="form-input" name="firstName" placeholder="John" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Phone / Text</label>
-              <input type="tel" class="form-input" placeholder="401-000-0000" required>
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-input" name="lastName" placeholder="Doe" required>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Vehicle (Year, Make, Model)</label>
-            <input type="text" class="form-input" placeholder="e.g. 2019 Toyota Camry">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" name="email" placeholder="john@example.com" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Package</label>
-            <select class="form-select">
-              <option value="">Select a package…</option>
-              <option>Basic — $85</option>
-              <option>Premium — $170</option>
-              <option>Ultra Premium — $245</option>
-              <option>Membership</option>
-              <option>Not sure — need a quote</option>
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" name="phone" placeholder="(401) 555-0000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Type</label>
+            <select class="form-select" name="service" required>
+              <option value="">Select a service...</option>
+              <option value="basic">Basic Package - $85</option>
+              <option value="premium">Premium Package - $170</option>
+              <option value="ultra">Ultra Premium - $245</option>
+              <option value="membership">Membership Plan</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Notes (optional)</label>
-            <textarea class="form-textarea" placeholder="Any specific requests or vehicle condition..."></textarea>
+            <label class="form-label">Message</label>
+            <textarea class="form-textarea" name="message" placeholder="Tell us about your vehicle and any special requests..."></textarea>
           </div>
-          <button type="submit" class="btn-submit">Send Request →</button>
-          <div class="success-msg" id="successMsg">✓ Request sent! We'll text you back within 30 minutes.</div>
+          <button type="submit" class="btn-submit">Get Your Quote</button>
+          <div class="success-msg" id="successMsg">Quote request sent! We'll contact you within 24 hours.</div>
         </form>
       </div>
     </div>
   </div>
 </section>
-<script>
-  function submitForm(e) {
-    e.preventDefault();
-    document.getElementById('successMsg').style.display = 'block';
-    e.target.reset();
-    setTimeout(() => { document.getElementById('successMsg').style.display = 'none'; }, 5000);
-  }
-</script>
 
 <footer>
   <div class="footer-inner">
@@ -206,4 +227,21 @@
     <span>Professional Mobile Detailing</span>
   </div>
 </footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png'")</script></body></html>
+<script>
+  document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
+  document.getElementById('quoteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/api/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(formData))
+    })
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('successMsg').style.display = 'block';
+      this.reset();
+    })
+    .catch(e => console.error('Error:', e));
+  });
+</script></body></html>
