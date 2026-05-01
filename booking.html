@@ -91,11 +91,12 @@
     .time-slots-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .time-slots-header { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
     .time-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
-    .time-slot { padding: 14px 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; background: var(--light-bg); }
+    .time-slot { padding: 14px 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; background: var(--light-bg); position: relative; }
     .time-slot.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
     .time-slot:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
     .time-slot.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: var(--light-bg2); }
+    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.6; background: var(--light-bg2); border-color: var(--error); }
+    .time-slot.disabled::after { content: 'Taken'; position: absolute; top: -8px; right: 4px; background: var(--error); color: white; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 700; letter-spacing: 0.5px; }
 
     .booking-form { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .form-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; }
@@ -223,6 +224,7 @@
             <div class="summary-item"><span class="summary-label">Date:</span> <span class="summary-value" id="summaryDate">Not selected</span></div>
             <div class="summary-item"><span class="summary-label">Time:</span> <span class="summary-value" id="summaryTime">Not selected</span></div>
             <div class="summary-item"><span class="summary-label">Service:</span> <span class="summary-value" id="summaryService">Not selected</span></div>
+            <div class="summary-item"><span class="summary-label">Price:</span> <span class="summary-value" id="summaryPrice">Not selected</span></div>
           </div>
 
           <div class="form-group">
@@ -259,15 +261,15 @@
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
               <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
-              <option value="Interior Detailing">Interior Detailing - $100</option>
-              <option value="Car Wash">Car Wash - $85</option>
+              <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
+              <option value="Car Wash">Car Wash - Starting from $85</option>
               <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
-              <option value="Premium Package">Premium Package - $170</option>
+              <option value="Premium Package">Premium Package - Starting from $170</option>
               <option value="Ultra Premium">Ultra Premium - $335</option>
-              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
-              <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
+              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 Extra Fee</option>
+              <option value="Headlight Restoration">Headlight Restoration - $50 per Headlight</option>
               <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75</option>
-              <option value="Full Vehicle Polish">Full Vehicle Polish - $250 (Location Only)</option>
+              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
             </select>
           </div>
 
@@ -469,6 +471,30 @@
     reader.readAsDataURL(file);
   });
 
+  // Service pricing configuration
+  const servicePriceMap = {
+    'Full Motorcycle Service': { price: 70, display: '$70' },
+    'Interior Detailing': { price: 100, display: 'Starting from $100' },
+    'Car Wash': { price: 85, display: 'Starting from $85' },
+    'Ceramic Coating': { price: 400, display: '$400' },
+    'Premium Package': { price: 170, display: 'Starting from $170' },
+    'Ultra Premium': { price: 335, display: '$335' },
+    'Pet Hair / Odor Elimination': { price: 50, display: '$50 Extra Fee' },
+    'Headlight Restoration': { price: 50, display: '$50 per Headlight' },
+    'Engine Bay Cleaning': { price: 75, display: '$75' },
+    'Full Vehicle Polish': { price: 250, display: 'Starting from $250' }
+  };
+
+  // Extract price display from service type
+  function getServicePrice(serviceType) {
+    for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
+      if (serviceType.includes(serviceName)) {
+        return priceData.display;
+      }
+    }
+    return 'Contact for pricing';
+  }
+
   let currentDate = new Date();
   let selectedDate = null;
   let selectedTime = null;
@@ -488,19 +514,25 @@
   // Fetch booked time slots on page load
   async function loadBookedTimeSlots() {
     try {
-      const response = await fetch('/api/bookings');
-      if (!response.ok) return;
+      console.log('[Calendar] Loading booked time slots...');
+      const response = await fetch('/api/bookings/public/booked-slots');
+      if (!response.ok) {
+        console.warn('[Calendar] Failed to load booked slots, status:', response.status);
+        return;
+      }
+
       const data = await response.json();
 
+      // Clear previous booked slots
+      bookedTimeSlots = {};
+
       // Build a map of booked times
-      if (data.bookings) {
-        data.bookings.forEach(booking => {
-          const key = `${booking.booking_date} ${booking.booking_time}`;
-          bookedTimeSlots[key] = true;
-        });
+      if (data.bookedSlots) {
+        bookedTimeSlots = data.bookedSlots;
+        console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
       }
     } catch (error) {
-      console.warn('Could not load booked slots:', error);
+      console.warn('[Calendar] Could not load booked slots:', error);
     }
   }
 
@@ -511,10 +543,15 @@
   document.querySelector('select[name="serviceType"]').addEventListener('change', (e) => {
     const serviceValue = e.target.value;
     const summaryElement = document.getElementById('summaryService');
+    const priceElement = document.getElementById('summaryPrice');
+
     if (serviceValue) {
       summaryElement.textContent = serviceValue;
+      const priceDisplay = getServicePrice(serviceValue);
+      priceElement.textContent = priceDisplay;
     } else {
       summaryElement.textContent = 'Not selected';
+      priceElement.textContent = 'Not selected';
     }
   });
 
@@ -652,19 +689,20 @@
       if (isBooked) {
         slotBtn.classList.add('disabled');
         slotBtn.disabled = true;
-        slotBtn.textContent = slot + ' (Booked)';
       } else {
         slotBtn.classList.add('available'); // Mark available times in light green
       }
 
-      if (selectedTime === slot) {
+      if (selectedTime === slot && !isBooked) {
         slotBtn.classList.add('selected');
       }
 
       slotBtn.addEventListener('click', () => {
-        selectedTime = slot;
-        document.getElementById('summaryTime').textContent = slot;
-        renderTimeSlots(dayOfWeek, date);
+        if (!isBooked) {
+          selectedTime = slot;
+          document.getElementById('summaryTime').textContent = slot;
+          renderTimeSlots(dayOfWeek, date);
+        }
       });
 
       timeSlotsGrid.appendChild(slotBtn);
@@ -756,13 +794,40 @@
 
       if (response.ok) {
         showMessage('Booking confirmed! Check your email for details.', 'success');
+
+        // Reload booked time slots from server to reflect the new booking immediately
+        console.log('[Booking Success] Reloading booked time slots...');
+        await loadBookedTimeSlots();
+
         e.target.reset();
         vehiclePhotoBase64 = null;
-        selectedDate = null;
-        selectedTime = null;
         document.getElementById('bookingSummary').style.display = 'none';
         document.getElementById('photoPreview').style.display = 'none';
+
+        // Re-render calendar and time slots to show the newly booked slot
         renderCalendar();
+        if (selectedDate) {
+          const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
+
+        // Clear selection after re-render
+        selectedDate = null;
+        selectedTime = null;
+      } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
+        // Handle double booking - time slot was just taken
+        showMessage('This time was just booked. Please choose another slot.', 'error');
+        console.warn('[Booking Error] Time slot taken - reloading available slots');
+
+        // Reload booked time slots immediately to reflect the competing booking
+        await loadBookedTimeSlots();
+
+        // Re-render time slots to show the newly booked slot as unavailable
+        renderCalendar();
+        if (selectedDate) {
+          const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
       } else {
         // Show actual backend error message
         const errorMessage = data.error || data.message || 'Booking failed. Please try again.';

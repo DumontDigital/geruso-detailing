@@ -160,6 +160,7 @@
                 <th>Customer</th>
                 <th>Address</th>
                 <th>Service</th>
+                <th>Price</th>
                 <th>Photo</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -167,7 +168,7 @@
             </thead>
             <tbody id="bookingsTableBody">
               <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading bookings...</td>
+                <td colspan="8" style="text-align: center; color: var(--text-muted);">Loading bookings...</td>
               </tr>
             </tbody>
           </table>
@@ -298,6 +299,30 @@
 </div>
 
 <script>
+  // Service pricing configuration
+  const servicePriceMap = {
+    'Full Motorcycle Service': { price: 70, display: '$70' },
+    'Interior Detailing': { price: 100, display: 'Starting from $100' },
+    'Car Wash': { price: 85, display: 'Starting from $85' },
+    'Ceramic Coating': { price: 400, display: '$400' },
+    'Premium Package': { price: 170, display: 'Starting from $170' },
+    'Ultra Premium': { price: 335, display: '$335' },
+    'Pet Hair / Odor Elimination': { price: 50, display: '$50 Extra Fee' },
+    'Headlight Restoration': { price: 50, display: '$50 per Headlight' },
+    'Engine Bay Cleaning': { price: 75, display: '$75' },
+    'Full Vehicle Polish': { price: 250, display: 'Starting from $250' }
+  };
+
+  // Extract price display from service type
+  function getServicePrice(serviceType) {
+    for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
+      if (serviceType.includes(serviceName)) {
+        return priceData.display;
+      }
+    }
+    return 'Contact for pricing';
+  }
+
   // Check authentication
   const token = localStorage.getItem('adminToken');
   if (!token) {
@@ -339,18 +364,21 @@
 
       const tbody = document.getElementById('bookingsTableBody');
       if (!data.bookings || data.bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
         return;
       }
 
-      tbody.innerHTML = data.bookings.map(booking => `
+      tbody.innerHTML = data.bookings.map(booking => {
+        const price = getServicePrice(booking.service_type);
+        return `
         <tr>
           <td>${new Date(booking.booking_date).toLocaleDateString()} ${booking.booking_time}</td>
           <td>${booking.customer_name}</td>
           <td><span title="${booking.service_address}">${booking.service_address.substring(0, 30)}...</span></td>
           <td>${booking.service_type}</td>
+          <td style="color: var(--primary); font-weight: 600;">${price}</td>
           <td style="text-align: center;">
-            ${booking.vehicle_photo ? `<button class="photo-btn" onclick="viewPhoto('${booking.id}', '${booking.vehicle_photo.substring(0, 50)}...')">📷 View</button>` : '<span style="color: #888;">—</span>'}
+            ${booking.vehicle_photo ? `<button class="photo-btn" onclick="viewPhoto('${booking.id}', '${booking.vehicle_photo.substring(0, 50)}...')">View</button>` : '<span style="color: #888;">—</span>'}
           </td>
           <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
           <td>
@@ -360,7 +388,7 @@
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     } catch (error) {
       console.error('Error loading bookings:', error);
     }

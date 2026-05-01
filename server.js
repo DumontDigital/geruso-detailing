@@ -19,7 +19,15 @@ app.use(express.static(path.join(__dirname)));
 
 // Serve all HTML pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/services', (req, res) => res.sendFile(path.join(__dirname, 'services.html')));
+app.get('/services', (req, res) => {
+  const fs = require('fs');
+  let servicesHtml = fs.readFileSync(path.join(__dirname, 'services.html'), 'utf8');
+  // Inject Google Places API key if available
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
+  servicesHtml = servicesHtml.replace('YOUR_API_KEY', apiKey);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(servicesHtml);
+});
 app.get('/work', (req, res) => res.sendFile(path.join(__dirname, 'work.html')));
 app.get('/memberships', (req, res) => res.sendFile(path.join(__dirname, 'memberships.html')));
 app.get('/schedule', (req, res) => res.sendFile(path.join(__dirname, 'schedule.html')));
@@ -45,10 +53,10 @@ app.post('/api/quote', async (req, res) => {
 
     const { firstName, lastName, email, phone, service, message } = req.body;
 
-    // Validate
-    if (!firstName || !lastName || !email || !phone) {
+    // Validate (lastName is optional for quotes)
+    if (!firstName || !email || !phone) {
       console.warn('[Quote API] Validation failed - missing required fields');
-      return res.status(400).json({ error: 'All required fields must be filled' });
+      return res.status(400).json({ error: 'Name, email, and phone are required' });
     }
 
     const quoteData = { firstName, lastName, email, phone, service, message };

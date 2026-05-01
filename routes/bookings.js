@@ -1,10 +1,35 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
-const { sendBookingConfirmation } = require('../email');
+const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
 const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Get booked time slots (public endpoint - no auth required)
+router.get('/public/booked-slots', async (req, res) => {
+  try {
+    console.log('[Bookings API] GET /public/booked-slots called');
+
+    const result = await pool.query(
+      'SELECT booking_date, booking_time FROM bookings WHERE status != $1',
+      ['cancelled']
+    );
+
+    // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:00': true }
+    const bookedSlots = {};
+    result.rows.forEach(booking => {
+      const key = `${booking.booking_date} ${booking.booking_time}`;
+      bookedSlots[key] = true;
+    });
+
+    console.log('[Bookings API] Returning', result.rows.length, 'booked slots');
+    res.json({ bookedSlots });
+  } catch (error) {
+    console.error('[Bookings API] Error fetching booked slots:', error.message);
+    res.status(500).json({ error: 'Failed to fetch available slots' });
+  }
+});
 
 // Create booking (public)
 router.post('/', async (req, res) => {
@@ -41,31 +66,50 @@ router.post('/', async (req, res) => {
     const booking = result.rows[0];
     console.log('[Bookings API] Booking created successfully:', booking.id);
 
-    // Extract price from service type string if it exists
-    const priceMatch = serviceType.match(/\$(\d+)/);
-    const price = priceMatch ? priceMatch[1] : '0';
-
     // Send confirmation email to customer
     console.log('[Bookings API] Sending confirmation email to:', customerEmail);
-    const emailResult = await sendBookingConfirmation({
+    const confirmationResult = await sendBookingConfirmation({
       customerName,
       customerEmail,
       bookingDate,
       bookingTime,
       serviceType,
       serviceAddress,
-      price,
       hasPhoto: !!vehiclePhoto // Flag indicating if photo was uploaded
     });
 
-    if (!emailResult.success) {
-      console.error('[Bookings API] Failed to send booking confirmation email:', emailResult.error);
+    if (!confirmationResult.success) {
+      console.error('[Bookings API] Failed to send booking confirmation email:', confirmationResult.error);
       // Don't fail the booking if email fails, but log it
     } else {
       console.log('[Bookings API] Confirmation email sent successfully');
     }
 
-    console.log('[Bookings API] SUCCESS - Returning booking response');
+    // Send owner/admin notification email
+    console.log('[Bookings API] Sending owner notification email');
+    const ownerResult = await sendOwnerNotification({
+      customerName,
+      customerEmail,
+      customerPhone,
+      bookingDate,
+      bookingTime,
+      serviceType,
+      serviceAddress,
+      vehicleType,
+      notes,
+      hasPhoto: !!vehiclePhoto
+    });
+
+    if (!ownerResult.success) {
+      console.error('[Bookings API] Failed to send owner notification email:', ownerResult.error);
+      // Don't fail the booking if email fails, but log it
+    } else {
+      console.log('[Bookings API] Owner notification email sent successfully');
+    }
+
+    console.log('[Bookings API] ✓ SUCCESS - Booking created and confirmed');
+    console.log('[Bookings API] Booking details:', { bookingId: booking.id, bookingDate, bookingTime, customerEmail });
+
     res.json({
       success: true,
       message: 'Booking confirmed! Check your email for details.',
@@ -73,7 +117,25 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('[Bookings API] FATAL ERROR - Booking creation failed:', error.message);
+    console.error('[Bookings API] Error code:', error.code);
+    console.error('[Bookings API] Error constraint:', error.constraint);
     console.error('[Bookings API] Stack trace:', error.stack);
+
+    // Handle unique constraint violation (double booking)
+    if (error.code === '23505') {
+      console.warn('[Bookings API] ⚠️ DOUBLE BOOKING ATTEMPT DETECTED!');
+      console.warn('[Bookings API] Conflict - Date:', bookingDate, 'Time:', bookingTime);
+      console.warn('[Bookings API] Attempted by:', customerEmail);
+      console.warn('[Bookings API] Constraint:', error.constraint);
+
+      return res.status(409).json({
+        error: 'This time was just booked. Please choose another slot.',
+        code: 'TIME_SLOT_TAKEN',
+        conflictDate: bookingDate,
+        conflictTime: bookingTime
+      });
+    }
+
     res.status(500).json({ error: 'Failed to create booking: ' + error.message });
   }
 });
