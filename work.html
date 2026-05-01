@@ -117,20 +117,20 @@
     <p class="section-sub">Every detail reflects our commitment to excellence. Click to view full-size images.</p>
     <div class="work-grid">
       <div class="work-img" onclick="openLightbox(0)">
-        <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #aaaaaa;">Gallery Image 1</div>
-        <div class="work-img-overlay"><span class="work-img-tag">Professional Detail</span></div>
+        <img src="gallery-1.jpg" alt="Interior Detail - Professional Clean">
+        <div class="work-img-overlay"><span class="work-img-tag">Interior Clean</span></div>
       </div>
       <div class="work-img" onclick="openLightbox(1)">
-        <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #aaaaaa;">Gallery Image 2</div>
-        <div class="work-img-overlay"><span class="work-img-tag">Exterior Shine</span></div>
+        <img src="gallery-2.jpg" alt="Interior Detail - Premium Finish">
+        <div class="work-img-overlay"><span class="work-img-tag">Premium Detail</span></div>
       </div>
       <div class="work-img" onclick="openLightbox(2)">
-        <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #aaaaaa;">Gallery Image 3</div>
-        <div class="work-img-overlay"><span class="work-img-tag">Interior Care</span></div>
+        <img src="gallery-3.jpg" alt="Wheel Restoration - Before & After">
+        <div class="work-img-overlay"><span class="work-img-tag">Wheel Shine</span></div>
       </div>
       <div class="work-img" onclick="openLightbox(3)">
-        <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #aaaaaa;">Gallery Image 4</div>
-        <div class="work-img-overlay"><span class="work-img-tag">Finish Perfect</span></div>
+        <img src="gallery-4.jpg" alt="Paint Protection - Steering Wheel">
+        <div class="work-img-overlay"><span class="work-img-tag">Paint Protection</span></div>
       </div>
     </div>
   </div>
@@ -174,7 +174,9 @@
 </footer>
 <script>
   document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
+  const galleryImages = ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg'];
   function openLightbox(i) {
+    document.getElementById('lightbox-img').src = galleryImages[i];
     document.getElementById('lightbox').classList.add('open');
   }
   function closeLightbox() {
