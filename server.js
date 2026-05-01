@@ -122,10 +122,62 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚗 Geruso Detailing server running on port ${PORT}`);
-  console.log(`📍 Listening on 0.0.0.0:${PORT}`);
+// Initialize database on startup
+async function initializeDatabase() {
+  try {
+    const pool = require('./db');
+    const fs = require('fs');
+
+    console.log('[Database] Checking database connection...');
+
+    // Test the connection
+    const testResult = await pool.query('SELECT 1');
+    console.log('[Database] ✓ Successfully connected to PostgreSQL');
+
+    // Read the migration file
+    console.log('[Database] Running migrations...');
+    const migrationSQL = fs.readFileSync(path.join(__dirname, 'migrations/001_init_schema.sql'), 'utf8');
+
+    // Execute the migration
+    await pool.query(migrationSQL);
+    console.log('[Database] ✓ Database schema initialized successfully');
+
+    return true;
+  } catch (error) {
+    console.error('[Database] ✗ FATAL ERROR - Failed to initialize database:', error.message);
+    console.error('[Database] Stack trace:', error.stack);
+    console.error('[Database] Make sure DATABASE_URL environment variable is set correctly');
+    console.error('[Database] DATABASE_URL:', process.env.DATABASE_URL ? 'SET (length: ' + process.env.DATABASE_URL.length + ')' : 'NOT SET');
+    return false;
+  }
+}
+
+// Start server after database initialization
+async function startServer() {
+  console.log('[Startup] Starting Geruso Detailing server...');
   console.log('[Startup] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[Startup] Email config loaded: RESEND_API_KEY =', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
-  console.log('[Startup] Owner email destination: OWNER_EMAIL =', process.env.OWNER_EMAIL);
+  console.log('[Startup] Database URL:', process.env.DATABASE_URL ? 'CONFIGURED' : '⚠️ NOT SET');
+  console.log('[Startup] Email config: RESEND_API_KEY =', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
+  console.log('[Startup] Owner email:', process.env.OWNER_EMAIL || 'NOT SET');
+
+  // Initialize database
+  const dbReady = await initializeDatabase();
+
+  if (!dbReady) {
+    console.error('[Startup] ✗ Server startup failed: Database initialization failed');
+    process.exit(1);
+  }
+
+  // Start listening for connections
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n✓ 🚗 Geruso Detailing server running on port ${PORT}`);
+    console.log(`✓ 📍 Listening on http://0.0.0.0:${PORT}`);
+    console.log(`✓ Ready to accept bookings!\n`);
+  });
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error('[Startup] Unexpected error:', error);
+  process.exit(1);
 });
