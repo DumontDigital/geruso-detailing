@@ -256,8 +256,7 @@
   <div class="nav-actions">
     <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
     <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="checkoutBtn" class="btn-quote-nav">Checkout</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (<span id="cartCount" style="display: none;">0</span>)</a>
+    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
   </div>
 </nav>
 
@@ -896,6 +895,10 @@
         console.log('[Booking Success] Redirecting to Stripe Checkout...');
         showMessage('Redirecting to payment...', 'success');
 
+        // Clear cart after successful booking
+        clearCart();
+        console.log('[Booking] Cart cleared');
+
         // Redirect to Stripe Checkout
         setTimeout(() => {
           window.location.href = data.checkoutUrl;
@@ -936,6 +939,87 @@
     messageBox.className = `message-box ${type}`;
     messageBox.textContent = text;
     messageBox.style.display = 'block';
+  }
+
+  // ========================================
+  // SERVICE TAG MAP FOR ADDRESS FIELD LOGIC
+  // ========================================
+  const serviceTagMap = {
+    'Full Motorcycle Service': 'MOBILE',
+    'Interior Detailing': 'MOBILE',
+    'Car Wash': 'MOBILE',
+    'Ceramic Coating': 'LOCATION ONLY',
+    'Premium Package': 'MOBILE',
+    'Ultra Premium': 'MOBILE',
+    'Pet Hair / Odor Elimination': 'EXTRA FEE',
+    'Headlight Restoration': 'EXTRA FEE',
+    'Engine Bay Cleaning': 'MOBILE',
+    'Full Vehicle Polish': 'LOCATION ONLY'
+  };
+
+  // ========================================
+  // LOAD CART ITEMS ON PAGE LOAD
+  // ========================================
+  function loadCartOnPageLoad() {
+    const cart = getCart();
+    const serviceDropdown = document.querySelector('select[name="serviceType"]');
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      console.log('[Booking] No cart items found');
+      return;
+    }
+
+    const firstItem = cart.items[0];
+    console.log('[Booking] Loading cart item:', firstItem.serviceName);
+
+    // Pre-fill service type with first cart item
+    serviceDropdown.value = firstItem.serviceName;
+    serviceDropdown.disabled = true; // Disable dropdown since service is from cart
+
+    // Trigger change event to update summary
+    const event = new Event('change');
+    serviceDropdown.dispatchEvent(event);
+
+    // Update address field visibility based on service tag
+    const serviceTag = firstItem.serviceTag || serviceTagMap[firstItem.serviceName];
+    updateAddressFieldForCart(serviceTag);
+  }
+
+  function updateAddressFieldForCart(serviceTag) {
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+
+    console.log('[Booking] Updating address field for service tag:', serviceTag);
+
+    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
+      // Show address field for mobile/extra fee services
+      addressFieldGroup.style.display = 'block';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = true;
+      console.log('[Booking] Address field shown (required)');
+    } else if (serviceTag === 'LOCATION ONLY') {
+      // Hide address field for location-only services
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'block';
+      serviceAddressInput.required = false;
+      console.log('[Booking] Address field hidden, location note shown');
+    } else {
+      // Default: hide address field
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+      console.log('[Booking] Address field hidden (default)');
+    }
+  }
+
+  // Load cart when page initializes
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadCartOnPageLoad);
+  } else {
+    loadCartOnPageLoad();
   }
 
   // Initial render
