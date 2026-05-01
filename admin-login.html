@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Geruso Detailing</title>
+  <style>
+    :root {
+      --primary: #00FF41;
+      --primary-dark: #00DD33;
+      --primary-light: #33FF66;
+      --white: #ffffff;
+      --light-bg: #0a0a0a;
+      --light-bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --text-light: #888888;
+      --error: #ef4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+    .login-container { width: 100%; max-width: 420px; padding: 40px 24px; }
+
+    .login-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 48px 40px; }
+
+    .login-header { text-align: center; margin-bottom: 40px; }
+    .login-logo { width: 64px; height: 64px; background-size: contain; background-repeat: no-repeat; background-position: center; margin: 0 auto 20px; }
+    .login-title { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .login-sub { font-size: 14px; color: var(--text-muted); }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    .form-input { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; width: 100%; transition: border 0.2s; }
+    .form-input::placeholder { color: var(--text-light); }
+    .form-input:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+
+    .btn-login { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 24px; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
+    .btn-login:hover:not(:disabled) { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .message-box { padding: 14px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
+    .message-box.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: var(--error); }
+    .message-box.info { background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); color: var(--primary); }
+
+    .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-footer { text-align: center; margin-top: 24px; }
+    .login-footer a { color: var(--primary); text-decoration: none; font-size: 13px; transition: all 0.2s; }
+    .login-footer a:hover { text-shadow: 0 0 8px rgba(0,255,65,0.5); }
+  </style>
+</head>
+<body>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo" style="background-image: url('logo.png')"></div>
+      <h1 class="login-title">Admin Portal</h1>
+      <p class="login-sub">Geruso Detailing Management</p>
+    </div>
+
+    <form id="loginForm">
+      <div id="messageBox"></div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" name="email" placeholder="admin@gerusodetailing.com" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" name="password" placeholder="Enter your password" required>
+      </div>
+
+      <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+    </form>
+
+    <div class="login-footer">
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Forgot your password?</p>
+      <a href="/">Back to Website</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.querySelector('input[name="email"]').value;
+    const password = document.querySelector('input[name="password"]').value;
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="loading"></span> Signing in...';
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem('adminToken', data.token);
+        window.location.href = '/admin/dashboard';
+      } else {
+        showMessage(data.error || 'Login failed. Please check your credentials.', 'error');
+      }
+    } catch (error) {
+      showMessage('Connection error. Please try again.', 'error');
+      console.error('Login error:', error);
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = 'Sign In';
+    }
+  });
+
+  function showMessage(text, type) {
+    const messageBox = document.getElementById('messageBox');
+    messageBox.className = `message-box ${type}`;
+    messageBox.textContent = text;
+  }
+
+  // Check if already logged in
+  if (localStorage.getItem('adminToken')) {
+    window.location.href = '/admin/dashboard';
+  }
+</script>
+</body>
+</html>
