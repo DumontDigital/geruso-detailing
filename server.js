@@ -31,27 +31,32 @@ app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'adm
 
 // API: Handle quote requests
 app.post('/api/quote', async (req, res) => {
+  console.log('[Quote API] POST /api/quote called');
+  console.log('[Quote API] Request body:', req.body);
+
   const { firstName, lastName, email, phone, service, message } = req.body;
 
   // Validate
   if (!firstName || !lastName || !email || !phone) {
+    console.warn('[Quote API] Validation failed - missing required fields');
     return res.status(400).json({ error: 'All required fields must be filled' });
   }
 
   const quoteData = { firstName, lastName, email, phone, service, message };
 
   // Send email notification
+  console.log('[Quote API] Calling sendQuoteEmail...');
   const emailResult = await sendQuoteEmail(quoteData);
 
   if (!emailResult.success) {
-    console.error('Failed to send quote email:', emailResult.error);
+    console.error('[Quote API] Email send failed:', emailResult.error);
     return res.status(500).json({
       error: 'Failed to send quote. Please try again or call us directly.'
     });
   }
 
   // Log quote request
-  console.log('Quote request received and emailed:', { firstName, lastName, email, phone, service });
+  console.log('[Quote API] SUCCESS - Quote email sent:', { firstName, lastName, email, phone, service });
 
   // Return success
   res.json({
@@ -80,4 +85,7 @@ app.use((req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 Geruso Detailing server running on port ${PORT}`);
   console.log(`📍 Listening on 0.0.0.0:${PORT}`);
+  console.log('[Startup] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[Startup] Email config loaded: SMTP_USER =', process.env.SMTP_USER);
+  console.log('[Startup] Owner email destination: OWNER_EMAIL =', process.env.OWNER_EMAIL);
 });

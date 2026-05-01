@@ -1,6 +1,12 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+console.log('[Email Config] SMTP_HOST:', process.env.SMTP_HOST);
+console.log('[Email Config] SMTP_PORT:', process.env.SMTP_PORT);
+console.log('[Email Config] SMTP_USER:', process.env.SMTP_USER);
+console.log('[Email Config] OWNER_EMAIL:', process.env.OWNER_EMAIL);
+console.log('[Email Config] FROM_EMAIL:', process.env.FROM_EMAIL);
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   host: process.env.SMTP_HOST,
@@ -12,8 +18,21 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Test transporter connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('[Email Error] SMTP connection failed:', error.message);
+  } else {
+    console.log('[Email] SMTP connection successful');
+  }
+});
+
 const sendQuoteEmail = async (quoteData) => {
   const { firstName, lastName, email, phone, service, message } = quoteData;
+
+  console.log('[Quote Email] Sending quote email:', { firstName, lastName, email, phone, service });
+  console.log('[Quote Email] Recipient (OWNER_EMAIL):', process.env.OWNER_EMAIL);
+  console.log('[Quote Email] From (FROM_EMAIL):', process.env.FROM_EMAIL);
 
   const htmlContent = `
     <h2>New Quote Request from Geruso Detailing Website</h2>
@@ -28,15 +47,17 @@ const sendQuoteEmail = async (quoteData) => {
   `;
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: process.env.FROM_EMAIL,
       to: process.env.OWNER_EMAIL,
       subject: `New Quote Request - ${firstName} ${lastName}`,
       html: htmlContent,
     });
+    console.log('[Quote Email] SUCCESS - Message ID:', info.messageId);
     return { success: true };
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error('[Quote Email] FAILED - Error:', error.message);
+    console.error('[Quote Email] Full error:', error);
     return { success: false, error: error.message };
   }
 };
