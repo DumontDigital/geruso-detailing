@@ -41,6 +41,15 @@ router.post('/checkout', async (req, res) => {
     console.log('[Bookings API] POST /checkout called');
     console.log('[Bookings API] Request body:', JSON.stringify(req.body, null, 2));
 
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+      console.warn('[Bookings API] Stripe keys not configured');
+      return res.status(503).json({
+        error: 'Stripe checkout is not connected yet. Please try again later.',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
+    }
+
     const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto } = req.body;
 
     // Validate required fields

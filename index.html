@@ -507,6 +507,90 @@
     .hero-title { font-size: 36px; }
     .hero-description { font-size: 16px; }
   }
+
+  /* ── CART ── */
+  .cart-link {
+    background: var(--primary);
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 0 12px rgba(0,255,65,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .cart-link:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(0,255,65,0.6);
+  }
+
+  .cart-modal {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: var(--light-bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 99;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cart-content {
+    padding: 20px;
+  }
+
+  .cart-content h2 {
+    font-size: 18px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    text-shadow: 0 0 8px rgba(0,255,65,0.3);
+  }
+
+  .cart-total {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .cart-modal button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  #cartItems {
+    margin-bottom: 16px;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 600px) {
+    .cart-modal {
+      width: calc(100% - 40px);
+      right: 20px;
+      left: 20px;
+      top: auto;
+      bottom: 20px;
+    }
+
+    .nav-actions {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
 </style></head><body>
 <nav>
   <a href="index.html" class="nav-brand">
@@ -530,9 +614,22 @@
   </ul>
   <div class="nav-actions">
     <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
+    <a href="#" id="cartBtn" class="cart-link">Cart (<span id="cartCount" style="display: none;">0</span>)</a>
+    <a href="#" id="checkoutBtn" class="btn-quote-nav">Checkout</a>
     <a href="booking.html" class="btn-quote-nav">Book Now</a>
   </div>
 </nav>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="cart-modal" style="display: none;">
+  <div class="cart-content">
+    <h2>Your Cart</h2>
+    <div id="cartItems"></div>
+    <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
+    <button id="proceedCheckout" class="btn-primary">Proceed to Checkout</button>
+    <button id="closeCart" class="btn-secondary">Close</button>
+  </div>
+</div>
 
 <section id="hero">
   <div class="hero-content">
@@ -601,4 +698,5 @@
     <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
   </div>
 </footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script></body></html>
+<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
+<script src="cart.js"></script></body></html>
