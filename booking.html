@@ -133,6 +133,12 @@
     .address-suggestion-item.selected { background: rgba(0,255,65,0.2); color: var(--primary); }
     .form-group { position: relative; }
 
+    .file-input-wrapper { position: relative; }
+    .form-file-input { display: none; }
+    .file-input-label { display: flex; align-items: center; justify-content: center; background: var(--light-bg); border: 2px dashed var(--primary); border-radius: 8px; padding: 24px; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .file-input-label:hover { background: rgba(0,255,65,0.1); border-color: var(--primary-light); }
+    .file-input-text { font-size: 14px; color: var(--text-muted); }
+
     @media(max-width:960px) {
       .booking-container { grid-template-columns: 1fr; gap: 40px; }
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
@@ -281,6 +287,20 @@
             <textarea class="form-textarea" name="notes" placeholder="Any special instructions or requests..."></textarea>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">Upload Photo (Optional)</label>
+            <div class="file-input-wrapper">
+              <input type="file" class="form-file-input" id="vehiclePhotoInput" name="vehiclePhoto" accept="image/jpeg,image/png,image/heic,.jpg,.jpeg,.png,.heic">
+              <label for="vehiclePhotoInput" class="file-input-label">
+                <span class="file-input-text">Choose a photo of your vehicle (JPG, PNG, HEIC)</span>
+              </label>
+              <div id="photoPreview" style="display: none; margin-top: 12px;">
+                <img id="photoPreviewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);">
+                <p id="photoFileName" style="font-size: 12px; color: var(--text-muted); margin-top: 8px;"></p>
+              </div>
+            </div>
+          </div>
+
           <button type="submit" class="btn-submit" id="submitBtn">Complete Booking</button>
         </form>
       </div>
@@ -412,6 +432,42 @@
   } else {
     window.addEventListener('load', initializeAddressAutocomplete);
   }
+
+  // Handle vehicle photo upload and preview
+  let vehiclePhotoBase64 = null;
+
+  document.getElementById('vehiclePhotoInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      vehiclePhotoBase64 = null;
+      document.getElementById('photoPreview').style.display = 'none';
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      showMessage('Photo is too large. Please choose a file under 5MB.', 'error');
+      e.target.value = '';
+      vehiclePhotoBase64 = null;
+      document.getElementById('photoPreview').style.display = 'none';
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      vehiclePhotoBase64 = event.target.result;
+
+      // Show preview
+      const img = document.getElementById('photoPreviewImg');
+      const nameEl = document.getElementById('photoFileName');
+      img.src = vehiclePhotoBase64;
+      nameEl.textContent = file.name;
+      document.getElementById('photoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
 
   let currentDate = new Date();
   let selectedDate = null;
@@ -643,6 +699,7 @@
       serviceAddress: finalAddress,
       bookingDate: selectedDate.toISOString().split('T')[0],
       bookingTime: selectedTime,
+      vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
     };
 
     document.getElementById('submitBtn').disabled = true;

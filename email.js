@@ -60,7 +60,7 @@ const sendQuoteEmail = async (quoteData) => {
 };
 
 const sendBookingConfirmation = async (bookingData) => {
-  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, price } = bookingData;
+  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, price, hasPhoto } = bookingData;
 
   const htmlContent = `
     <h2>Booking Confirmation - Geruso Detailing</h2>
@@ -72,6 +72,7 @@ const sendBookingConfirmation = async (bookingData) => {
     <p><strong>Time:</strong> ${bookingTime}</p>
     <p><strong>Service Address:</strong> ${serviceAddress}</p>
     <p><strong>Price:</strong> $${price}</p>
+    ${hasPhoto ? '<p><strong>Vehicle Photo:</strong> ✓ Uploaded</p>' : ''}
     <hr>
     <p>If you need to reschedule or cancel, please contact us at 401-490-1236.</p>
     <p>We look forward to detailing your vehicle!</p>

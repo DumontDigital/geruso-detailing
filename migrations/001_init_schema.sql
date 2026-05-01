@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   booking_time VARCHAR(20) NOT NULL,
   vehicle_type VARCHAR(50),
   notes TEXT,
+  vehicle_photo TEXT,
   status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
