@@ -1,31 +1,11 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
-console.log('[Email Config] SMTP_HOST:', process.env.SMTP_HOST);
-console.log('[Email Config] SMTP_PORT:', process.env.SMTP_PORT);
-console.log('[Email Config] SMTP_USER:', process.env.SMTP_USER);
+console.log('[Email Config] Resend API Key:', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
 console.log('[Email Config] OWNER_EMAIL:', process.env.OWNER_EMAIL);
 console.log('[Email Config] FROM_EMAIL:', process.env.FROM_EMAIL);
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
-// Test transporter connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('[Email Error] SMTP connection failed:', error.message);
-  } else {
-    console.log('[Email] SMTP connection successful');
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendQuoteEmail = async (quoteData) => {
   const { firstName, lastName, email, phone, service, message } = quoteData;
@@ -33,16 +13,11 @@ const sendQuoteEmail = async (quoteData) => {
   console.log('[Quote Email] Sending quote email:', { firstName, lastName, email, phone, service });
   console.log('[Quote Email] Recipient (OWNER_EMAIL):', process.env.OWNER_EMAIL);
   console.log('[Quote Email] From (FROM_EMAIL):', process.env.FROM_EMAIL);
-  console.log('[Quote Email] SMTP_HOST:', process.env.SMTP_HOST);
-  console.log('[Quote Email] SMTP_USER:', process.env.SMTP_USER);
 
   // Check if environment variables are set
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error('[Quote Email] FAILED - Missing SMTP configuration');
-    console.error('[Quote Email] SMTP_HOST:', process.env.SMTP_HOST ? 'SET' : 'NOT SET');
-    console.error('[Quote Email] SMTP_USER:', process.env.SMTP_USER ? 'SET' : 'NOT SET');
-    console.error('[Quote Email] SMTP_PASS:', process.env.SMTP_PASS ? 'SET' : 'NOT SET');
-    return { success: false, error: 'Email configuration missing. Please contact support.' };
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[Quote Email] FAILED - Missing RESEND_API_KEY');
+    return { success: false, error: 'Email service not configured. Please contact support.' };
   }
 
   if (!process.env.OWNER_EMAIL) {
@@ -63,25 +38,23 @@ const sendQuoteEmail = async (quoteData) => {
   `;
 
   try {
-    // Create a promise with a 10-second timeout
-    const emailPromise = transporter.sendMail({
-      from: process.env.FROM_EMAIL,
+    console.log('[Quote Email] Calling Resend API...');
+    const result = await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: process.env.OWNER_EMAIL,
       subject: `New Quote Request - ${firstName} ${lastName}`,
       html: htmlContent,
     });
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Email send timeout - SMTP server not responding')), 10000)
-    );
+    if (result.error) {
+      console.error('[Quote Email] FAILED - Resend error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email. Please try again.' };
+    }
 
-    const info = await Promise.race([emailPromise, timeoutPromise]);
-    console.log('[Quote Email] SUCCESS - Message ID:', info.messageId);
+    console.log('[Quote Email] SUCCESS - Email ID:', result.data.id);
     return { success: true };
   } catch (error) {
     console.error('[Quote Email] FAILED - Error:', error.message);
-    console.error('[Quote Email] Error code:', error.code);
-    console.error('[Quote Email] Error response:', error.response);
     return { success: false, error: error.message };
   }
 };
@@ -107,15 +80,21 @@ const sendBookingConfirmation = async (bookingData) => {
   `;
 
   try {
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL,
+    const result = await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: customerEmail,
       subject: `Booking Confirmation - ${serviceType}`,
       html: htmlContent,
     });
+
+    if (result.error) {
+      console.error('Booking confirmation email error:', result.error);
+      return { success: false, error: result.error.message };
+    }
+
     return { success: true };
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error('Booking confirmation email error:', error);
     return { success: false, error: error.message };
   }
 };
