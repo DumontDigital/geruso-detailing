@@ -44,6 +44,26 @@ CREATE TABLE IF NOT EXISTS availability (
   UNIQUE(date, service_type)
 );
 
+-- Add Stripe payment columns if they don't exist (for existing databases)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'payment_status') THEN
+    ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(50) DEFAULT 'unpaid';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'stripe_session_id') THEN
+    ALTER TABLE bookings ADD COLUMN stripe_session_id TEXT;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'stripe_payment_intent_id') THEN
+    ALTER TABLE bookings ADD COLUMN stripe_payment_intent_id TEXT;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'deposit_amount') THEN
+    ALTER TABLE bookings ADD COLUMN deposit_amount INTEGER DEFAULT 2500;
+  END IF;
+END $$;
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(customer_email);
