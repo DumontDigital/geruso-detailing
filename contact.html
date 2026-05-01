@@ -90,7 +90,10 @@
   .form-textarea { resize: vertical; min-height: 100px; }
   .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 18px; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
   .btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
-  .success-msg { display: none; background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--primary); margin-top: 14px; text-align: center; }
+  .success-msg { display: none; background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--primary); margin-bottom: 18px; text-align: center; animation: slideIn 0.3s ease; }
+  .success-msg.success { display: block; background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
+  .success-msg.error { display: block; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
   @media(max-width:960px){ .quote-layout{grid-template-columns:1fr} .form-row{grid-template-columns:1fr} }
 </style></head><body>
 <nav>
@@ -234,19 +237,96 @@
 </footer>
 <script>
   document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
-  document.getElementById('quoteForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    fetch('/api/quote', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.fromEntries(formData))
-    })
-    .then(r => r.json())
-    .then(d => {
-      document.getElementById('successMsg').style.display = 'block';
-      this.reset();
-    })
-    .catch(e => console.error('Error:', e));
+
+  // Wait for DOM to be ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const quoteForm = document.getElementById('quoteForm');
+    const successMsg = document.getElementById('successMsg');
+
+    if (!quoteForm) {
+      console.error('[Quote Form] ERROR: Form element not found!');
+      return;
+    }
+
+    console.log('[Quote Form] Form initialized and ready');
+
+    quoteForm.addEventListener('submit', async function(e) {
+      console.log('[Quote Form] Submit event triggered');
+      e.preventDefault();
+
+      // Validate form fields
+      const firstName = this.querySelector('[name="firstName"]').value.trim();
+      const lastName = this.querySelector('[name="lastName"]').value.trim();
+      const email = this.querySelector('[name="email"]').value.trim();
+      const phone = this.querySelector('[name="phone"]').value.trim();
+      const service = this.querySelector('[name="service"]').value;
+      const message = this.querySelector('[name="message"]').value.trim();
+
+      console.log('[Quote Form] Form data:', { firstName, lastName, email, phone, service });
+
+      // Validate required fields
+      if (!firstName || !lastName || !email || !phone) {
+        console.error('[Quote Form] Validation failed: missing required fields');
+        showError('Please fill in all required fields (First Name, Last Name, Email, Phone)');
+        return;
+      }
+
+      // Prepare data
+      const formDataObj = { firstName, lastName, email, phone, service, message };
+
+      // Disable button and show loading state
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
+      try {
+        console.log('[Quote Form] Sending to /api/quote...');
+        const response = await fetch('/api/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formDataObj)
+        });
+
+        console.log('[Quote Form] Response status:', response.status);
+        const data = await response.json();
+        console.log('[Quote Form] Response data:', data);
+
+        if (response.ok) {
+          console.log('[Quote Form] SUCCESS');
+          successMsg.style.display = 'block';
+          successMsg.className = 'success-msg success';
+          quoteForm.reset();
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+
+          // Auto-hide success message after 5 seconds
+          setTimeout(() => {
+            successMsg.style.display = 'none';
+          }, 5000);
+        } else {
+          console.error('[Quote Form] Server returned error:', data.error);
+          showError(data.error || 'Failed to send quote. Please try again.');
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }
+      } catch (error) {
+        console.error('[Quote Form] Network/Fetch error:', error);
+        showError('Error submitting form: ' + error.message);
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+
+    function showError(message) {
+      console.error('[Quote Form] ERROR:', message);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'success-msg error';
+      errorDiv.textContent = message;
+      quoteForm.insertBefore(errorDiv, quoteForm.firstChild);
+
+      // Auto-remove error after 5 seconds
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
   });
 </script></body></html>
