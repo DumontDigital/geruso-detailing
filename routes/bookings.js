@@ -16,11 +16,14 @@ router.get('/public/booked-slots', async (req, res) => {
       ['cancelled']
     );
 
-    // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:00': true }
+    // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
     result.rows.forEach(booking => {
-      const key = `${booking.booking_date} ${booking.booking_time}`;
+      // Format date as ISO string (YYYY-MM-DD) to match frontend format
+      const dateStr = new Date(booking.booking_date).toISOString().split('T')[0];
+      const key = `${dateStr} ${booking.booking_time}`;
       bookedSlots[key] = true;
+      console.log('[Bookings API] Booked slot:', key);
     });
 
     console.log('[Bookings API] Returning', result.rows.length, 'booked slots');
