@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+// Stripe Checkout implementation deployed
+
 const { sendQuoteEmail } = require('./email');
 const authRoutes = require('./routes/auth');
 const bookingsRoutes = require('./routes/bookings');
