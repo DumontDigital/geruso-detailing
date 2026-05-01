@@ -647,9 +647,19 @@
       summaryElement.textContent = serviceValue;
       const priceDisplay = getServicePrice(serviceValue);
       priceElement.textContent = priceDisplay;
+
+      // Get the service tag and update address field visibility
+      const serviceTag = getServiceTagFromName(serviceValue);
+      updateAddressFieldVisibility(serviceTag);
     } else {
       summaryElement.textContent = 'Not selected';
       priceElement.textContent = 'Not selected';
+
+      // Hide address field if no service selected
+      const addressFieldGroup = document.getElementById('addressFieldGroup');
+      const locationNoteGroup = document.getElementById('locationNoteGroup');
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
     }
   });
 
@@ -958,6 +968,45 @@
   };
 
   // ========================================
+  // GET SERVICE TAG FROM SERVICE NAME
+  // ========================================
+  function getServiceTagFromName(serviceName) {
+    return serviceTagMap[serviceName] || 'MOBILE';
+  }
+
+  // ========================================
+  // UPDATE ADDRESS FIELD VISIBILITY
+  // ========================================
+  function updateAddressFieldVisibility(serviceTag) {
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+
+    console.log('[Booking] Updating address field for service tag:', serviceTag);
+
+    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
+      // Show address field for mobile/extra fee services
+      addressFieldGroup.style.display = 'block';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = true;
+      console.log('[Booking] Address field shown (required)');
+    } else if (serviceTag === 'LOCATION ONLY') {
+      // Hide address field for location-only services
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'block';
+      serviceAddressInput.required = false;
+      serviceAddressInput.value = ''; // Clear previous address
+      console.log('[Booking] Address field hidden, location note shown');
+    } else {
+      // Default: hide address field
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+      console.log('[Booking] Address field hidden (default)');
+    }
+  }
+
+  // ========================================
   // LOAD CART ITEMS ON PAGE LOAD
   // ========================================
   function loadCartOnPageLoad() {
@@ -978,42 +1027,11 @@
     serviceDropdown.value = firstItem.serviceName;
     serviceDropdown.disabled = true; // Disable dropdown since service is from cart
 
-    // Trigger change event to update summary
+    // Trigger change event to update summary and address field
     const event = new Event('change');
     serviceDropdown.dispatchEvent(event);
-
-    // Update address field visibility based on service tag
-    const serviceTag = firstItem.serviceTag || serviceTagMap[firstItem.serviceName];
-    updateAddressFieldForCart(serviceTag);
   }
 
-  function updateAddressFieldForCart(serviceTag) {
-    const addressFieldGroup = document.getElementById('addressFieldGroup');
-    const locationNoteGroup = document.getElementById('locationNoteGroup');
-    const serviceAddressInput = document.getElementById('serviceAddressInput');
-
-    console.log('[Booking] Updating address field for service tag:', serviceTag);
-
-    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
-      // Show address field for mobile/extra fee services
-      addressFieldGroup.style.display = 'block';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = true;
-      console.log('[Booking] Address field shown (required)');
-    } else if (serviceTag === 'LOCATION ONLY') {
-      // Hide address field for location-only services
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'block';
-      serviceAddressInput.required = false;
-      console.log('[Booking] Address field hidden, location note shown');
-    } else {
-      // Default: hide address field
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
-      console.log('[Booking] Address field hidden (default)');
-    }
-  }
 
   // Load cart when page initializes
   if (document.readyState === 'loading') {
