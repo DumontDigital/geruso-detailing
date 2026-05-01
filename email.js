@@ -60,7 +60,7 @@ const sendQuoteEmail = async (quoteData) => {
 };
 
 const sendBookingConfirmation = async (bookingData) => {
-  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, price } = bookingData;
+  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, price } = bookingData;
 
   const htmlContent = `
     <h2>Booking Confirmation - Geruso Detailing</h2>
@@ -70,6 +70,7 @@ const sendBookingConfirmation = async (bookingData) => {
     <p><strong>Service:</strong> ${serviceType}</p>
     <p><strong>Date:</strong> ${new Date(bookingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
     <p><strong>Time:</strong> ${bookingTime}</p>
+    <p><strong>Service Address:</strong> ${serviceAddress}</p>
     <p><strong>Price:</strong> $${price}</p>
     <hr>
     <p>If you need to reschedule or cancel, please contact us at 401-490-1236.</p>

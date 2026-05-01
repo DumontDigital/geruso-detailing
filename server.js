@@ -25,7 +25,15 @@ app.get('/memberships', (req, res) => res.sendFile(path.join(__dirname, 'members
 app.get('/schedule', (req, res) => res.sendFile(path.join(__dirname, 'schedule.html')));
 app.get('/reviews', (req, res) => res.sendFile(path.join(__dirname, 'reviews.html')));
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
-app.get('/booking', (req, res) => res.sendFile(path.join(__dirname, 'booking.html')));
+app.get('/booking', (req, res) => {
+  const fs = require('fs');
+  let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
+  // Inject Google Places API key if available
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
+  bookingHtml = bookingHtml.replace('YOUR_API_KEY', apiKey);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(bookingHtml);
+});
 app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'admin-login.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'admin-dashboard.html')));
 

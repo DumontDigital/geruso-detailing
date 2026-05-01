@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   customer_name VARCHAR(255) NOT NULL,
   customer_email VARCHAR(255) NOT NULL,
   customer_phone VARCHAR(20) NOT NULL,
+  service_address VARCHAR(500) NOT NULL,
   service_type VARCHAR(255) NOT NULL,
   booking_date DATE NOT NULL,
   booking_time VARCHAR(20) NOT NULL,

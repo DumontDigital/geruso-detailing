@@ -9,20 +9,20 @@ const router = express.Router();
 // Create booking (public)
 router.post('/', async (req, res) => {
   try {
-    const { customerName, customerEmail, customerPhone, serviceType, bookingDate, bookingTime, vehicleType, notes } = req.body;
+    const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes } = req.body;
 
     // Validate required fields
-    if (!customerName || !customerEmail || !customerPhone || !serviceType || !bookingDate || !bookingTime) {
+    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime) {
       return res.status(400).json({ error: 'All required fields must be filled' });
     }
 
     // Insert booking
     const bookingId = uuidv4();
     const result = await pool.query(
-      `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_type, booking_date, booking_time, vehicle_type, notes, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [bookingId, customerName, customerEmail, customerPhone, serviceType, bookingDate, bookingTime, vehicleType, notes, 'pending']
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, 'pending']
     );
 
     const booking = result.rows[0];

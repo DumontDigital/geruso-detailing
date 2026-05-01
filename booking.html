@@ -123,11 +123,20 @@
     .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,255,65,0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .address-suggestions { position: absolute; background: var(--light-bg2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; max-height: 240px; overflow-y: auto; width: calc(100% - 28px); z-index: 1000; display: none; }
+    .address-suggestions.show { display: block; }
+    .address-suggestion-item { padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all 0.2s; border-bottom: 1px solid var(--border); }
+    .address-suggestion-item:last-child { border-bottom: none; }
+    .address-suggestion-item:hover { background: rgba(0,255,65,0.1); color: var(--primary); }
+    .address-suggestion-item.selected { background: rgba(0,255,65,0.2); color: var(--primary); }
+    .form-group { position: relative; }
+
     @media(max-width:960px) {
       .booking-container { grid-template-columns: 1fr; gap: 40px; }
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&language=en" async defer></script>
 </head>
 <body>
 <nav>
@@ -224,6 +233,13 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Service Address</label>
+            <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" required autocomplete="off">
+            <div id="addressSuggestions" class="address-suggestions"></div>
+            <input type="hidden" id="serviceAddressValue" name="serviceAddress" value="">
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Service Type</label>
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
@@ -296,6 +312,97 @@
 
 <script>
   document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
+
+  // Google Places Autocomplete for Service Address
+  let autocompleteService;
+  let sessionToken;
+  let selectedPlaceId = null;
+  let selectedAddress = '';
+
+  function initializeAddressAutocomplete() {
+    const apiKey = document.querySelector('script[src*="maps.googleapis.com"]')?.src.includes('YOUR_API_KEY') ? null : true;
+    if (!apiKey) {
+      console.warn('Google Places API key not configured. Address autocomplete disabled.');
+      return;
+    }
+
+    const addressInput = document.getElementById('serviceAddressInput');
+    const suggestionsContainer = document.getElementById('addressSuggestions');
+
+    if (!window.google || !window.google.maps) {
+      console.warn('Google Maps API not loaded yet');
+      return;
+    }
+
+    autocompleteService = new google.maps.places.AutocompleteService();
+    sessionToken = new google.maps.places.AutocompleteSessionToken();
+
+    addressInput.addEventListener('input', async (e) => {
+      const value = e.target.value;
+
+      if (value.length < 3) {
+        suggestionsContainer.classList.remove('show');
+        return;
+      }
+
+      try {
+        const request = {
+          input: value,
+          componentRestrictions: { country: 'us' },
+          sessionToken: sessionToken,
+        };
+
+        const predictions = await autocompleteService.getPlacePredictions(request);
+
+        if (predictions.predictions && predictions.predictions.length > 0) {
+          // Filter for Rhode Island
+          const riPredictions = predictions.predictions.filter(p =>
+            p.description.includes('RI') || p.description.includes('Rhode Island')
+          );
+
+          suggestionsContainer.innerHTML = '';
+
+          if (riPredictions.length > 0) {
+            riPredictions.slice(0, 5).forEach(prediction => {
+              const div = document.createElement('div');
+              div.className = 'address-suggestion-item';
+              div.textContent = prediction.description;
+              div.addEventListener('click', () => selectAddress(prediction));
+              suggestionsContainer.appendChild(div);
+            });
+            suggestionsContainer.classList.add('show');
+          } else {
+            suggestionsContainer.classList.remove('show');
+          }
+        } else {
+          suggestionsContainer.classList.remove('show');
+        }
+      } catch (error) {
+        console.error('Autocomplete error:', error);
+      }
+    });
+
+    addressInput.addEventListener('blur', () => {
+      setTimeout(() => suggestionsContainer.classList.remove('show'), 200);
+    });
+  }
+
+  function selectAddress(prediction) {
+    const addressInput = document.getElementById('serviceAddressInput');
+    const suggestionsContainer = document.getElementById('addressSuggestions');
+
+    addressInput.value = prediction.description;
+    selectedAddress = prediction.description;
+    selectedPlaceId = prediction.place_id;
+    suggestionsContainer.classList.remove('show');
+  }
+
+  // Initialize autocomplete when Google Maps is loaded
+  if (window.google && window.google.maps) {
+    initializeAddressAutocomplete();
+  } else {
+    window.addEventListener('load', initializeAddressAutocomplete);
+  }
 
   let currentDate = new Date();
   let selectedDate = null;
@@ -440,14 +547,22 @@
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
+
     if (!selectedDate || !selectedTime) {
       showMessage('Please select a date and time', 'error');
+      return;
+    }
+
+    if (!serviceAddress) {
+      showMessage('Please enter a service address', 'error');
       return;
     }
 
     const formData = new FormData(e.target);
     const bookingData = {
       ...Object.fromEntries(formData),
+      serviceAddress: serviceAddress,
       bookingDate: selectedDate.toISOString().split('T')[0],
       bookingTime: selectedTime,
     };

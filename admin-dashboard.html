@@ -155,6 +155,7 @@
               <tr>
                 <th>Date</th>
                 <th>Customer</th>
+                <th>Address</th>
                 <th>Service</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -342,6 +343,7 @@
         <tr>
           <td>${new Date(booking.booking_date).toLocaleDateString()} ${booking.booking_time}</td>
           <td>${booking.customer_name}</td>
+          <td><span title="${booking.service_address}">${booking.service_address.substring(0, 30)}...</span></td>
           <td>${booking.service_type}</td>
           <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
           <td>
