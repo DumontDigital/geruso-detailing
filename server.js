@@ -76,6 +76,28 @@ app.post('/api/quote', async (req, res) => {
   }
 });
 
+// Database initialization (run SQL migrations)
+app.get('/api/init-db', async (req, res) => {
+  try {
+    console.log('[Init-DB] Starting database initialization...');
+    const fs = require('fs');
+    const pool = require('./db');
+
+    // Read migration file
+    const migrationSQL = fs.readFileSync(path.join(__dirname, 'migrations/001_init_schema.sql'), 'utf8');
+
+    // Run migrations
+    await pool.query(migrationSQL);
+
+    console.log('[Init-DB] SUCCESS - Database tables created');
+    res.json({ success: true, message: 'Database initialized successfully' });
+  } catch (error) {
+    console.error('[Init-DB] ERROR:', error.message);
+    // Don't return error details in production
+    res.status(500).json({ success: false, error: 'Database initialization failed' });
+  }
+});
+
 // Register API routes
 app.use('/api/admin', authRoutes);
 app.use('/api/admin', adminRoutes);
