@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — Geruso Detailing</title>
+  <title>Dev Dashboard — Geruso Detailing</title>
   <style>
     :root {
       --primary: #00FF41;
@@ -526,12 +526,16 @@
 </div>
 
 <script>
-  let token = localStorage.getItem('adminToken');
+  // Unified auth check
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+
   let currentEditingBookingId = null;
 
-  // Check authentication
-  if (!token) {
-    window.location.href = '/admin/login';
+  // Check authentication - allow dev and owner roles
+  if (!token || !user || (user.role !== 'dev' && user.role !== 'owner')) {
+    window.location.href = '/login';
   }
 
   // Format date string (YYYY-MM-DD) WITHOUT UTC conversion
@@ -842,8 +846,9 @@
 
   // Logout
   function logout() {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/admin/login';
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   }
 
   // Initialize on load
