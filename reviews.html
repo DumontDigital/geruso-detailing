@@ -31,8 +31,8 @@
   .nav-actions { display: flex; align-items: center; gap: 16px; }
   .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
   .nav-phone:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
 
   .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
   .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
@@ -40,21 +40,22 @@
   .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
   .nav-toggle:checked ~ .nav-phone { display: block; }
 
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 0 12px rgba(0,255,65,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,65,0.6); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
+  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
+  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: none; }
+  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,255,65,0.2); }
 
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 8px rgba(0,255,65,0.3); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
+  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 12px; }
+  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; margin-bottom: 8px; }
+  .trust-line { font-size: 13px; color: var(--text-light); text-align: center; margin-bottom: 40px; font-weight: 500; }
   section { padding: 80px 48px; }
   .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
 
   .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
+  .card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,255,65,0.15); transform: translateY(-4px); }
+  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, transparent 100%); }
+  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
   footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
   .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
@@ -70,9 +71,9 @@
   @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
   #reviews { background: var(--light-bg); }
-  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-  .review-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: all 0.2s; }
-  .review-card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
+  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 0; }
+  .review-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 16px; transition: all 0.2s; }
+  .review-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,255,65,0.15); transform: translateY(-4px); }
   .review-stars { display: flex; gap: 3px; }
   .star-icon { color: var(--primary); font-size: 15px; }
   .review-text { font-size: 15px; color: var(--text-muted); line-height: 1.65; font-style: italic; flex: 1; }
@@ -80,7 +81,7 @@
   .review-avatar { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #000; flex-shrink: 0; }
   .review-name { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 2px; }
   .review-verified { font-size: 12px; color: var(--text-muted); }
-  .reviews-cta { margin-top: 48px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .reviews-cta { margin-top: 56px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
   .reviews-cta h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
   .reviews-cta p { font-size: 14px; color: var(--text-muted); }
   @media(max-width:960px){ .reviews-grid{grid-template-columns:1fr} .reviews-cta{flex-direction:column;align-items:flex-start} }
@@ -117,6 +118,7 @@
     <div class="section-label">REVIEWS</div>
     <h1 class="section-heading">What clients say.</h1>
     <p class="section-sub">Real customers, real results.</p>
+    <p class="trust-line">Real reviews from local Rhode Island customers</p>
     <div class="reviews-grid">
       <div class="review-card">
         <div class="review-stars"><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span></div>
