@@ -316,7 +316,23 @@ app.get('/api/owner/bookings', async (req, res) => {
     // Build current datetime in comparable format: YYYY-MM-DD HH:MM (24-hour)
     const currentDateTimeStr = `${currentDateStr} ${currentTimeStr}`;
 
+    console.log(`[API] ==== CRITICAL DEBUG ====`);
     console.log(`[API] Current Eastern Time: ${currentDateTimeStr}`);
+    console.log(`[API] Full currentET object:`, currentET);
+    console.log(`[API] Total bookings from DB: ${result.rows.length}`);
+
+    const may2BookingsInDB = result.rows.filter(b => {
+      if (typeof b.booking_date === 'string') {
+        return b.booking_date.split('T')[0] === '2026-05-02';
+      } else if (b.booking_date instanceof Date) {
+        const y = b.booking_date.getUTCFullYear();
+        const m = String(b.booking_date.getUTCMonth() + 1).padStart(2, '0');
+        const d = String(b.booking_date.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${d}` === '2026-05-02';
+      }
+      return false;
+    });
+    console.log(`[API] May 2 bookings IN DATABASE: ${may2BookingsInDB.length}`);
 
     // Filter out past available slots, but keep all real customer bookings
     const filteredBookings = result.rows
@@ -384,7 +400,16 @@ app.get('/api/owner/bookings', async (req, res) => {
         return isInFuture;
       });
 
-    console.log(`[API] Returned ${filteredBookings.length} bookings`);
+    const may2InResponse = filteredBookings.filter(b => {
+      if (typeof b.booking_date === 'string') {
+        return b.booking_date.split('T')[0] === '2026-05-02';
+      }
+      return false;
+    });
+
+    console.log(`[API] May 2 bookings IN RESPONSE: ${may2InResponse.length}`);
+    console.log(`[API] Total returned: ${filteredBookings.length} bookings (was ${result.rows.length} before filtering)`);
+    console.log(`[API] ========================\n`);
     res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
