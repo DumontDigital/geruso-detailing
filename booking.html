@@ -627,10 +627,10 @@
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const businessHours = {
-    'Thu': { start: 12, end: 18, type: 'mobile' }, // 12 PM - 6 PM (Mobile)
-    'Fri': { start: 12, end: 18, type: 'mobile' },
-    'Sat': { start: 6, end: 11, type: 'location' }, // 6 AM - 11 AM (Location only)
-    'Sun': { start: 6, end: 11, type: 'location' },
+    'Thu': { start: 12, end: 19, type: 'mobile' }, // 12 PM - 6 PM (Mobile, includes 6 PM slot)
+    'Fri': { start: 12, end: 19, type: 'mobile' },
+    'Sat': { start: 6, end: 12, type: 'location' }, // 6 AM - 11 AM (Location only, includes 11 AM slot)
+    'Sun': { start: 6, end: 12, type: 'location' },
     'Mon': null,
     'Tue': null,
     'Wed': null
