@@ -289,9 +289,10 @@
 
       <div class="booking-container">
         <div>
+          <!-- CALENDAR -->
           <div class="calendar-section">
             <div class="calendar-header">
-              <h3 class="calendar-month" id="calendarMonth">January 2026</h3>
+              <h3 class="calendar-month" id="calendarMonth">May 2026</h3>
               <div class="calendar-nav">
                 <button class="calendar-btn" id="prevMonth">← Prev</button>
                 <button class="calendar-btn" id="nextMonth">Next →</button>
@@ -309,49 +310,94 @@
             <div class="calendar-grid" id="calendarGrid"></div>
           </div>
 
+          <!-- TIME SLOTS -->
           <div class="time-slots-section">
-            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Available Times</h3>
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text);">Available Times</h3>
             <div id="timeMessage" style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Select a date to view available times</div>
             <div class="time-slots-grid" id="timeSlotsGrid"></div>
           </div>
         </div>
 
+        <!-- BOOKING FORM -->
         <div class="booking-form">
           <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 24px;">Complete Your Booking</h2>
+
+          <!-- BOOKING SUMMARY -->
+          <div id="bookingSummary" class="booking-summary" style="display: none;">
+            <div class="summary-item">
+              <span class="summary-label">Date: </span>
+              <span class="summary-value" id="summaryDate">—</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Time: </span>
+              <span class="summary-value" id="summaryTime">—</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Service: </span>
+              <span class="summary-value" id="summaryService">—</span>
+            </div>
+          </div>
+
           <form id="bookingForm">
             <div class="form-group">
               <label class="form-label">Full Name</label>
               <input type="text" class="form-input" name="customerName" placeholder="John Doe" required>
             </div>
+
             <div class="form-group">
               <label class="form-label">Email</label>
               <input type="email" class="form-input" name="customerEmail" placeholder="john@example.com" required>
             </div>
+
             <div class="form-group">
               <label class="form-label">Phone</label>
               <input type="tel" class="form-input" name="customerPhone" placeholder="(401) 555-0000" required>
             </div>
+
             <div class="form-group">
               <label class="form-label">Service Type</label>
               <select class="form-select" name="serviceType" required>
                 <option value="">Select a service...</option>
-                <option value="Car Wash">Car Wash - $85</option>
-                <option value="Interior Detailing">Interior Detailing - $100+</option>
-                <option value="Ceramic Coating">Ceramic Coating - $400</option>
-                <option value="Premium Package">Premium Package - $170+</option>
+                <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
+                <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
+                <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
+                <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
+                <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
+                <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
+                <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
+                <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
+                <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
+                <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
               </select>
             </div>
+
+            <!-- ADDRESS FIELD (shows for Thu/Fri mobile service) -->
+            <div class="form-group" id="addressFieldGroup" style="display: none;">
+              <label class="form-label">Service Address</label>
+              <input type="text" class="form-input" name="serviceAddress" id="serviceAddressInput" placeholder="123 Main St, Providence, RI 02903">
+            </div>
+
+            <!-- LOCATION NOTE (shows for Sat/Sun Mapleville) -->
+            <div class="form-group" id="locationNoteGroup" style="display: none;">
+              <label class="form-label">Service Location</label>
+              <div style="background: rgba(0,255,65,0.15); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 14px; color: var(--text-muted);">
+                📍 Mapleville Location, RI<br><small style="color: var(--text-light);">Our facility location. Premium services available.</small>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Vehicle Type</label>
               <select class="form-select" name="vehicleType" required>
                 <option value="">Select vehicle type...</option>
                 <option value="Car">Car</option>
-                <option value="Motorcycle">Motorcycle</option>
                 <option value="SUV">SUV</option>
                 <option value="Truck">Truck</option>
+                <option value="Motorcycle">Motorcycle</option>
               </select>
             </div>
-            <button type="submit" class="btn-submit">Book & Continue to Payment</button>
+
+            <button type="submit" class="btn-submit" id="submitBtn" disabled>Book & Continue to Payment</button>
+            <div id="formMessage" style="margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: 14px; text-align: center;"></div>
           </form>
         </div>
       </div>
@@ -359,36 +405,28 @@
   </section>
 
   <script>
-    // Initialize navbar logo
-    document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
+    // ===== GLOBAL STATE =====
+    let currentDate = new Date();
+    let selectedDate = null;
+    let selectedTime = null;
+    let bookedTimeSlots = {};
 
-    // Section switching
-    window.showSection = function(sectionId) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayLetters = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-      const sectionMap = {
-        'home': 'home-section',
-        'services': 'services-section',
-        'work': 'work-section',
-        'reviews': 'reviews-section',
-        'schedule': 'schedule-section'
-      };
-
-      const targetSection = document.getElementById(sectionMap[sectionId]);
-      if (targetSection) {
-        targetSection.classList.add('active');
-        window.scrollTo(0, 0);
-
-        // Initialize calendar if showing schedule
-        if (sectionId === 'schedule' && document.getElementById('calendarGrid').innerHTML === '') {
-          initializeCalendar();
-        }
-      }
+    // Business hours: Thu/Fri 12 PM-6 PM (mobile), Sat/Sun 6 AM-11 AM (location)
+    const businessHours = {
+      'Thu': { start: 12, end: 19, type: 'mobile' },
+      'Fri': { start: 12, end: 19, type: 'mobile' },
+      'Sat': { start: 6, end: 12, type: 'location' },
+      'Sun': { start: 6, end: 12, type: 'location' },
+      'Mon': null,
+      'Tue': null,
+      'Wed': null
     };
 
-    // Calendar functions
-    let currentDate = new Date();
-
+    // ===== TIMEZONE HANDLING =====
     function getCurrentTimeET() {
       const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/New_York',
@@ -409,16 +447,77 @@
       };
     }
 
-    function initializeCalendar() {
+    // ===== SECTION NAVIGATION =====
+    window.showSection = function(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+      const sectionMap = {
+        'home': 'home-section',
+        'services': 'services-section',
+        'work': 'work-section',
+        'reviews': 'reviews-section',
+        'schedule': 'schedule-section'
+      };
+
+      const targetSection = document.getElementById(sectionMap[sectionId]);
+      if (targetSection) {
+        targetSection.classList.add('active');
+        window.scrollTo(0, 0);
+
+        if (sectionId === 'schedule' && document.getElementById('calendarGrid').innerHTML === '') {
+          initializeSchedule();
+        }
+      }
+    };
+
+    // ===== SCHEDULE INITIALIZATION =====
+    async function initializeSchedule() {
       const et = getCurrentTimeET();
       currentDate = new Date(et.year, et.month, et.day);
+
+      // Load booked slots from API
+      await loadBookedTimeSlots();
+
+      // Render calendar
       renderCalendar();
+
+      // Attach event listeners
+      document.getElementById('prevMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      });
+
+      document.getElementById('nextMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      });
+
+      document.getElementById('bookingForm').addEventListener('submit', handleFormSubmit);
     }
 
+    // ===== BOOKED SLOTS =====
+    async function loadBookedTimeSlots() {
+      try {
+        const response = await fetch('/api/bookings/public/booked-slots');
+        if (response.ok) {
+          const data = await response.json();
+          bookedTimeSlots = data.bookedSlots || {};
+        }
+      } catch (error) {
+        console.warn('Could not load booked slots:', error);
+      }
+    }
+
+    function isSlotBooked(date, timeString) {
+      const dateStr = date.toISOString().split('T')[0];
+      const key = `${dateStr}|${timeString}`;
+      return bookedTimeSlots[key] === true;
+    }
+
+    // ===== CALENDAR RENDERING =====
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
       document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
 
@@ -433,12 +532,14 @@
       const et = getCurrentTimeET();
       const todayET = et.date;
 
+      // Empty cells before month starts
       for (let i = 0; i < startingDayOfWeek; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'calendar-day disabled';
         grid.appendChild(emptyCell);
       }
 
+      // Days of month
       for (let day = 1; day <= daysInMonth; day++) {
         const dayCell = document.createElement('button');
         dayCell.className = 'calendar-day';
@@ -446,8 +547,13 @@
         dayCell.type = 'button';
 
         const cellDate = new Date(year, month, day);
+        const dayOfWeek = dayLetters[cellDate.getDay()];
 
-        if (cellDate < todayET) {
+        // Check if date is available (not past, and business is open)
+        const isPast = cellDate < todayET;
+        const isClosed = !businessHours[dayOfWeek];
+
+        if (isPast || isClosed) {
           dayCell.classList.add('disabled');
           dayCell.disabled = true;
         } else {
@@ -455,29 +561,226 @@
           dayCell.addEventListener('click', () => selectDate(cellDate));
         }
 
+        // Highlight today
         if (cellDate.toDateString() === todayET.toDateString()) {
           dayCell.classList.add('today');
+        }
+
+        // Highlight selected
+        if (selectedDate && cellDate.toDateString() === selectedDate.toDateString()) {
+          dayCell.classList.add('selected');
         }
 
         grid.appendChild(dayCell);
       }
     }
 
+    // ===== DATE SELECTION =====
     function selectDate(date) {
-      alert('Selected: ' + date.toDateString() + '\\n\\nFull booking form would load here.');
+      selectedDate = date;
+      selectedTime = null;
+
+      const dayOfWeek = dayLetters[date.getDay()];
+      const dateDisplay = monthNames[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+
+      // Update summary
+      document.getElementById('summaryDate').textContent = dateDisplay;
+      document.getElementById('summaryTime').textContent = '—';
+      document.getElementById('bookingSummary').style.display = 'block';
+
+      // Show/hide address field based on day
+      const addressFieldGroup = document.getElementById('addressFieldGroup');
+      const locationNoteGroup = document.getElementById('locationNoteGroup');
+
+      if (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') {
+        addressFieldGroup.style.display = 'block';
+        locationNoteGroup.style.display = 'none';
+        document.getElementById('serviceAddressInput').required = true;
+      } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+        addressFieldGroup.style.display = 'none';
+        locationNoteGroup.style.display = 'block';
+        document.getElementById('serviceAddressInput').required = false;
+      }
+
+      // Render time slots
+      renderTimeSlots(date);
+      renderCalendar();
     }
 
-    document.getElementById('prevMonth')?.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      renderCalendar();
-    });
+    // ===== TIME SLOTS =====
+    function renderTimeSlots(date) {
+      const dayOfWeek = dayLetters[date.getDay()];
+      const hours = businessHours[dayOfWeek];
 
-    document.getElementById('nextMonth')?.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      renderCalendar();
-    });
+      const timeMessage = document.getElementById('timeMessage');
+      const timeSlotsGrid = document.getElementById('timeSlotsGrid');
+      timeSlotsGrid.innerHTML = '';
 
-    // Show home section by default
+      if (!hours) {
+        timeMessage.textContent = 'No appointments available on this day.';
+        return;
+      }
+
+      const et = getCurrentTimeET();
+      const isToday = date.toDateString() === et.date.toDateString();
+
+      const slots = [];
+      for (let hour = hours.start; hour < hours.end; hour++) {
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+        const timeStr = `${displayHour}:00 ${ampm}`;
+
+        // Skip if time is in the past (for today)
+        let skip = false;
+        if (isToday) {
+          const [timeWithAmPm] = timeStr.split(' ');
+          let [hourStr] = timeWithAmPm.split(':');
+          let slotHour = parseInt(hourStr);
+          if (ampm === 'PM' && slotHour !== 12) slotHour += 12;
+          if (ampm === 'AM' && slotHour === 12) slotHour = 0;
+
+          if (slotHour < et.hour || (slotHour === et.hour && 0 <= et.minute)) {
+            skip = true;
+          }
+        }
+
+        // Skip if booked
+        if (isSlotBooked(date, timeStr)) {
+          skip = true;
+        }
+
+        if (!skip) {
+          slots.push(timeStr);
+        }
+      }
+
+      timeMessage.textContent = slots.length > 0 ? 'Select a time:' : 'All times are booked for this day.';
+
+      slots.forEach(timeStr => {
+        const btn = document.createElement('button');
+        btn.className = 'time-slot available';
+        btn.textContent = timeStr;
+        btn.type = 'button';
+
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          selectedTime = timeStr;
+          document.getElementById('summaryTime').textContent = timeStr;
+
+          // Update selected state
+          document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+          btn.classList.add('selected');
+
+          // Enable submit button
+          document.getElementById('submitBtn').disabled = false;
+        });
+
+        timeSlotsGrid.appendChild(btn);
+      });
+    }
+
+    // ===== FORM SUBMISSION =====
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      if (!selectedDate || !selectedTime) {
+        showFormMessage('Please select a date and time.', 'error');
+        return;
+      }
+
+      const formData = {
+        customerName: document.querySelector('input[name="customerName"]').value,
+        customerEmail: document.querySelector('input[name="customerEmail"]').value,
+        customerPhone: document.querySelector('input[name="customerPhone"]').value,
+        serviceType: document.querySelector('select[name="serviceType"]').value,
+        vehicleType: document.querySelector('select[name="vehicleType"]').value,
+        serviceAddress: document.querySelector('input[name="serviceAddress"]')?.value || '',
+        bookingDate: selectedDate.toISOString().split('T')[0],
+        bookingTime: selectedTime
+      };
+
+      if (!formData.serviceType) {
+        showFormMessage('Please select a service type.', 'error');
+        return;
+      }
+
+      // Check if address is required (Thu/Fri mobile service)
+      const dayOfWeek = dayLetters[selectedDate.getDay()];
+      if ((dayOfWeek === 'Thu' || dayOfWeek === 'Fri') && !formData.serviceAddress) {
+        showFormMessage('Please enter a service address for mobile service.', 'error');
+        return;
+      }
+
+      // Submit booking
+      try {
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = 'Processing...';
+
+        const response = await fetch('/api/bookings/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          showFormMessage('Booking confirmed! Redirecting to payment...', 'success');
+
+          // Redirect to Stripe checkout or success page
+          setTimeout(() => {
+            if (data.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+            } else {
+              window.location.href = '/booking-success';
+            }
+          }, 2000);
+        } else {
+          const error = await response.json();
+          showFormMessage('Booking failed: ' + (error.message || 'Unknown error'), 'error');
+          document.getElementById('submitBtn').disabled = false;
+          document.getElementById('submitBtn').textContent = 'Book & Continue to Payment';
+        }
+      } catch (error) {
+        showFormMessage('Error: ' + error.message, 'error');
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'Book & Continue to Payment';
+      }
+    }
+
+    function showFormMessage(msg, type) {
+      const msgEl = document.getElementById('formMessage');
+      msgEl.textContent = msg;
+      msgEl.className = 'message-box ' + type;
+      msgEl.style.display = 'block';
+
+      if (type === 'error') {
+        setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+      }
+    }
+
+    // Add message box styling
+    const style = document.createElement('style');
+    style.textContent = `
+      .message-box {
+        padding: 12px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        text-align: center;
+      }
+      .message-box.error {
+        background: rgba(239,68,68,0.15);
+        border: 1px solid rgba(239,68,68,0.4);
+        color: #ef4444;
+      }
+      .message-box.success {
+        background: rgba(16,185,129,0.15);
+        border: 1px solid rgba(16,185,129,0.4);
+        color: #10b981;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // ===== INITIALIZE ON LOAD =====
     showSection('home');
   </script>
 </body>
