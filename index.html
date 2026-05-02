@@ -746,6 +746,7 @@
         <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
         <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
         <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
+        <button class="owner-nav-btn" data-tab="gallery" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
       </div>
 
       <!-- Main Content -->
@@ -960,6 +961,51 @@
           </div>
         </div>
 
+        <!-- Gallery Tab -->
+        <div id="galleryTab" class="owner-tab" style="display: none;">
+          <h2 style="margin-bottom: 24px;">Gallery Management</h2>
+
+          <!-- Add New Photo Form -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+            <h3 style="margin-bottom: 16px;">Add New Photo</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Photo Filename</label>
+                <input type="text" id="galleryFormFilename" placeholder="e.g., photo-001.jpg" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Photo Label</label>
+                <input type="text" id="galleryFormLabel" placeholder="e.g., Car Wash #1" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+              </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Description</label>
+              <textarea id="galleryFormDescription" placeholder="Brief description of the photo..." style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 60px;"></textarea>
+            </div>
+            <button onclick="ownerSaveGalleryPhoto()" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">+ Add Photo</button>
+          </div>
+
+          <!-- Gallery Photos List -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 16px; background: var(--light-bg); border-bottom: 1px solid var(--border);">
+              <h3 style="margin: 0;">🖼️ Photos</h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead style="background: var(--light-bg);">
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Filename</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Label</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Order</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Active</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="galleryList"></tbody>
+            </table>
+            <div id="galleryEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No photos in gallery. Add one above.</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1060,6 +1106,7 @@
     loadServices();
     loadSchedule();
     loadWebsiteContent();
+    loadGallery();
     setupTabNavigation();
     setupAutoRotation();
     // Update Eastern time display every second
@@ -1085,6 +1132,7 @@
         if (tab === 'bookings') loadBookings();
         if (tab === 'services') loadServices();
         if (tab === 'content') loadWebsiteContent();
+        if (tab === 'gallery') loadGallery();
       });
     });
   }
@@ -1638,6 +1686,107 @@
       }
     } catch (error) {
       alert('Error saving content: ' + error.message);
+    }
+  };
+
+  // Gallery Management
+  async function loadGallery() {
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/gallery', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      const tbody = document.getElementById('galleryList');
+      const emptyDiv = document.getElementById('galleryEmpty');
+      tbody.innerHTML = '';
+
+      if (!data.photos || data.photos.length === 0) {
+        tbody.innerHTML = '';
+        emptyDiv.style.display = 'block';
+        return;
+      }
+
+      emptyDiv.style.display = 'none';
+      data.photos.forEach(photo => {
+        tbody.innerHTML += `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px; font-size: 13px;">${photo.filename}</td>
+            <td style="padding: 12px; font-weight: 700;">${photo.label || '—'}</td>
+            <td style="padding: 12px; font-size: 13px;">${photo.display_order || 999}</td>
+            <td style="padding: 12px;">
+              <span style="background: ${photo.is_active ? 'var(--success)' : 'var(--text-muted)'}20; color: ${photo.is_active ? 'var(--success)' : 'var(--text-muted)'}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${photo.is_active ? 'Active' : 'Inactive'}</span>
+            </td>
+            <td style="padding: 12px;">
+              <div style="display: flex; gap: 4px;">
+                <button onclick="ownerEditGalleryPhoto('${photo.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;">Edit</button>
+                <button onclick="ownerDeleteGalleryPhoto('${photo.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+    } catch (error) {
+      console.error('Error loading gallery:', error);
+    }
+  }
+
+  window.ownerSaveGalleryPhoto = async () => {
+    const filename = document.getElementById('galleryFormFilename').value;
+    const label = document.getElementById('galleryFormLabel').value;
+    const description = document.getElementById('galleryFormDescription').value;
+
+    if (!filename) {
+      alert('Please enter a filename');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ filename, label, description, display_order: 999 })
+      });
+
+      if (response.ok) {
+        document.getElementById('galleryFormFilename').value = '';
+        document.getElementById('galleryFormLabel').value = '';
+        document.getElementById('galleryFormDescription').value = '';
+        loadGallery();
+      } else {
+        const error = await response.json();
+        alert('Error: ' + error.error);
+      }
+    } catch (error) {
+      alert('Error adding photo: ' + error.message);
+    }
+  };
+
+  window.ownerEditGalleryPhoto = async (photoId) => {
+    alert('Edit photo feature coming soon');
+  };
+
+  window.ownerDeleteGalleryPhoto = async (photoId) => {
+    if (!confirm('Delete this photo permanently?')) return;
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch(`/api/admin/gallery/${photoId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        loadGallery();
+      } else {
+        alert('Failed to delete photo');
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
     }
   };
 })();
