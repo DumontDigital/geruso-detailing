@@ -597,7 +597,13 @@
 
     tbody.innerHTML = rollingFiltered.map(booking => {
       const price = getServicePrice(booking.service_type);
-      const bookingDate = new Date(booking.booking_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      // FIX: Use ISO split to avoid timezone conversion bug
+      // new Date("2026-05-02T00:00:00.000Z").toLocaleDateString() returns May 1 in ET!
+      const dateObj = new Date(booking.booking_date);
+      const isoDate = dateObj.toISOString().split('T')[0]; // 2026-05-02
+      const [year, month, day] = isoDate.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const bookingDate = `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
       const isPlaceholder = booking.is_placeholder || (booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot');
       const isCancelled = booking.status === 'cancelled';
 
@@ -762,7 +768,7 @@
 
       tbody.innerHTML = data.upcomingBookings.map(booking => `
         <tr>
-          <td>${new Date(booking.booking_date).toLocaleDateString()}</td>
+          <td>${new Date(booking.booking_date).toISOString().split('T')[0]}</td>
           <td>${booking.customer_name}</td>
           <td>${booking.service_type}</td>
           <td>${booking.booking_time}</td>
@@ -840,7 +846,8 @@
 
         // Show success message
         const booking = result.booking;
-        alert(`✓ Booking cancelled\n\nDate: ${new Date(booking.booking_date).toLocaleDateString()}\nTime: ${booking.booking_time}\n\nThe time slot is now available again on the public calendar.`);
+        const displayDate = new Date(booking.booking_date).toISOString().split('T')[0];
+        alert(`✓ Booking cancelled\n\nDate: ${displayDate}\nTime: ${booking.booking_time}\n\nThe time slot is now available again on the public calendar.`);
 
         // Reload bookings to show updated status
         loadBookings();
