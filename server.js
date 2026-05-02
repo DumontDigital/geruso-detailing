@@ -267,9 +267,9 @@ function getCurrentTimeInEastern() {
 // Get all bookings for owner (filters out past available slots, keeps real bookings)
 app.get('/api/owner/bookings', async (req, res) => {
   try {
-    // Return ALL bookings sorted by date (oldest first for chronological display)
+    // Cast booking_date to TEXT to get YYYY-MM-DD format strings (not Date objects)
     const result = await pool.query(
-      'SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC'
+      "SELECT *, booking_date::TEXT as booking_date_str FROM bookings ORDER BY booking_date ASC, booking_time ASC"
     );
 
     const currentET = getCurrentTimeInEastern();
@@ -282,11 +282,13 @@ app.get('/api/owner/bookings', async (req, res) => {
 
       // Keep all real customer bookings regardless of date/time
       if (!isPlaceholder) {
+        // Replace booking_date with string version for consistency
+        booking.booking_date = booking.booking_date_str;
         return true;
       }
 
       // For placeholder available slots, filter out past ones
-      const bookingDateOnly = booking.booking_date.toString().split('T')[0];
+      const bookingDateOnly = booking.booking_date_str; // Use the TEXT cast
 
       // Hide slots on past dates
       if (bookingDateOnly < currentDate) {
@@ -302,8 +304,13 @@ app.get('/api/owner/bookings', async (req, res) => {
         }
       }
 
+      // Use string version of date for consistency
+      booking.booking_date = booking.booking_date_str;
       return true; // Keep this slot
     });
+
+    // Remove the temporary field before sending
+    filteredBookings.forEach(b => delete b.booking_date_str);
 
     res.json({ bookings: filteredBookings });
   } catch (error) {
