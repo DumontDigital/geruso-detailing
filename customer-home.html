@@ -792,6 +792,7 @@
         const serviceName = e.target.value;
         const newServiceType = getServiceTypeFromName(serviceName);
 
+        // Set schedule service type (unless it's an add-on)
         if (newServiceType && newServiceType !== 'addon') {
           scheduleServiceType = newServiceType;
         }
@@ -799,18 +800,16 @@
         // Update address field visibility
         updateAddressFieldVisibility(serviceName);
 
-        // Clear selected date if it's now invalid
-        if (selectedDate) {
-          const dayOfWeek = dayLetters[selectedDate.getDay()];
-          const isValidDay = isValidDayForService(dayOfWeek, newServiceType);
-          if (!isValidDay) {
-            selectedDate = null;
-            selectedTime = null;
-            document.getElementById('bookingSummary').style.display = 'none';
-            document.getElementById('timeSlotsGrid').innerHTML = '';
-            document.getElementById('timeMessage').textContent = 'Select a date to view available times';
-          }
-        }
+        // Clear selected date, time, and time slots
+        selectedDate = null;
+        selectedTime = null;
+        document.getElementById('bookingSummary').style.display = 'none';
+        document.getElementById('timeSlotsGrid').innerHTML = '';
+        document.getElementById('timeMessage').textContent = 'Select a date to view available times';
+        document.getElementById('submitBtn').disabled = true;
+
+        // Update selected state on calendar
+        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
 
         // Re-render calendar
         renderCalendar();
@@ -923,22 +922,33 @@
     // ===== TIME SLOTS =====
     function renderTimeSlots(date) {
       const dayOfWeek = dayLetters[date.getDay()];
-      const hours = businessHours[dayOfWeek];
-
       const timeMessage = document.getElementById('timeMessage');
       const timeSlotsGrid = document.getElementById('timeSlotsGrid');
       timeSlotsGrid.innerHTML = '';
 
-      if (!hours) {
-        timeMessage.textContent = 'No appointments available on this day.';
+      if (!scheduleServiceType) {
+        timeMessage.textContent = 'Select a service type first.';
         return;
       }
 
       const et = getCurrentTimeET();
       const isToday = date.toDateString() === et.date.toDateString();
 
+      // Generate time slots based on service type
+      let timeHours = [];
+      if (scheduleServiceType === 'mobile') {
+        // Mobile: 12 PM to 6 PM (12, 1, 2, 3, 4, 5, 6 PM)
+        timeHours = [12, 13, 14, 15, 16, 17, 18];
+      } else if (scheduleServiceType === 'location') {
+        // Location: 6 AM to 11 AM (6, 7, 8, 9, 10, 11 AM)
+        timeHours = [6, 7, 8, 9, 10, 11];
+      } else {
+        timeMessage.textContent = 'Unable to determine service type.';
+        return;
+      }
+
       const slots = [];
-      for (let hour = hours.start; hour < hours.end; hour++) {
+      for (let hour of timeHours) {
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
         const timeStr = `${displayHour}:00 ${ampm}`;
@@ -946,13 +956,8 @@
         // Skip if time is in the past (for today)
         let skip = false;
         if (isToday) {
-          const [timeWithAmPm] = timeStr.split(' ');
-          let [hourStr] = timeWithAmPm.split(':');
-          let slotHour = parseInt(hourStr);
-          if (ampm === 'PM' && slotHour !== 12) slotHour += 12;
-          if (ampm === 'AM' && slotHour === 12) slotHour = 0;
-
-          if (slotHour < et.hour || (slotHour === et.hour && 0 <= et.minute)) {
+          // Compare hour with current ET hour
+          if (hour < et.hour || (hour === et.hour && 0 <= et.minute)) {
             skip = true;
           }
         }
@@ -967,7 +972,7 @@
         }
       }
 
-      timeMessage.textContent = slots.length > 0 ? 'Select a time:' : 'All times are booked for this day.';
+      timeMessage.textContent = slots.length > 0 ? 'Select a time:' : 'No available times for this date.';
 
       slots.forEach(timeStr => {
         const btn = document.createElement('button');
