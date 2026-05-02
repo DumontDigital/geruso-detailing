@@ -1,6 +1,27 @@
 const { v4: uuidv4 } = require('uuid');
 
 /**
+ * Get today's date in Eastern Time (America/New_York timezone)
+ * Returns date string in YYYY-MM-DD format
+ */
+function getTodayInEasternTime() {
+  const now = new Date();
+  const easternFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const parts = easternFormatter.formatToParts(now);
+  const year = parts.find(p => p.type === 'year').value;
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Business Hours Configuration
  * Defines availability for each day of the week
  */
@@ -63,14 +84,17 @@ function getTimeSlotsForDate(date) {
 }
 
 /**
- * Get available dates and times for the next N days (starting from today)
+ * Get available dates and times for the next N days (starting from today in Eastern Time)
  */
 function getUpcomingAvailability(daysAhead = 60) {
   const availability = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  // Start from TODAY, not tomorrow
+  // Get today's date in Eastern Time (America/New_York)
+  const todayEastern = getTodayInEasternTime();
+  const [year, month, day] = todayEastern.split('-').map(Number);
+  const today = new Date(year, month - 1, day);
+
+  // Start from today in Eastern Time, not tomorrow
   for (let i = 0; i < daysAhead; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() + i);
@@ -123,5 +147,6 @@ module.exports = {
   isHoliday,
   getTimeSlotsForDate,
   getUpcomingAvailability,
-  createPlaceholderBooking
+  createPlaceholderBooking,
+  getTodayInEasternTime
 };

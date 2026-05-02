@@ -420,6 +420,24 @@
   // Store all bookings for filtering
   let allBookings = [];
 
+  // Get today's date in Eastern Time (America/New_York timezone)
+  function getTodayInEasternTime() {
+    const now = new Date();
+    const easternFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
+    const parts = easternFormatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+
+    return `${year}-${month}-${day}`;
+  }
+
   // Load bookings
   async function loadBookings() {
     try {
@@ -445,8 +463,8 @@
         return a.booking_time.localeCompare(b.booking_time);
       });
 
-      // Filter to show only today and future dates for rolling schedule
-      const today = new Date().toISOString().split('T')[0];
+      // Filter to show only today and future dates for rolling schedule (using Eastern Time)
+      const today = getTodayInEasternTime();
       const rollingBookings = allBookings.filter(booking => {
         const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
         return bookingDate >= today;
@@ -523,7 +541,7 @@
       const searchTerm = searchInput.value.toLowerCase();
       const selectedDate = dateFilter.value;
       const selectedStatus = statusFilter.value;
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayInEasternTime();
 
       const filtered = allBookings.filter(booking => {
         const matchesSearch = !searchTerm ||
@@ -552,8 +570,8 @@
       searchInput.value = '';
       dateFilter.value = '';
       statusFilter.value = '';
-      // When clearing filters, return to rolling schedule (today and future)
-      const today = new Date().toISOString().split('T')[0];
+      // When clearing filters, return to rolling schedule (today and future in Eastern Time)
+      const today = getTodayInEasternTime();
       const rollingBookings = allBookings.filter(booking => {
         const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
         return bookingDate >= today;
