@@ -66,11 +66,16 @@ app.get('/admin/login', (req, res) => {
 app.get('/admin', (req, res) => {
   try {
     const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin] Main entry point - serving admin dashboard');
+    console.log('[Admin] Main entry point - serving admin dashboard from:', filePath);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.sendFile(filePath);
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('[Admin] sendFile error:', err.message);
+        res.status(500).send('Error loading admin panel: ' + err.message);
+      }
+    });
   } catch (error) {
-    console.error('[Admin] Error:', error.message);
+    console.error('[Admin] Catch block error:', error.message);
     res.status(500).send('Error loading admin panel');
   }
 });
@@ -295,12 +300,16 @@ app.post('/api/admin/reset-availability', async (req, res) => {
   }
 });
 
-// Explicit catch-all: serve index for non-admin routes
+// Explicit catch-all: serve index for non-API routes
+// Note: All /admin routes are handled by explicit handlers above
 app.use((req, res) => {
-  // Skip catch-all for API routes and admin routes
-  if (req.path.startsWith('/api') || req.path.startsWith('/admin')) {
+  // Skip catch-all for API routes (admin routes handled above)
+  if (req.path.startsWith('/api')) {
+    console.log('[Catch-all] API request not found:', req.path);
     return res.status(404).json({ error: 'Not Found' });
   }
+  // For all other non-matching routes, serve index.html (for SPA routing)
+  console.log('[Catch-all] Serving index.html for:', req.path);
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
