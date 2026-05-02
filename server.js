@@ -466,6 +466,35 @@ app.get('/api/test-deployment', (req, res) => {
   res.json({ message: 'Deployment test - this should be visible if new code is deployed', timestamp: new Date().toISOString() });
 });
 
+// SIMPLE FIX: Direct password update (temporary, for testing only)
+app.post('/api/quick-fix-passwords', async (req, res) => {
+  try {
+    const testPassword = 'Test1234!';
+
+    // Generate hash using bcryptjs
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(testPassword, salt);
+
+    console.log(`[Quick Fix] Generated hash for "${testPassword}": ${passwordHash}`);
+
+    // Update users
+    const users = ['owner@geruso-detailing.com', 'dev@geruso-detailing.com', 'customer@example.com'];
+    for (const email of users) {
+      await pool.query(
+        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2',
+        [passwordHash, email]
+      );
+      console.log(`[Quick Fix] Updated ${email}`);
+    }
+
+    res.json({ success: true, message: 'Passwords fixed', hash: passwordHash });
+  } catch (error) {
+    console.error('[Quick Fix] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Legacy owner login for backward compatibility
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
 
