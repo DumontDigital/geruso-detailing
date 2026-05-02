@@ -95,4 +95,86 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Generate availability schedule based on business hours (admin only)
+router.post('/generate-schedule', verifyToken, async (req, res) => {
+  try {
+    const { getUpcomingAvailability, BUSINESS_HOURS } = require('../utils/availability');
+
+    console.log('[Availability] Generating availability schedule...');
+
+    // Clear existing availability data
+    await pool.query('DELETE FROM availability');
+
+    // Get upcoming availability slots
+    const slots = getUpcomingAvailability(60);
+
+    // Group slots by date and get day info
+    const dateMap = new Map();
+    slots.forEach(slot => {
+      if (!dateMap.has(slot.date)) {
+        const dateObj = new Date(slot.date + 'T00:00:00Z');
+        const dayOfWeek = dateObj.getDay();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        dateMap.set(slot.date, {
+          date: slot.date,
+          dayOfWeek: dayNames[dayOfWeek],
+          dayNum: dayOfWeek
+        });
+      }
+    });
+
+    // Insert availability records
+    let insertedCount = 0;
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    for (const [dateStr, dayInfo] of dateMap.entries()) {
+      const dayNum = dayInfo.dayNum;
+      const dayName = DAYS[dayNum];
+
+      // Determine business hours for this day
+      let hours = null;
+      let serviceType = 'both';
+      let isAvailable = false;
+
+      if (dayNum === 0 || dayNum === 6) { // Sunday or Saturday
+        hours = { startHour: 6, endHour: 11 };
+        serviceType = 'location';
+        isAvailable = true;
+      } else if (dayNum === 4 || dayNum === 5) { // Thursday or Friday
+        hours = { startHour: 12, endHour: 18 };
+        serviceType = 'mobile';
+        isAvailable = true;
+      } else {
+        // Closed days
+        isAvailable = false;
+      }
+
+      const startTime = isAvailable && hours ? `${String(hours.startHour).padStart(2, '0')}:00:00` : null;
+      const endTime = isAvailable && hours ? `${String(hours.endHour).padStart(2, '0')}:00:00` : null;
+
+      try {
+        await pool.query(
+          `INSERT INTO availability (date, day_of_week, is_available, service_type, start_time, end_time)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (date, service_type) DO UPDATE SET is_available = $3, start_time = $5, end_time = $6`,
+          [dateStr, dayName, isAvailable, serviceType, startTime, endTime]
+        );
+        insertedCount++;
+      } catch (e) {
+        console.error(`Error inserting availability for ${dateStr}:`, e.message);
+      }
+    }
+
+    console.log(`[Availability] Generated ${insertedCount} availability records`);
+    res.json({
+      success: true,
+      message: 'Availability schedule generated',
+      generatedCount: insertedCount
+    });
+  } catch (error) {
+    console.error('[Availability] Error generating schedule:', error);
+    res.status(500).json({ error: 'Failed to generate schedule' });
+  }
+});
+
 module.exports = router;
