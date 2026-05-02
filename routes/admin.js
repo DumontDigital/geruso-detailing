@@ -338,86 +338,364 @@ router.post('/booking/:id/cancel', verifyToken, async (req, res) => {
   }
 });
 
-// ===== SERVICES ENDPOINTS (PLACEHOLDER - HARDCODED SERVICES) =====
+// ===== SERVICES ENDPOINTS =====
 
 // Get all services (admin only)
 router.get('/services', verifyToken, async (req, res) => {
   try {
-    // Return hardcoded services for now until we have a services table
-    const services = [
-      { id: '1', name: 'Full Motorcycle Service', price: 70, tag: 'MOBILE', description: 'Complete motorcycle detailing service' },
-      { id: '2', name: 'Interior Detailing', price: 100, tag: 'MOBILE', description: 'Interior cleaning and detailing' },
-      { id: '3', name: 'Car Wash', price: 85, tag: 'MOBILE', description: 'Professional car washing' },
-      { id: '4', name: 'Ceramic Coating', price: 400, tag: 'LOCATION ONLY', description: 'Professional ceramic coating service' },
-      { id: '5', name: 'Premium Package', price: 170, tag: 'MOBILE', description: 'Premium detailing package' },
-      { id: '6', name: 'Ultra Premium', price: 335, tag: 'MOBILE', description: 'Ultra premium detailing package' },
-      { id: '7', name: 'Pet Hair / Odor Elimination', price: 50, tag: 'EXTRA FEE', description: 'Pet hair and odor removal' },
-      { id: '8', name: 'Headlight Restoration', price: 50, tag: 'EXTRA FEE', description: 'Headlight restoration service' },
-      { id: '9', name: 'Engine Bay Cleaning', price: 75, tag: 'MOBILE', description: 'Engine bay cleaning service' },
-      { id: '10', name: 'Full Vehicle Polish', price: 250, tag: 'LOCATION ONLY', description: 'Full vehicle polishing service' }
-    ];
-
-    res.json(services);
+    const result = await pool.query(
+      'SELECT id, name, description, price, category, is_active, display_order FROM services ORDER BY display_order ASC, name ASC'
+    );
+    res.json({ services: result.rows });
   } catch (error) {
     console.error('Error fetching services:', error);
     res.status(500).json({ error: 'Failed to fetch services' });
   }
 });
 
-// ===== ADD-ONS ENDPOINTS (PLACEHOLDER) =====
+// Create new service (admin only)
+router.post('/services', verifyToken, async (req, res) => {
+  try {
+    const { name, description, price, category, is_active, display_order } = req.body;
+
+    if (!name || !price) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO services (name, description, price, category, is_active, display_order)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, description || '', price, category || '', is_active !== false, display_order || 999]
+    );
+
+    res.json({ success: true, service: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating service:', error);
+    res.status(500).json({ error: 'Failed to create service' });
+  }
+});
+
+// Update service (admin only)
+router.put('/services/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, category, is_active, display_order } = req.body;
+
+    const result = await pool.query(
+      `UPDATE services SET name = $1, description = $2, price = $3, category = $4, is_active = $5, display_order = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *`,
+      [name, description, price, category, is_active, display_order, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    res.json({ success: true, service: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating service:', error);
+    res.status(500).json({ error: 'Failed to update service' });
+  }
+});
+
+// Delete service (admin only)
+router.delete('/services/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM services WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    res.json({ success: true, message: 'Service deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting service:', error);
+    res.status(500).json({ error: 'Failed to delete service' });
+  }
+});
+
+// ===== ADD-ONS ENDPOINTS =====
 
 // Get all add-ons (admin only)
 router.get('/addons', verifyToken, async (req, res) => {
   try {
-    // Return hardcoded add-ons for now
-    const addons = [
-      { id: '1', name: 'Pet Hair / Odor Elimination', price: 50, description: 'Remove pet hair and odors' },
-      { id: '2', name: 'Headlight Restoration', price: 50, description: 'Restore headlight clarity' }
-    ];
-
-    res.json(addons);
+    const result = await pool.query(
+      'SELECT id, name, description, price, is_active, display_order FROM addons ORDER BY display_order ASC, name ASC'
+    );
+    res.json({ addons: result.rows });
   } catch (error) {
     console.error('Error fetching add-ons:', error);
     res.status(500).json({ error: 'Failed to fetch add-ons' });
   }
 });
 
-// ===== CONTENT ENDPOINTS (PLACEHOLDER) =====
-
-// Get website content (admin only)
-router.get('/content', verifyToken, async (req, res) => {
+// Create new add-on (admin only)
+router.post('/addons', verifyToken, async (req, res) => {
   try {
-    // Return placeholder content data
-    const content = {
-      businessPhone: '401-490-1236',
-      businessEmail: 'info@geruso-detailing.com',
-      businessAddress: 'North Providence, RI',
-      heroText: 'Your Vehicle, Perfected',
-      servicesDescription: 'Professional car detailing services including washing, waxing, ceramic coating and more'
-    };
+    const { name, description, price, is_active, display_order } = req.body;
 
-    res.json(content);
+    if (!name || !price) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO addons (name, description, price, is_active, display_order)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [name, description || '', price, is_active !== false, display_order || 999]
+    );
+
+    res.json({ success: true, addon: result.rows[0] });
   } catch (error) {
-    console.error('Error fetching content:', error);
-    res.status(500).json({ error: 'Failed to fetch content' });
+    console.error('Error creating add-on:', error);
+    res.status(500).json({ error: 'Failed to create add-on' });
   }
 });
 
-// Update website content (admin only)
-router.post('/content', verifyToken, async (req, res) => {
+// Update add-on (admin only)
+router.put('/addons/:id', verifyToken, async (req, res) => {
   try {
-    // Placeholder - would save to database in production
-    const content = req.body;
-    console.log('[Admin] Content updated:', content);
+    const { id } = req.params;
+    const { name, description, price, is_active, display_order } = req.body;
 
-    res.json({
-      success: true,
-      message: 'Content updated successfully (placeholder - not persisted yet)',
-      content
-    });
+    const result = await pool.query(
+      `UPDATE addons SET name = $1, description = $2, price = $3, is_active = $4, display_order = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *`,
+      [name, description, price, is_active, display_order, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Add-on not found' });
+    }
+
+    res.json({ success: true, addon: result.rows[0] });
   } catch (error) {
-    console.error('Error updating content:', error);
-    res.status(500).json({ error: 'Failed to update content' });
+    console.error('Error updating add-on:', error);
+    res.status(500).json({ error: 'Failed to update add-on' });
+  }
+});
+
+// Delete add-on (admin only)
+router.delete('/addons/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM addons WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Add-on not found' });
+    }
+
+    res.json({ success: true, message: 'Add-on deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting add-on:', error);
+    res.status(500).json({ error: 'Failed to delete add-on' });
+  }
+});
+
+// ===== SETTINGS/CONTENT ENDPOINTS =====
+
+// Get all settings (admin only)
+router.get('/settings', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM settings LIMIT 1');
+
+    if (result.rows.length === 0) {
+      // Return empty settings object if no data exists
+      return res.json({
+        owner_email: '',
+        notification_email: '',
+        business_phone: '',
+        business_email: '',
+        business_address: '',
+        service_area: '',
+        location_description: '',
+        faq_text: '',
+        homepage_headline: '',
+        homepage_subheadline: ''
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Update settings (admin only)
+router.post('/settings', verifyToken, async (req, res) => {
+  try {
+    const {
+      owner_email,
+      notification_email,
+      business_phone,
+      business_email,
+      business_address,
+      service_area,
+      location_description,
+      faq_text,
+      homepage_headline,
+      homepage_subheadline
+    } = req.body;
+
+    // Check if settings exist
+    const existing = await pool.query('SELECT id FROM settings LIMIT 1');
+
+    if (existing.rows.length === 0) {
+      // Create new settings record
+      const result = await pool.query(
+        `INSERT INTO settings (owner_email, notification_email, business_phone, business_email, business_address, service_area, location_description, faq_text, homepage_headline, homepage_subheadline)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        [owner_email, notification_email, business_phone, business_email, business_address, service_area, location_description, faq_text, homepage_headline, homepage_subheadline]
+      );
+      return res.json({ success: true, settings: result.rows[0] });
+    }
+
+    // Update existing settings
+    const result = await pool.query(
+      `UPDATE settings SET
+        owner_email = $1,
+        notification_email = $2,
+        business_phone = $3,
+        business_email = $4,
+        business_address = $5,
+        service_area = $6,
+        location_description = $7,
+        faq_text = $8,
+        homepage_headline = $9,
+        homepage_subheadline = $10,
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $11 RETURNING *`,
+      [owner_email, notification_email, business_phone, business_email, business_address, service_area, location_description, faq_text, homepage_headline, homepage_subheadline, existing.rows[0].id]
+    );
+
+    res.json({ success: true, settings: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// ===== SCHEDULE ENDPOINTS =====
+
+// Get business hours schedule (admin only)
+router.get('/schedule', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, day_of_week, is_open, start_time, end_time, is_mobile_day, is_shop_day FROM schedule ORDER BY ARRAY_POSITION(ARRAY[\'Monday\', \'Tuesday\', \'Wednesday\', \'Thursday\', \'Friday\', \'Saturday\', \'Sunday\'], day_of_week)'
+    );
+    res.json({ schedule: result.rows });
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ error: 'Failed to fetch schedule' });
+  }
+});
+
+// Update business hours for a day (admin only)
+router.put('/schedule/:day', verifyToken, async (req, res) => {
+  try {
+    const { day } = req.params;
+    const { is_open, start_time, end_time, is_mobile_day, is_shop_day } = req.body;
+
+    const result = await pool.query(
+      `UPDATE schedule SET is_open = $1, start_time = $2, end_time = $3, is_mobile_day = $4, is_shop_day = $5, updated_at = CURRENT_TIMESTAMP WHERE day_of_week = $6 RETURNING *`,
+      [is_open, start_time, end_time, is_mobile_day, is_shop_day, day]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Schedule day not found' });
+    }
+
+    res.json({ success: true, schedule: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    res.status(500).json({ error: 'Failed to update schedule' });
+  }
+});
+
+// ===== GALLERY ENDPOINTS =====
+
+// Get gallery photos (admin only)
+router.get('/gallery', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, filename, label, description, display_order, is_active FROM gallery_photos ORDER BY display_order ASC'
+    );
+    res.json({ photos: result.rows });
+  } catch (error) {
+    console.error('Error fetching gallery:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery' });
+  }
+});
+
+// Add photo to gallery (admin only)
+router.post('/gallery', verifyToken, async (req, res) => {
+  try {
+    const { filename, label, description, display_order } = req.body;
+
+    if (!filename) {
+      return res.status(400).json({ error: 'Filename is required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO gallery_photos (filename, label, description, display_order, is_active)
+       VALUES ($1, $2, $3, $4, true) RETURNING *`,
+      [filename, label || '', description || '', display_order || 999]
+    );
+
+    res.json({ success: true, photo: result.rows[0] });
+  } catch (error) {
+    console.error('Error adding photo:', error);
+    res.status(500).json({ error: 'Failed to add photo' });
+  }
+});
+
+// Update gallery photo (admin only)
+router.put('/gallery/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { label, description, display_order, is_active } = req.body;
+
+    const result = await pool.query(
+      `UPDATE gallery_photos SET label = $1, description = $2, display_order = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *`,
+      [label, description, display_order, is_active, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    res.json({ success: true, photo: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating photo:', error);
+    res.status(500).json({ error: 'Failed to update photo' });
+  }
+});
+
+// Delete gallery photo (admin only)
+router.delete('/gallery/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM gallery_photos WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    res.json({ success: true, message: 'Photo deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    res.status(500).json({ error: 'Failed to delete photo' });
   }
 });
 

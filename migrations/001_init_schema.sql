@@ -135,6 +135,80 @@ CREATE TABLE IF NOT EXISTS reviews (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create schedule table (business hours)
+CREATE TABLE IF NOT EXISTS schedule (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  day_of_week VARCHAR(10) UNIQUE NOT NULL,
+  is_open BOOLEAN DEFAULT true,
+  start_time TIME DEFAULT '10:00:00',
+  end_time TIME DEFAULT '18:00:00',
+  is_mobile_day BOOLEAN DEFAULT true,
+  is_shop_day BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create settings table
+CREATE TABLE IF NOT EXISTS settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_email VARCHAR(255),
+  notification_email VARCHAR(255),
+  business_phone VARCHAR(20),
+  business_email VARCHAR(255),
+  business_address VARCHAR(500),
+  service_area VARCHAR(500),
+  location_description TEXT,
+  faq_text TEXT,
+  homepage_headline VARCHAR(255),
+  homepage_subheadline TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed default services (if table is empty)
+INSERT INTO services (name, description, price, category, is_active, display_order) VALUES
+  ('Full Motorcycle Service', 'Complete motorcycle detailing service', 7000, 'Mobile', true, 1),
+  ('Interior Detailing', 'Interior cleaning and detailing', 10000, 'Mobile', true, 2),
+  ('Car Wash', 'Professional car washing', 8500, 'Mobile', true, 3),
+  ('Ceramic Coating', 'Professional ceramic coating service', 40000, 'Location Only', true, 4),
+  ('Premium Package', 'Premium detailing package', 17000, 'Mobile', true, 5),
+  ('Ultra Premium', 'Ultra premium detailing package', 33500, 'Mobile', true, 6),
+  ('Engine Bay Cleaning', 'Engine bay cleaning service', 7500, 'Mobile', true, 7),
+  ('Full Vehicle Polish', 'Full vehicle polishing service', 25000, 'Location Only', true, 8)
+ON CONFLICT DO NOTHING;
+
+-- Seed default add-ons (if table is empty)
+INSERT INTO addons (name, description, price, is_active, display_order) VALUES
+  ('Pet Hair / Odor Elimination', 'Remove pet hair and odors', 5000, true, 1),
+  ('Headlight Restoration', 'Restore headlight clarity', 5000, true, 2)
+ON CONFLICT DO NOTHING;
+
+-- Seed default schedule (business hours for all 7 days)
+INSERT INTO schedule (day_of_week, is_open, start_time, end_time, is_mobile_day, is_shop_day) VALUES
+  ('Monday', true, '10:00:00', '18:00:00', true, false),
+  ('Tuesday', true, '10:00:00', '18:00:00', true, false),
+  ('Wednesday', true, '10:00:00', '18:00:00', true, false),
+  ('Thursday', true, '10:00:00', '18:00:00', true, false),
+  ('Friday', true, '10:00:00', '18:00:00', true, false),
+  ('Saturday', true, '10:00:00', '16:00:00', true, true),
+  ('Sunday', false, '10:00:00', '16:00:00', false, false)
+ON CONFLICT DO NOTHING;
+
+-- Seed default settings
+INSERT INTO settings (owner_email, notification_email, business_phone, business_email, business_address, service_area, location_description, homepage_headline, homepage_subheadline) VALUES
+  (
+    'owner@geruso-detailing.com',
+    'notifications@geruso-detailing.com',
+    '401-490-1236',
+    'info@geruso-detailing.com',
+    'North Providence, RI',
+    'Rhode Island',
+    'Mapleville, RI',
+    'Your Vehicle, Perfected',
+    'Professional car detailing services including washing, waxing, ceramic coating and more'
+  )
+ON CONFLICT DO NOTHING;
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(customer_email);
@@ -148,3 +222,5 @@ CREATE INDEX IF NOT EXISTS idx_blocked_dates ON blocked_dates(blocked_date);
 CREATE INDEX IF NOT EXISTS idx_gallery_order ON gallery_photos(display_order);
 CREATE INDEX IF NOT EXISTS idx_reviews_active ON reviews(is_active);
 CREATE INDEX IF NOT EXISTS idx_site_content_key ON site_content(key);
+CREATE INDEX IF NOT EXISTS idx_schedule_day ON schedule(day_of_week);
+CREATE INDEX IF NOT EXISTS idx_settings_id ON settings(id);
