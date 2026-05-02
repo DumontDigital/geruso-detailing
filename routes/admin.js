@@ -134,4 +134,79 @@ router.post('/cleanup-old-placeholders', verifyToken, async (req, res) => {
   }
 });
 
+// Complete schedule reset - delete ALL bookings and regenerate (admin only)
+router.post('/reset-complete-schedule', verifyToken, async (req, res) => {
+  try {
+    console.log('[Complete Reset] Starting complete schedule reset...');
+
+    // First, delete ALL bookings from the database
+    const deleteResult = await pool.query('DELETE FROM bookings RETURNING id');
+    console.log(`[Complete Reset] Deleted ${deleteResult.rowCount} bookings from database`);
+
+    // Now regenerate fresh availability slots
+    const { getUpcomingAvailability, createPlaceholderBooking } = require('../utils/availability');
+
+    console.log('[Complete Reset] Generating fresh availability slots...');
+    const slots = getUpcomingAvailability(60);
+    console.log(`[Complete Reset] Generated ${slots.length} available slots`);
+
+    // Insert fresh placeholder bookings
+    let insertedCount = 0;
+    for (const slot of slots) {
+      try {
+        const placeholder = createPlaceholderBooking(slot.date, slot.time);
+
+        await pool.query(
+          `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status, stripe_session_id, stripe_payment_intent_id, deposit_amount, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+          [
+            placeholder.id, placeholder.customer_name, placeholder.customer_email, placeholder.customer_phone,
+            placeholder.service_address, placeholder.service_type, placeholder.booking_date, placeholder.booking_time,
+            placeholder.vehicle_type, placeholder.notes, placeholder.vehicle_photo, placeholder.status,
+            placeholder.payment_status, placeholder.stripe_session_id, placeholder.stripe_payment_intent_id,
+            placeholder.deposit_amount, placeholder.created_at, placeholder.updated_at
+          ]
+        );
+
+        insertedCount++;
+      } catch (error) {
+        if (error.code === '23505') {
+          // Unique constraint error - slot already exists, skip
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    console.log(`[Complete Reset] ✓ Inserted ${insertedCount} fresh placeholder slots`);
+
+    // Verify the reset
+    const verifyResult = await pool.query(
+      `SELECT MIN(booking_date::date) as earliest, MAX(booking_date::date) as latest, COUNT(*) as total
+       FROM bookings`
+    );
+
+    const earliest = verifyResult.rows[0].earliest;
+    const latest = verifyResult.rows[0].latest;
+    const total = verifyResult.rows[0].total;
+
+    console.log(`[Complete Reset] Verification: earliest=${earliest}, latest=${latest}, total=${total}`);
+
+    res.json({
+      success: true,
+      message: 'Complete schedule reset successful',
+      deleted: deleteResult.rowCount,
+      regenerated: insertedCount,
+      verification: {
+        earliestDate: earliest,
+        latestDate: latest,
+        totalSlots: total
+      }
+    });
+  } catch (error) {
+    console.error('[Complete Reset] Error:', error.message);
+    res.status(500).json({ error: 'Failed to reset schedule: ' + error.message });
+  }
+});
+
 module.exports = router;
