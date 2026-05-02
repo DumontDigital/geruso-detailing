@@ -438,6 +438,25 @@
     return `${year}-${month}-${day}`;
   }
 
+  // Convert time string (e.g., "6:00 AM") to numeric value for sorting
+  function parseTimeToMinutes(timeStr) {
+    const match = timeStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
+    if (!match) return 0;
+
+    let [, hours, minutes, period] = match;
+    hours = parseInt(hours);
+    minutes = parseInt(minutes);
+
+    // Convert to 24-hour format for proper sorting
+    if (period.toUpperCase() === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period.toUpperCase() === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return hours * 60 + minutes; // Return minutes since midnight
+  }
+
   // Load bookings
   async function loadBookings() {
     try {
@@ -457,10 +476,12 @@
         const dateA = new Date(a.booking_date).toISOString().split('T')[0];
         const dateB = new Date(b.booking_date).toISOString().split('T')[0];
         if (dateA !== dateB) {
-          return dateA.localeCompare(dateB); // Sort by date ascending
+          return dateA.localeCompare(dateB); // Sort by date ascending (YYYY-MM-DD format sorts correctly)
         }
-        // Same date, sort by time ascending
-        return a.booking_time.localeCompare(b.booking_time);
+        // Same date, sort by time ascending (convert to numeric minutes for proper sorting)
+        const timeAMinutes = parseTimeToMinutes(a.booking_time);
+        const timeBMinutes = parseTimeToMinutes(b.booking_time);
+        return timeAMinutes - timeBMinutes;
       });
 
       // Filter to show only today and future dates for rolling schedule (using Eastern Time)
