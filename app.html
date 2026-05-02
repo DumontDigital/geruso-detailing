@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geruso Detailing</title>
+  <style>
+    :root {
+      --primary: #00FF41;
+      --primary-dark: #00DD33;
+      --primary-light: #33FF66;
+      --white: #ffffff;
+      --light-bg: #0a0a0a;
+      --light-bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --text-light: #888888;
+      --accent: #ff6b6b;
+      --success: #00a854;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--light-bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* View Container */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      background: var(--light-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 255, 65, 0.1);
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 18px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .user-role {
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #ff5252;
+      transform: translateY(-1px);
+    }
+
+    /* Main Content Area */
+    .app-content {
+      flex: 1;
+      display: flex;
+    }
+
+    /* View Sections */
+    .view {
+      display: none;
+      flex: 1;
+      width: 100%;
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--light-bg);
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Placeholder for embedded content */
+    .view-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading State -->
+  <div id="loadingScreen" class="loading">
+    <div>Loading Geruso Detailing...</div>
+  </div>
+
+  <!-- App Container -->
+  <div id="appContainer" class="app-container" style="display: none;">
+    <!-- Top Navigation -->
+    <div class="top-nav">
+      <div class="nav-brand">🚗 Geruso Detailing</div>
+      <div class="nav-right">
+        <div class="user-info">
+          Signed in as: <span id="userDisplay">User</span>
+          <div class="user-role" id="roleDisplay">customer</div>
+        </div>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <!-- App Content -->
+    <div class="app-content">
+      <!-- CUSTOMER VIEW -->
+      <div id="customerView" class="view">
+        <div class="view-content" id="customerContent">
+          <!-- Customer view will be loaded here -->
+          <iframe id="customerFrame" src="/booking.html" style="border: none; width: 100%; height: 100%;"></iframe>
+        </div>
+      </div>
+
+      <!-- OWNER VIEW -->
+      <div id="ownerView" class="view">
+        <div class="view-content" id="ownerContent">
+          <!-- Owner dashboard will be loaded here -->
+          <iframe id="ownerFrame" src="/index.html" style="border: none; width: 100%; height: 100%;"></iframe>
+        </div>
+      </div>
+
+      <!-- DEV VIEW -->
+      <div id="devView" class="view">
+        <div class="view-content" id="devContent">
+          <!-- Dev dashboard will be loaded here -->
+          <iframe id="devFrame" src="/admin-dashboard.html" style="border: none; width: 100%; height: 100%;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth-helper.js"></script>
+  <script>
+    const auth = new AuthHelper();
+    const loadingScreen = document.getElementById('loadingScreen');
+    const appContainer = document.getElementById('appContainer');
+    const customerView = document.getElementById('customerView');
+    const ownerView = document.getElementById('ownerView');
+    const devView = document.getElementById('devView');
+    const userDisplay = document.getElementById('userDisplay');
+    const roleDisplay = document.getElementById('roleDisplay');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Initialize app
+    window.addEventListener('load', () => {
+      // Check if authenticated
+      if (!auth.isLoggedIn()) {
+        // Redirect to login
+        window.location.href = '/login';
+        return;
+      }
+
+      // Show app
+      loadingScreen.style.display = 'none';
+      appContainer.style.display = 'flex';
+
+      // Display user info
+      userDisplay.textContent = auth.getUserDisplay();
+      roleDisplay.textContent = auth.getRole();
+
+      // Show appropriate view based on role
+      const role = auth.getRole();
+
+      if (role === 'customer') {
+        customerView.classList.add('active');
+      } else if (role === 'owner') {
+        ownerView.classList.add('active');
+      } else if (role === 'dev') {
+        devView.classList.add('active');
+      }
+    });
+
+    // Logout handler
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to logout?')) {
+        auth.logout();
+      }
+    });
+
+    // Handle auth errors
+    window.addEventListener('message', (event) => {
+      // Listen for auth errors from iframes
+      if (event.data && event.data.type === 'AUTH_ERROR') {
+        auth.logout();
+      }
+    });
+  </script>
+</body>
+</html>

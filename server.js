@@ -34,14 +34,16 @@ app.use(express.static(path.join(__dirname), {
   etag: true
 }));
 
-// Serve all HTML pages with no-cache headers
+// UNIFIED WEBSITE - Single entry point
+// Landing page: show app if authenticated, login if not
 app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'app.html'));
 });
 
+// Login portal - standalone page
 app.get('/login', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
@@ -49,8 +51,17 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Customer view - booking page
-app.get('/booking', (req, res) => {
+// App page (main application)
+app.get('/app', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+// EMBEDDED VIEWS (for iframes within app.html)
+// Customer view - booking page (embedded)
+app.get('/booking.html', (req, res) => {
   const fs = require('fs');
   let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
   const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
@@ -60,14 +71,14 @@ app.get('/booking', (req, res) => {
   res.send(bookingHtml);
 });
 
-// Owner dashboard
-app.get('/owner-dashboard.html', (req, res) => {
+// Owner dashboard view (embedded)
+app.get('/index.html', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Dev dashboard (same as owner for now, can be customized)
-app.get('/dev-dashboard.html', (req, res) => {
+// Dev dashboard view (embedded)
+app.get('/admin-dashboard.html', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
 });
