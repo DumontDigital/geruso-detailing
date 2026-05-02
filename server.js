@@ -62,27 +62,9 @@ app.get('/admin/login', (req, res) => {
 });
 
 // Main admin entry point: /admin
-// Serves dashboard - client-side checks auth and redirects to /admin/login if needed
+// Serves admin dashboard with client-side auth checking
 app.get('/admin', (req, res) => {
-  console.log('[Admin] GET /admin request received');
-  const fs = require('fs');
-  const filePath = path.join(__dirname, 'admin-dashboard.html');
-
-  try {
-    console.log('[Admin] Checking if file exists:', filePath);
-    if (!fs.existsSync(filePath)) {
-      console.error('[Admin] File not found:', filePath);
-      return res.status(404).send('Admin dashboard file not found');
-    }
-
-    console.log('[Admin] Reading and serving admin-dashboard.html');
-    const adminHtml = fs.readFileSync(filePath, 'utf8');
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(adminHtml);
-  } catch (error) {
-    console.error('[Admin] Error serving admin dashboard:', error.message);
-    res.status(500).send('Error loading admin panel: ' + error.message);
-  }
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // Route aliases that redirect to /admin (for backwards compatibility)
