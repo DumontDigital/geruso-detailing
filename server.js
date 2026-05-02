@@ -263,11 +263,18 @@ app.use('/api/availability', availabilityRoutes);
 // ========== OWNER PANEL API - PHASE 1 ==========
 // Owner authentication
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
+const jwt = require('jsonwebtoken');
 
 app.post('/api/owner/login', (req, res) => {
   const { password } = req.body;
   if (password === OWNER_PASSWORD) {
-    res.json({ success: true });
+    // Generate JWT token for owner
+    const token = jwt.sign(
+      { role: 'owner', email: 'owner@geruso-detailing.com' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+    res.json({ success: true, token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid password' });
   }

@@ -743,6 +743,7 @@
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
         <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
         <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
       </div>
 
@@ -781,6 +782,69 @@
               </thead>
               <tbody id="bookingsList"></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="servicesTab" class="owner-tab" style="display: none;">
+          <h2 style="margin-bottom: 24px;">Manage Services</h2>
+
+          <!-- Add New Service Form -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+            <h3 style="margin-bottom: 16px;">Add New Service</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Service Name</label>
+                <input type="text" id="serviceFormName" placeholder="e.g., Interior Detailing" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Price ($)</label>
+                <input type="number" id="serviceFormPrice" placeholder="100" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Category</label>
+                <select id="serviceFormCategory" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+                  <option value="Mobile">Mobile</option>
+                  <option value="Location Only">Location Only</option>
+                  <option value="Extra Fee">Extra Fee</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Active</label>
+                <select id="serviceFormActive" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 14px;">Description</label>
+              <textarea id="serviceFormDescription" placeholder="Brief description of this service..." style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;"></textarea>
+            </div>
+            <button onclick="ownerSaveNewService()" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">+ Add Service</button>
+          </div>
+
+          <!-- Services List -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 16px; background: var(--light-bg); border-bottom: 1px solid var(--border);">
+              <h3 style="margin: 0;">📋 Services</h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead style="background: var(--light-bg);">
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Category</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Price</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Active</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; font-size: 14px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="servicesList"></tbody>
+            </table>
+            <div id="servicesEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No services found. Add one above.</div>
           </div>
         </div>
 
@@ -862,17 +926,18 @@
     e.preventDefault();
     const password = document.getElementById('ownerPassword').value;
     const errorDiv = document.getElementById('ownerLoginError');
-    
+
     try {
       const response = await fetch('/api/owner/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
       });
-      
+
       const data = await response.json();
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.token) {
         localStorage.setItem('ownerLoggedIn', 'true');
+        localStorage.setItem('ownerToken', data.token);
         showDashboard();
       } else {
         errorDiv.textContent = '✗ Invalid password';
@@ -883,10 +948,11 @@
       errorDiv.style.display = 'block';
     }
   });
-  
+
   // Logout handler
   logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('ownerLoggedIn');
+    localStorage.removeItem('ownerToken');
     ownerPanel.style.display = 'none';
     document.body.style.overflow = 'auto';
     window.location.href = '/';
@@ -918,30 +984,32 @@
     dashboard.style.display = 'block';
     updateEasternTimeDisplay();
     loadBookings();
+    loadServices();
     loadSchedule();
     setupTabNavigation();
     setupAutoRotation();
     // Update Eastern time display every second
     setInterval(updateEasternTimeDisplay, 1000);
   }
-  
+
   function setupTabNavigation() {
     document.querySelectorAll('.owner-nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
-        
+
         document.querySelectorAll('.owner-tab').forEach(t => t.style.display = 'none');
         document.getElementById(tab + 'Tab').style.display = 'block';
-        
+
         document.querySelectorAll('.owner-nav-btn').forEach(b => {
           b.style.background = 'transparent';
           b.style.color = 'var(--text)';
         });
         btn.style.background = 'var(--primary)';
         btn.style.color = '#000';
-        
+
         if (tab === 'schedule') loadSchedule();
         if (tab === 'bookings') loadBookings();
+        if (tab === 'services') loadServices();
       });
     });
   }
@@ -1194,7 +1262,53 @@
       console.error('Error loading schedule:', error);
     }
   }
-  
+
+  async function loadServices() {
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/services', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      const tbody = document.getElementById('servicesList');
+      const emptyDiv = document.getElementById('servicesEmpty');
+      tbody.innerHTML = '';
+
+      if (!data.services || data.services.length === 0) {
+        tbody.innerHTML = '';
+        emptyDiv.style.display = 'block';
+        return;
+      }
+
+      emptyDiv.style.display = 'none';
+      data.services.forEach(service => {
+        tbody.innerHTML += `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px;">
+              <div style="font-weight: 700;">${service.name}</div>
+              <small style="color: var(--text-muted); display: block; margin-top: 4px;">${service.description || ''}</small>
+            </td>
+            <td style="padding: 12px; font-size: 13px;">${service.category || '—'}</td>
+            <td style="padding: 12px; font-weight: 700;">$${(service.price / 100).toFixed(2)}</td>
+            <td style="padding: 12px;">
+              <span style="background: ${service.is_active ? 'var(--success)' : 'var(--text-muted)'}20; color: ${service.is_active ? 'var(--success)' : 'var(--text-muted)'}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${service.is_active ? 'Active' : 'Inactive'}</span>
+            </td>
+            <td style="padding: 12px;">
+              <div style="display: flex; gap: 4px;">
+                <button onclick="ownerEditService('${service.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;">Edit</button>
+                <button onclick="ownerDeleteService('${service.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+    } catch (error) {
+      console.error('Error loading services:', error);
+    }
+  }
+
   // Global functions for booking actions
   window.ownerConfirmBooking = async (bookingId) => {
     if (!confirm('Confirm this booking?')) return;
@@ -1295,6 +1409,70 @@
       const response = await fetch(`/api/owner/blocked-date/${blockedDateId}`, { method: 'DELETE' });
       if (response.ok) {
         loadSchedule();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+
+  // Service Management Functions
+  window.ownerSaveNewService = async () => {
+    const name = document.getElementById('serviceFormName').value;
+    const price = parseInt(document.getElementById('serviceFormPrice').value) * 100; // Convert to cents
+    const category = document.getElementById('serviceFormCategory').value;
+    const description = document.getElementById('serviceFormDescription').value;
+    const is_active = document.getElementById('serviceFormActive').value === 'true';
+
+    if (!name || !price) {
+      alert('Please fill in service name and price');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/services', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, price, category, description, is_active })
+      });
+
+      if (response.ok) {
+        // Clear form
+        document.getElementById('serviceFormName').value = '';
+        document.getElementById('serviceFormPrice').value = '';
+        document.getElementById('serviceFormCategory').value = 'Mobile';
+        document.getElementById('serviceFormDescription').value = '';
+        document.getElementById('serviceFormActive').value = 'true';
+
+        loadServices();
+      } else {
+        const error = await response.json();
+        alert('Error: ' + error.error);
+      }
+    } catch (error) {
+      alert('Error adding service: ' + error.message);
+    }
+  };
+
+  window.ownerEditService = async (serviceId) => {
+    alert('Edit service feature coming soon');
+  };
+
+  window.ownerDeleteService = async (serviceId) => {
+    if (!confirm('Delete this service permanently?')) return;
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        loadServices();
+      } else {
+        alert('Failed to delete service');
       }
     } catch (error) {
       alert('Error: ' + error.message);
