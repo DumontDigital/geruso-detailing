@@ -337,9 +337,14 @@ app.get('/api/owner/bookings', async (req, res) => {
       .filter(booking => {
         // REMOVE all placeholder "Available Slot" rows from owner dashboard
         const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-        return !isPlaceholder; // Only keep real customer bookings
+        const kept = !isPlaceholder;
+        if (!kept && result.rows.length <= 5) {
+          console.log(`[Owner Dashboard] Filtering out placeholder: ${booking.customer_name} (${booking.customer_email})`);
+        }
+        return kept; // Only keep real customer bookings
       });
 
+    console.log(`[Owner Dashboard] API: ${result.rows.length} total → ${filteredBookings.length} real bookings`);
     res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
