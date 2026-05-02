@@ -1042,8 +1042,54 @@
         return;
       }
 
-      // Backend already filters out past available slots, so just use bookings as-is
-      const filteredBookings = data.bookings;
+      // FRONTEND FILTERING: Get current Eastern Time for safety check
+      const nowET = getCurrentTimeET();
+      const todayET = getTodayET();
+      const currentDateTimeStr = `${todayET} ${String(nowET.hour).padStart(2, '0')}:${String(nowET.minute).padStart(2, '0')}`;
+
+      // Filter: Keep real bookings, filter out past placeholder slots
+      const filteredBookings = data.bookings.filter(booking => {
+        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+
+        // Keep all real customer bookings
+        if (!isPlaceholder) {
+          return true;
+        }
+
+        // For placeholder slots, check if they're in the future
+        const bookingDateStr = booking.booking_date.split('T')[0]; // Extract YYYY-MM-DD
+
+        // Parse time from "H:MM AM/PM" or "HH:MM AM/PM" format
+        const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+        const timeMatch = booking.booking_time.match(timeRegex);
+
+        if (!timeMatch) {
+          return false; // Invalid time format, skip
+        }
+
+        let hour = parseInt(timeMatch[1]);
+        const minute = parseInt(timeMatch[2]);
+        const ampm = timeMatch[3].toUpperCase();
+
+        // Convert to 24-hour format
+        if (ampm === 'PM' && hour !== 12) {
+          hour += 12;
+        } else if (ampm === 'AM' && hour === 12) {
+          hour = 0;
+        }
+
+        const slotTimeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const slotDateTimeStr = `${bookingDateStr} ${slotTimeStr}`;
+
+        // Only show slots where slotDateTime > currentDateTime (strictly greater)
+        const isInFuture = slotDateTimeStr > currentDateTimeStr;
+
+        if (!isInFuture) {
+          console.log(`[Frontend] Filtering past slot: ${slotDateTimeStr} <= ${currentDateTimeStr}`);
+        }
+
+        return isInFuture;
+      });
 
       // Render filtered bookings
       if (filteredBookings.length > 0) {
