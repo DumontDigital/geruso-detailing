@@ -227,6 +227,28 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'geruso-detailing' });
 });
 
+// Admin: Reset system to availability slots (clears old bookings)
+app.post('/api/admin/reset-availability', async (req, res) => {
+  try {
+    console.log('[Admin Reset] Resetting system to availability slots...');
+    const { resetToAvailability } = require('./utils/clearBookings');
+
+    const result = await resetToAvailability();
+
+    res.json({
+      success: true,
+      message: result.message,
+      details: 'All test bookings cleared. Fresh availability slots generated for next 60 days.'
+    });
+  } catch (error) {
+    console.error('[Admin Reset] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to reset availability: ' + error.message
+    });
+  }
+});
+
 // 404 fallback - serve index for SPA-like behavior
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

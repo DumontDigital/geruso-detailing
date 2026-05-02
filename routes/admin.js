@@ -76,10 +76,17 @@ router.get('/bookings', verifyToken, async (req, res) => {
       params.push(search);
     }
 
-    query += ' ORDER BY booking_date DESC';
+    query += ' ORDER BY booking_date ASC, booking_time ASC';
 
     const result = await pool.query(query, params);
-    res.json({ bookings: result.rows });
+
+    // Mark placeholder bookings
+    const bookings = result.rows.map(booking => ({
+      ...booking,
+      is_placeholder: booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot'
+    }));
+
+    res.json({ bookings });
   } catch (error) {
     console.error('Fetch admin bookings error:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
