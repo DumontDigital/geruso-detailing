@@ -54,35 +54,42 @@ router.post('/checkout', async (req, res) => {
 
     console.log('[Bookings API] Validation passed');
 
-    // Use INSERT ... ON CONFLICT to replace placeholders or create new bookings
-    // This ensures only one booking per date/time slot
-    const bookingId = uuidv4();
-    const result = await pool.query(
-      `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       ON CONFLICT (booking_date, booking_time) DO UPDATE SET
-         customer_name = EXCLUDED.customer_name,
-         customer_email = EXCLUDED.customer_email,
-         customer_phone = EXCLUDED.customer_phone,
-         service_address = EXCLUDED.service_address,
-         service_type = EXCLUDED.service_type,
-         vehicle_type = EXCLUDED.vehicle_type,
-         notes = EXCLUDED.notes,
-         vehicle_photo = EXCLUDED.vehicle_photo,
-         status = EXCLUDED.status,
-         payment_status = EXCLUDED.payment_status,
-         updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto || null, 'pending', 'unpaid']
+    // Try to find and replace an existing placeholder at this date/time
+    const placeholderQuery = await pool.query(
+      `SELECT id FROM bookings WHERE booking_date::text = $1 AND booking_time = $2 AND customer_email = $3 AND customer_name = $4 LIMIT 1`,
+      [bookingDate, bookingTime, 'booking.test@gmail.com', 'Available Slot']
     );
 
-    const booking = result.rows[0];
+    let booking;
 
-    // Check if this was an UPDATE (replacing placeholder) or INSERT (new booking)
-    if (booking.id === bookingId) {
-      console.log('[Bookings API] Booking created (unpaid):', booking.id);
-    } else {
+    if (placeholderQuery.rows.length > 0) {
+      // Update existing placeholder
+      const placeholderId = placeholderQuery.rows[0].id;
+      console.log('[Bookings API] Replacing placeholder:', placeholderId);
+
+      const result = await pool.query(
+        `UPDATE bookings SET customer_name = $1, customer_email = $2, customer_phone = $3, service_address = $4, service_type = $5, vehicle_type = $6, notes = $7, vehicle_photo = $8, status = $9, payment_status = $10, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $11
+         RETURNING *`,
+        [customerName, customerEmail, customerPhone, serviceAddress, serviceType, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid', placeholderId]
+      );
+
+      booking = result.rows[0];
       console.log('[Bookings API] Placeholder replaced with real customer data:', booking.id);
+    } else {
+      // Create new booking if placeholder doesn't exist
+      const bookingId = uuidv4();
+      console.log('[Bookings API] No placeholder found, creating new booking');
+
+      const result = await pool.query(
+        `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING *`,
+        [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
+      );
+
+      booking = result.rows[0];
+      console.log('[Bookings API] Booking created (unpaid):', booking.id);
     }
 
     // Send confirmation email to customer
