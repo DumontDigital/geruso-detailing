@@ -769,13 +769,17 @@
             </select>
           </div>
 
-          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;">
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
               <thead style="background: var(--light-bg);">
                 <tr style="border-bottom: 1px solid var(--border);">
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Customer</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Date/Time</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Name</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Email</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Phone</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Address</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700;">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Date</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Time</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700;">Status</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700;">Actions</th>
                 </tr>
@@ -965,20 +969,34 @@
   }
 
   // Format booking date/time for owner dashboard display
+  // Format date without UTC conversion: YYYY-MM-DD → "May 29, 2026"
+  function formatDateOnly(dateStr) {
+    try {
+      // Extract YYYY-MM-DD without converting to Date object (no UTC shift)
+      let plainDate = dateStr;
+      if (dateStr && dateStr.includes('T')) {
+        plainDate = dateStr.split('T')[0]; // Get YYYY-MM-DD part
+      }
+
+      if (!plainDate || plainDate.length < 10) {
+        return dateStr;
+      }
+
+      const [year, month, day] = plainDate.split('-');
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthName = months[parseInt(month) - 1];
+
+      return `${monthName} ${parseInt(day)}, ${year}`;
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return dateStr;
+    }
+  }
+
   function formatBookingDateTime(dateStr, timeStr) {
     try {
-      // Parse the booking_date from database (ISO format or direct date)
-      const date = new Date(dateStr);
-
-      // Format date using Eastern Time
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      });
-
-      const formattedDate = formatter.format(date);
+      // Use string parsing - NO Date object conversion (prevents UTC shift)
+      const formattedDate = formatDateOnly(dateStr);
 
       // timeStr is already in format like "12:00 PM" or "14:00"
       // If 24-hour format, convert to 12-hour
@@ -1067,7 +1085,7 @@
       tbody.innerHTML = '';
 
       if (!data.bookings || data.bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
         return;
       }
 
@@ -1078,32 +1096,35 @@
 
       // If no real bookings, show message
       if (realBookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
         return;
       }
 
-      // Render real bookings only
+      // Render real bookings only with all details
       realBookings.forEach(booking => {
         const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
                           booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
 
+        const formattedDate = formatDateOnly(booking.booking_date);
+
         tbody.innerHTML += `
           <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px; font-weight: 700;">${booking.customer_name || '—'}</td>
+            <td style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
+            <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
+            <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
+            <td style="padding: 12px;">${booking.service_type || '—'}</td>
+            <td style="padding: 12px;">${formattedDate}</td>
+            <td style="padding: 12px;">${booking.booking_time || '—'}</td>
             <td style="padding: 12px;">
-              <div style="font-weight: 700;">${booking.customer_name}</div>
-              <small style="color: var(--text-muted);">${booking.customer_email}</small>
+              <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${booking.status}</span>
             </td>
-            <td style="padding: 12px;">${formatBookingDateTime(booking.booking_date, booking.booking_time)}</td>
-            <td style="padding: 12px;">${booking.service_type}</td>
             <td style="padding: 12px;">
-              <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${booking.status}</span>
-            </td>
-            <td style="padding: 12px;">
-              <div style="display: flex; gap: 8px;">
-                <button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Complete</button>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                <button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
                 ${booking.status !== 'cancelled' ?
-                  `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Cancel</button>` : ''}
-                <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Delete</button>
+                  `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>` : ''}
+                <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Delete</button>
               </div>
             </td>
           </tr>

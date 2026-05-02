@@ -960,13 +960,19 @@
     }
 
     // Build booking data with all required fields
+    // CRITICAL: Format date as YYYY-MM-DD WITHOUT UTC conversion (use local timezone)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+
     const bookingData = {
       customerName,
       customerEmail,
       customerPhone,
       serviceAddress: finalAddress,
       serviceType,
-      bookingDate: selectedDate.toISOString().split('T')[0],
+      bookingDate: localDateStr, // Plain string: YYYY-MM-DD (NO UTC conversion)
       bookingTime: selectedTime,
       vehicleType: document.querySelector('select[name="vehicleType"]').value,
       notes: document.querySelector('textarea[name="notes"]').value,
@@ -975,7 +981,7 @@
 
     // Debug: Log the payload before submission
     console.log('[Booking Submission] Payload:', bookingData);
-    console.log('[Booking Submission] selectedDate:', selectedDate.toISOString().split('T')[0]);
+    console.log('[Booking Submission] selectedDate (local):', localDateStr);
     console.log('[Booking Submission] selectedTime:', selectedTime);
     console.log('[Booking Submission] vehiclePhoto included:', !!vehiclePhotoBase64);
 
