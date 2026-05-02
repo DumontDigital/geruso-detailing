@@ -434,9 +434,25 @@
         return;
       }
 
-      // Sort by date descending
-      allBookings = data.bookings.sort((a, b) => new Date(b.booking_date) - new Date(a.booking_date));
-      renderBookingsTable(allBookings);
+      // Sort by date ascending, then by time ascending (rotating schedule from today forward)
+      allBookings = data.bookings.sort((a, b) => {
+        const dateA = new Date(a.booking_date).toISOString().split('T')[0];
+        const dateB = new Date(b.booking_date).toISOString().split('T')[0];
+        if (dateA !== dateB) {
+          return dateA.localeCompare(dateB); // Sort by date ascending
+        }
+        // Same date, sort by time ascending
+        return a.booking_time.localeCompare(b.booking_time);
+      });
+
+      // Filter to show only today and future dates for rolling schedule
+      const today = new Date().toISOString().split('T')[0];
+      const rollingBookings = allBookings.filter(booking => {
+        const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
+        return bookingDate >= today;
+      });
+
+      renderBookingsTable(rollingBookings);
       setupFilterListeners();
     } catch (error) {
       console.error('Error loading bookings:', error);
@@ -507,6 +523,7 @@
       const searchTerm = searchInput.value.toLowerCase();
       const selectedDate = dateFilter.value;
       const selectedStatus = statusFilter.value;
+      const today = new Date().toISOString().split('T')[0];
 
       const filtered = allBookings.filter(booking => {
         const matchesSearch = !searchTerm ||
@@ -515,7 +532,10 @@
           booking.customer_email.toLowerCase().includes(searchTerm);
 
         const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-        const matchesDate = !selectedDate || bookingDate === selectedDate;
+
+        // If date filter is specified, show only that date
+        // Otherwise show rolling window (today and future)
+        const matchesDate = selectedDate ? (bookingDate === selectedDate) : (bookingDate >= today);
 
         const matchesStatus = !selectedStatus || booking.status === selectedStatus;
 
@@ -532,7 +552,13 @@
       searchInput.value = '';
       dateFilter.value = '';
       statusFilter.value = '';
-      renderBookingsTable(allBookings);
+      // When clearing filters, return to rolling schedule (today and future)
+      const today = new Date().toISOString().split('T')[0];
+      const rollingBookings = allBookings.filter(booking => {
+        const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
+        return bookingDate >= today;
+      });
+      renderBookingsTable(rollingBookings);
     });
   }
 
