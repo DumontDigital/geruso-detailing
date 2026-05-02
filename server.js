@@ -418,6 +418,49 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// DEBUG ENDPOINT: Fix test user passwords (remove in production)
+app.post('/api/debug/fix-passwords', async (req, res) => {
+  try {
+    const testPassword = 'Test1234!';
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(testPassword, salt);
+
+    // Update all test users
+    const users = [
+      'owner@geruso-detailing.com',
+      'dev@geruso-detailing.com',
+      'customer@example.com'
+    ];
+
+    const results = [];
+    for (const email of users) {
+      const result = await pool.query(
+        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING email, role',
+        [passwordHash, email]
+      );
+
+      if (result.rows.length > 0) {
+        results.push({ email: result.rows[0].email, role: result.rows[0].role, updated: true });
+      } else {
+        results.push({ email, updated: false });
+      }
+    }
+
+    console.log('[Debug] Fixed test user passwords');
+    res.json({
+      success: true,
+      message: 'Passwords fixed for test users',
+      updated: results,
+      testPassword: testPassword
+    });
+  } catch (error) {
+    console.error('[Debug] Error fixing passwords:', error);
+    res.status(500).json({ error: 'Failed to fix passwords' });
+  }
+});
+
 // Legacy owner login for backward compatibility
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
 
