@@ -29,17 +29,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware to prevent old index.html from being served (renamed to owner-dashboard.html)
-app.use((req, res, next) => {
-  if (req.path === '/index.html' || req.path === '/' && req.accepts('html') && !req.accepts('application/json')) {
-    // For these paths, continue to our explicit route handlers below, don't serve from static
-    return next();
-  }
-  next();
-});
-
+// Static file serving
 app.use(express.static(path.join(__dirname), {
-  maxAge: '1h', // Cache other static files for 1 hour
+  maxAge: '1h',
   etag: true
 }));
 
