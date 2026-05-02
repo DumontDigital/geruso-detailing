@@ -44,8 +44,72 @@ app.get('/booking', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(bookingHtml);
 });
-app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'admin-login.html')));
-app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'admin-dashboard.html')));
+// Admin routes - must be before catch-all
+app.get('/admin/login', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-login.html');
+    console.log('[Admin Login] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Login] Error:', error.message);
+    res.status(500).send('Error loading login page');
+  }
+});
+
+app.get('/admin', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
+    console.log('[Admin Dashboard] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Dashboard] Error:', error.message);
+    res.status(500).send('Error loading dashboard');
+  }
+});
+
+app.get('/admin/dashboard', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
+    console.log('[Admin Dashboard] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Dashboard] Error:', error.message);
+    res.status(500).send('Error loading dashboard');
+  }
+});
+
+app.get('/admin/bookings', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
+    console.log('[Admin Bookings] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Bookings] Error:', error.message);
+    res.status(500).send('Error loading bookings');
+  }
+});
+
+app.get('/admin/services', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
+    console.log('[Admin Services] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Services] Error:', error.message);
+    res.status(500).send('Error loading services');
+  }
+});
+
+app.get('/admin/settings', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
+    console.log('[Admin Settings] Serving from:', filePath);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('[Admin Settings] Error:', error.message);
+    res.status(500).send('Error loading settings');
+  }
+});
 app.get('/success', (req, res) => res.sendFile(path.join(__dirname, 'success.html')));
 app.get('/cancel', (req, res) => res.sendFile(path.join(__dirname, 'cancel.html')));
 
@@ -249,8 +313,12 @@ app.post('/api/admin/reset-availability', async (req, res) => {
   }
 });
 
-// 404 fallback - serve index for SPA-like behavior
+// Explicit catch-all: serve index for non-admin routes
 app.use((req, res) => {
+  // Skip catch-all for API routes and admin routes
+  if (req.path.startsWith('/api') || req.path.startsWith('/admin')) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
