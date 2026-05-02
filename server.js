@@ -97,47 +97,6 @@ app.post('/api/quote', async (req, res) => {
     });
   }
 });
-
-// API: Handle owner update requests
-app.post('/api/owner-request', async (req, res) => {
-  try {
-    console.log('[Owner Request] Received owner update request');
-    const { requestType, requestDetails } = req.body;
-
-    if (!requestType || !requestDetails) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Send email to owner
-    const { sendOwnerEmail } = require('./email');
-    const emailResult = await sendOwnerEmail({
-      requestType,
-      requestDetails,
-      submittedAt: new Date().toISOString()
-    });
-
-    if (!emailResult.success) {
-      console.error('[Owner Request] Email send failed:', emailResult.error);
-      return res.status(500).json({
-        success: false,
-        error: emailResult.error || 'Failed to send request'
-      });
-    }
-
-    console.log('[Owner Request] SUCCESS - Owner email sent');
-    return res.json({
-      success: true,
-      message: 'Your update request has been sent to the owner'
-    });
-  } catch (error) {
-    console.error('[Owner Request] ERROR:', error.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error: ' + error.message
-    });
-  }
-});
-
 // Stripe webhook handler
 const { handleWebhook, retrieveSession } = require('./stripe');
 const pool = require('./db');
