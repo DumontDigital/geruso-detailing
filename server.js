@@ -17,30 +17,67 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
 
-// Serve all HTML pages
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// Cache-busting middleware for static files and HTML
+app.use((req, res, next) => {
+  // Disable caching for HTML files
+  if (req.path.endsWith('.html') || req.path === '/' || req.path.match(/^\/\?/)) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
+
+app.use(express.static(path.join(__dirname), {
+  maxAge: '1h', // Cache other static files for 1 hour
+  etag: true
+}));
+
+// Serve all HTML pages with no-cache headers
+app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 app.get('/services', (req, res) => {
   const fs = require('fs');
   let servicesHtml = fs.readFileSync(path.join(__dirname, 'services.html'), 'utf8');
   // Inject Google Places API key if available
   const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
   servicesHtml = servicesHtml.replace('YOUR_API_KEY', apiKey);
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(servicesHtml);
 });
-app.get('/work', (req, res) => res.sendFile(path.join(__dirname, 'work.html')));
-app.get('/memberships', (req, res) => res.sendFile(path.join(__dirname, 'memberships.html')));
-app.get('/schedule', (req, res) => res.sendFile(path.join(__dirname, 'schedule.html')));
-app.get('/reviews', (req, res) => res.sendFile(path.join(__dirname, 'reviews.html')));
-app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
+app.get('/work', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'work.html'));
+});
+app.get('/memberships', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'memberships.html'));
+});
+app.get('/schedule', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'schedule.html'));
+});
+app.get('/reviews', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'reviews.html'));
+});
+app.get('/contact', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'contact.html'));
+});
 app.get('/booking', (req, res) => {
   const fs = require('fs');
   let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
   // Inject Google Places API key if available
   const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
   bookingHtml = bookingHtml.replace('YOUR_API_KEY', apiKey);
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(bookingHtml);
 });
