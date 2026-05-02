@@ -1071,8 +1071,53 @@
         return;
       }
 
-      // Render all bookings (API already filters past slots on backend)
-      data.bookings.forEach(booking => {
+      // Get current time in Eastern Time
+      const nowET = getCurrentTimeET();
+      const todayET = getTodayET();
+
+      // Filter: Remove placeholder slots that are in the past, keep real bookings
+      const filteredBookings = data.bookings.filter(booking => {
+        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+
+        // Keep all real customer bookings
+        if (!isPlaceholder) {
+          return true;
+        }
+
+        // For placeholder slots, remove if in the past
+        const bookingDateStr = booking.booking_date.split('T')[0]; // YYYY-MM-DD format
+        const isSameDay = bookingDateStr === todayET;
+
+        if (!isSameDay) {
+          // Future date, keep it
+          return true;
+        }
+
+        // Same day - check time
+        const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+        const timeMatch = booking.booking_time.match(timeRegex);
+
+        if (!timeMatch) {
+          return false;
+        }
+
+        let hour = parseInt(timeMatch[1]);
+        const minute = parseInt(timeMatch[2]);
+        const ampm = timeMatch[3].toUpperCase();
+
+        // Convert to 24-hour
+        if (ampm === 'PM' && hour !== 12) hour += 12;
+        else if (ampm === 'AM' && hour === 12) hour = 0;
+
+        // Compare: Keep if slot time > current time
+        const slotMinutes = hour * 60 + minute;
+        const currentMinutes = nowET.hour * 60 + nowET.minute;
+
+        return slotMinutes > currentMinutes;
+      });
+
+      // Render filtered bookings
+      filteredBookings.forEach(booking => {
         const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
                           booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
 
@@ -1101,6 +1146,11 @@
           </tr>
         `;
       });
+
+      // Show "No bookings found" only if AFTER filtering there are no rows
+      if (filteredBookings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+      }
 
     } catch (error) {
       console.error('Error loading bookings:', error);
