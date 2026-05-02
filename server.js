@@ -315,11 +315,26 @@ app.get('/api/owner/bookings', async (req, res) => {
 
         // For slots on today, hide slots that have already passed
         if (bookingDateOnly === currentDate) {
-          const [hour, minute] = booking.booking_time.split(':').map(Number);
-          const slotTimeInMinutes = hour * 60 + minute;
-          if (slotTimeInMinutes <= currentTimeMinutes) {
-            console.log(`[API] Filtering out past time slot: ${booking.booking_time} (${slotTimeInMinutes}) <= ${currentTimeMinutes}`);
-            return false; // Hide this slot (already passed)
+          // Parse time in HH:MM AM/PM format
+          const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+          const match = booking.booking_time.match(timeRegex);
+          if (match) {
+            let hour = parseInt(match[1]);
+            const minute = parseInt(match[2]);
+            const ampm = match[3].toUpperCase();
+
+            // Convert to 24-hour format
+            if (ampm === 'PM' && hour !== 12) {
+              hour += 12;
+            } else if (ampm === 'AM' && hour === 12) {
+              hour = 0;
+            }
+
+            const slotTimeInMinutes = hour * 60 + minute;
+            if (slotTimeInMinutes <= currentTimeMinutes) {
+              console.log(`[API] Filtering out past time slot: ${booking.booking_time} (${slotTimeInMinutes}) <= ${currentTimeMinutes}`);
+              return false; // Hide this slot (already passed)
+            }
           }
         }
 
