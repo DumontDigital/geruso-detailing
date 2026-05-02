@@ -38,6 +38,7 @@ app.use(express.static(path.join(__dirname), {
 // UNIFIED WEBSITE - Single entry point
 // App shell - handles authentication and routing to different views
 // Replaced old index.html which was served statically and interfered with routing
+// Force redeploy to pick up login.html fix
 app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
