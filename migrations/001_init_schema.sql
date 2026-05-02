@@ -64,6 +64,77 @@ BEGIN
   END IF;
 END $$;
 
+-- Create services table
+CREATE TABLE IF NOT EXISTS services (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price INTEGER NOT NULL,
+  category VARCHAR(100),
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create add-ons table
+CREATE TABLE IF NOT EXISTS addons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price INTEGER NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create gallery photos table
+CREATE TABLE IF NOT EXISTS gallery_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  filename VARCHAR(255) NOT NULL,
+  label VARCHAR(255),
+  description TEXT,
+  display_order INTEGER,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create blocked dates table
+CREATE TABLE IF NOT EXISTS blocked_dates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  blocked_date DATE NOT NULL,
+  blocked_time VARCHAR(20),
+  reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(blocked_date, blocked_time)
+);
+
+-- Create site content table
+CREATE TABLE IF NOT EXISTS site_content (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key VARCHAR(255) UNIQUE NOT NULL,
+  value TEXT,
+  value_type VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create reviews table
+CREATE TABLE IF NOT EXISTS reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_name VARCHAR(255) NOT NULL,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  review_text TEXT,
+  vehicle_type VARCHAR(100),
+  service_type VARCHAR(255),
+  is_featured BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(customer_email);
@@ -73,3 +144,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_date_time ON bookings(booking_date, book
 CREATE INDEX IF NOT EXISTS idx_bookings_stripe_session ON bookings(stripe_session_id);
 CREATE INDEX IF NOT EXISTS idx_availability_date ON availability(date);
 CREATE INDEX IF NOT EXISTS idx_admins_email ON admins(email);
+CREATE INDEX IF NOT EXISTS idx_blocked_dates ON blocked_dates(blocked_date);
+CREATE INDEX IF NOT EXISTS idx_gallery_order ON gallery_photos(display_order);
+CREATE INDEX IF NOT EXISTS idx_reviews_active ON reviews(is_active);
+CREATE INDEX IF NOT EXISTS idx_site_content_key ON site_content(key);
