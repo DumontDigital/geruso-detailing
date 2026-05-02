@@ -745,6 +745,7 @@
         <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
         <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
         <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
+        <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
       </div>
 
       <!-- Main Content -->
@@ -887,6 +888,78 @@
           </div>
         </div>
 
+        <!-- Website Content Tab -->
+        <div id="contentTab" class="owner-tab" style="display: none;">
+          <h2 style="margin-bottom: 24px;">Website Content & Settings</h2>
+
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px;">
+            <!-- Business Info Section -->
+            <h3 style="margin-bottom: 20px;">Business Information</h3>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Phone</label>
+              <input type="tel" id="businessPhone" placeholder="401-490-1236" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Email</label>
+              <input type="email" id="businessEmail" placeholder="info@geruso-detailing.com" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Address</label>
+              <input type="text" id="businessAddress" placeholder="North Providence, RI" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Service Area</label>
+              <input type="text" id="serviceArea" placeholder="Rhode Island" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+            <!-- Homepage Text Section -->
+            <h3 style="margin-bottom: 20px;">Homepage</h3>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Headline</label>
+              <input type="text" id="homepageHeadline" placeholder="Your Vehicle, Perfected" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Subheadline</label>
+              <textarea id="homepageSubheadline" placeholder="Professional car detailing services..." style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;"></textarea>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+            <!-- FAQ Section -->
+            <h3 style="margin-bottom: 20px;">FAQ</h3>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">FAQ Text</label>
+              <textarea id="faqText" placeholder="Enter your FAQ content here..." style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 150px;"></textarea>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+            <!-- Owner Email Section -->
+            <h3 style="margin-bottom: 20px;">Admin Settings</h3>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Owner Email (for notifications)</label>
+              <input type="email" id="ownerEmail" placeholder="owner@geruso-detailing.com" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Notification Email</label>
+              <input type="email" id="notificationEmail" placeholder="notifications@geruso-detailing.com" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); box-sizing: border-box;">
+            </div>
+
+            <button onclick="ownerSaveWebsiteContent()" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">💾 Save All Changes</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -986,6 +1059,7 @@
     loadBookings();
     loadServices();
     loadSchedule();
+    loadWebsiteContent();
     setupTabNavigation();
     setupAutoRotation();
     // Update Eastern time display every second
@@ -1010,6 +1084,7 @@
         if (tab === 'schedule') loadSchedule();
         if (tab === 'bookings') loadBookings();
         if (tab === 'services') loadServices();
+        if (tab === 'content') loadWebsiteContent();
       });
     });
   }
@@ -1503,6 +1578,66 @@
       }
     } catch (error) {
       alert('Error: ' + error.message);
+    }
+  };
+
+  // Website Content Management
+  async function loadWebsiteContent() {
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/settings', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+
+      // Populate form fields
+      document.getElementById('businessPhone').value = data.business_phone || '';
+      document.getElementById('businessEmail').value = data.business_email || '';
+      document.getElementById('businessAddress').value = data.business_address || '';
+      document.getElementById('serviceArea').value = data.service_area || '';
+      document.getElementById('homepageHeadline').value = data.homepage_headline || '';
+      document.getElementById('homepageSubheadline').value = data.homepage_subheadline || '';
+      document.getElementById('faqText').value = data.faq_text || '';
+      document.getElementById('ownerEmail').value = data.owner_email || '';
+      document.getElementById('notificationEmail').value = data.notification_email || '';
+    } catch (error) {
+      console.error('Error loading website content:', error);
+    }
+  }
+
+  window.ownerSaveWebsiteContent = async () => {
+    const content = {
+      business_phone: document.getElementById('businessPhone').value,
+      business_email: document.getElementById('businessEmail').value,
+      business_address: document.getElementById('businessAddress').value,
+      service_area: document.getElementById('serviceArea').value,
+      homepage_headline: document.getElementById('homepageHeadline').value,
+      homepage_subheadline: document.getElementById('homepageSubheadline').value,
+      faq_text: document.getElementById('faqText').value,
+      owner_email: document.getElementById('ownerEmail').value,
+      notification_email: document.getElementById('notificationEmail').value
+    };
+
+    try {
+      const token = localStorage.getItem('ownerToken');
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(content)
+      });
+
+      if (response.ok) {
+        alert('✓ Website content saved successfully');
+        loadWebsiteContent();
+      } else {
+        const error = await response.json();
+        alert('Error: ' + error.error);
+      }
+    } catch (error) {
+      alert('Error saving content: ' + error.message);
     }
   };
 })();
