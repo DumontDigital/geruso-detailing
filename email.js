@@ -64,6 +64,31 @@ function extractNumericPrice(serviceType) {
   return match ? parseInt(match[1]) : 0;
 }
 
+// Format date string (YYYY-MM-DD) to readable format WITHOUT UTC conversion
+function formatBookingDateForEmail(dateStr) {
+  try {
+    // Parse YYYY-MM-DD string directly (no UTC conversion)
+    const [year, month, day] = dateStr.split('-');
+
+    // Create date object using local timezone components ONLY
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+    // Format using Intl API with Eastern Time
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'America/New_York'
+    });
+
+    return formatter.format(date);
+  } catch (error) {
+    console.error('[Date Formatting] Error formatting date:', error);
+    return dateStr; // Fallback to raw string
+  }
+}
+
 const sendQuoteEmail = async (quoteData) => {
   const { firstName, lastName, email, phone, service, message } = quoteData;
 
@@ -132,7 +157,7 @@ const sendBookingConfirmation = async (bookingData) => {
     <p>Thank you for booking with Geruso Detailing! Here are your booking details:</p>
     <hr>
     <p><strong>Service:</strong> ${serviceType}</p>
-    <p><strong>Date:</strong> ${new Date(bookingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    <p><strong>Date:</strong> ${formatBookingDateForEmail(bookingDate)}</p>
     <p><strong>Time:</strong> ${bookingTime}</p>
     <p><strong>Service Address:</strong> ${serviceAddress}</p>
     <p><strong>Price:</strong> ${priceDisplay}</p>
@@ -192,7 +217,7 @@ const sendOwnerNotification = async (bookingData) => {
     <p><strong>Email:</strong> <a href="mailto:${customerEmail}">${customerEmail}</a></p>
     <p><strong>Phone:</strong> <a href="tel:${customerPhone}">${customerPhone}</a></p>
     <p><strong>Service Type:</strong> ${serviceType}</p>
-    <p><strong>Date:</strong> ${new Date(bookingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    <p><strong>Date:</strong> ${formatBookingDateForEmail(bookingDate)}</p>
     <p><strong>Time:</strong> ${bookingTime}</p>
     <p><strong>Service Address:</strong> ${serviceAddress}</p>
     <p><strong>Vehicle Type:</strong> ${vehicleType || 'Not specified'}</p>

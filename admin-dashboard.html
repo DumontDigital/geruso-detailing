@@ -534,6 +534,30 @@
     window.location.href = '/admin/login';
   }
 
+  // Format date string (YYYY-MM-DD) WITHOUT UTC conversion
+  function formatDateForDisplay(dateStr) {
+    try {
+      // Extract YYYY-MM-DD without converting to Date object
+      let plainDate = dateStr;
+      if (dateStr && dateStr.includes('T')) {
+        plainDate = dateStr.split('T')[0]; // Get YYYY-MM-DD part
+      }
+
+      if (!plainDate || plainDate.length < 10) {
+        return dateStr;
+      }
+
+      const [year, month, day] = plainDate.split('-');
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthName = months[parseInt(month) - 1];
+
+      return `${monthName} ${parseInt(day)}, ${year}`;
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return dateStr;
+    }
+  }
+
   // Section navigation
   function showSection(sectionName) {
     // Hide all sections
@@ -570,7 +594,7 @@
       const tbody = document.getElementById('upcomingTableBody');
       tbody.innerHTML = data.upcomingBookings.map(b => `
         <tr>
-          <td>${new Date(b.booking_date).toLocaleDateString()}</td>
+          <td>${formatDateForDisplay(b.booking_date)}</td>
           <td>${b.booking_time}</td>
           <td>${b.customer_name}</td>
           <td>${b.service_type}</td>
@@ -603,7 +627,7 @@
       const tbody = document.getElementById('bookingsTableBody');
       tbody.innerHTML = bookings.map(b => `
         <tr>
-          <td>${new Date(b.booking_date).toLocaleDateString()}</td>
+          <td>${formatDateForDisplay(b.booking_date)}</td>
           <td>${b.booking_time}</td>
           <td>${b.customer_name}</td>
           <td>${b.service_type.split('-')[0].trim()}</td>

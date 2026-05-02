@@ -851,7 +851,11 @@
     timeMessage.style.display = 'none';
     timeSlotsGrid.innerHTML = '';
 
-    const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    // Format date WITHOUT UTC conversion (use local date components)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
 
     slots.forEach(slot => {
       const slotBtn = document.createElement('button');
@@ -922,7 +926,12 @@
       return;
     }
 
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    // Format date WITHOUT UTC conversion (use local date components)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
+
     const bookingKey = `${dateStr} ${selectedTime}`;
     if (bookedTimeSlots[bookingKey]) {
       showMessage('The selected time slot has been booked. Please choose another time.', 'error');
