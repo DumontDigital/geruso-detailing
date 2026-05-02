@@ -181,28 +181,6 @@
         </div>
       </div>
 
-      <div class="table-section">
-        <div class="table-header">
-          <h2 class="table-title">Upcoming Bookings</h2>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="upcomingTableBody">
-            <tr><td colspan="6">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- BOOKINGS SECTION -->
     <div id="bookings-section" class="section">
       <div class="content-header">
@@ -593,23 +571,6 @@
       document.getElementById('weekCount').textContent = data.weekCount;
       document.getElementById('pendingCount').textContent = data.pendingCount;
       document.getElementById('revenue').textContent = '$' + data.revenue;
-
-      // Load upcoming bookings table
-      const tbody = document.getElementById('upcomingTableBody');
-      tbody.innerHTML = data.upcomingBookings.map(b => `
-        <tr>
-          <td>${formatDateForDisplay(b.booking_date)}</td>
-          <td>${b.booking_time}</td>
-          <td>${b.customer_name}</td>
-          <td>${b.service_type}</td>
-          <td><span class="status-badge status-${b.status}">${b.status}</span></td>
-          <td><div class="action-buttons">
-            <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
-            <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
-            <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
-          </div></td>
-        </tr>
-      `).join('');
     } catch (error) {
       console.error('Dashboard error:', error);
     }
