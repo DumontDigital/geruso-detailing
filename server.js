@@ -267,9 +267,9 @@ function getCurrentTimeInEastern() {
 // Get all bookings for owner (filters out past available slots, keeps real bookings)
 app.get('/api/owner/bookings', async (req, res) => {
   try {
-    // Use TO_CHAR to format date as YYYY-MM-DD string
+    // Select all bookings and format dates in JavaScript
     const result = await pool.query(
-      "SELECT id, customer_name, customer_email, customer_phone, service_address, service_type, TO_CHAR(booking_date, 'YYYY-MM-DD') as booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, created_at, updated_at, payment_status, stripe_session_id, stripe_payment_intent_id, deposit_amount FROM bookings ORDER BY booking_date ASC, booking_time ASC"
+      "SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC"
     );
 
     const currentET = getCurrentTimeInEastern();
@@ -277,34 +277,56 @@ app.get('/api/owner/bookings', async (req, res) => {
     const currentTimeMinutes = currentET.timeInMinutes;
 
     // Filter out past available slots, but keep all real customer bookings
-    const filteredBookings = result.rows.filter(booking => {
-      const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-
-      // Keep all real customer bookings regardless of date/time
-      if (!isPlaceholder) {
-        return true;
-      }
-
-      // For placeholder available slots, filter out past ones
-      const bookingDateOnly = booking.booking_date; // Already a YYYY-MM-DD string from TO_CHAR
-
-      // Hide slots on past dates
-      if (bookingDateOnly < currentDate) {
-        return false;
-      }
-
-      // For slots on today, hide slots that have already passed
-      if (bookingDateOnly === currentDate) {
-        const [hour, minute] = booking.booking_time.split(':').map(Number);
-        const slotTimeInMinutes = hour * 60 + minute;
-        if (slotTimeInMinutes <= currentTimeMinutes) {
-          return false; // Hide this slot (already passed)
+    const filteredBookings = result.rows
+      .map(booking => {
+        // Convert booking_date to YYYY-MM-DD string format manually
+        let bookingDateStr;
+        if (typeof booking.booking_date === 'string') {
+          // Already a string
+          bookingDateStr = booking.booking_date.split('T')[0];
+        } else if (booking.booking_date instanceof Date) {
+          // Convert Date object to YYYY-MM-DD
+          const year = booking.booking_date.getUTCFullYear();
+          const month = String(booking.booking_date.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(booking.booking_date.getUTCDate()).padStart(2, '0');
+          bookingDateStr = `${year}-${month}-${day}`;
+        } else {
+          bookingDateStr = String(booking.booking_date);
         }
-      }
 
-      return true; // Keep this slot
-    });
+        return { ...booking, booking_date: bookingDateStr };
+      })
+      .filter(booking => {
+        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
 
+        // Keep all real customer bookings regardless of date/time
+        if (!isPlaceholder) {
+          return true;
+        }
+
+        // For placeholder available slots, filter out past ones
+        const bookingDateOnly = booking.booking_date; // Now a YYYY-MM-DD string
+
+        // Hide slots on past dates
+        if (bookingDateOnly < currentDate) {
+          console.log(`[API] Filtering out past slot: ${bookingDateOnly} < ${currentDate}`);
+          return false;
+        }
+
+        // For slots on today, hide slots that have already passed
+        if (bookingDateOnly === currentDate) {
+          const [hour, minute] = booking.booking_time.split(':').map(Number);
+          const slotTimeInMinutes = hour * 60 + minute;
+          if (slotTimeInMinutes <= currentTimeMinutes) {
+            console.log(`[API] Filtering out past time slot: ${booking.booking_time} (${slotTimeInMinutes}) <= ${currentTimeMinutes}`);
+            return false; // Hide this slot (already passed)
+          }
+        }
+
+        return true; // Keep this slot
+      });
+
+    console.log(`[API] Returned ${filteredBookings.length} bookings (current ET: ${currentDate} ${currentET.time})`);
     res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
