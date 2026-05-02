@@ -241,11 +241,11 @@ router.get('/booking/:id', verifyToken, async (req, res) => {
 router.put('/booking/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, status } = req.body;
+    const { customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, status } = req.body;
 
     const result = await pool.query(
       `UPDATE bookings SET customer_name = $1, customer_email = $2, customer_phone = $3, service_address = $4, service_type = $5, booking_date = $6, booking_time = $7, vehicle_type = $8, notes = $9, status = $10, updated_at = CURRENT_TIMESTAMP WHERE id = $11 RETURNING *`,
-      [customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, status, id]
+      [customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, status, id]
     );
 
     if (result.rows.length === 0) {
