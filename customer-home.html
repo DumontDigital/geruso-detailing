@@ -27,7 +27,7 @@
     /* NAVBAR */
     nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
     .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; cursor: pointer; }
-    .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%2300FF41" opacity="0.1"/><circle cx="50" cy="50" r="40" fill="none" stroke="%2300FF41" stroke-width="2"/><text x="50" y="55" font-size="32" font-weight="bold" fill="%2300FF41" text-anchor="middle">G</text></svg>'); }
+    .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; background-image: url('/logo.png'); }
     .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
     .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
     .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
@@ -1160,7 +1160,10 @@
   <footer style="background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; margin-top: 40px;">
     <div class="footer-inner">
       <div>
-        <div class="footer-brand-name">🚗 Geruso Detailing</div>
+        <div class="footer-brand-name" style="display: flex; align-items: center; gap: 12px;">
+          <img src="/logo.png" alt="Geruso Detailing" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
+          Geruso Detailing
+        </div>
         <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Mapleville, Rhode Island</p>
         <p style="font-size: 13px; margin-bottom: 0;">
