@@ -84,30 +84,68 @@ function getTimeSlotsForDate(date) {
 }
 
 /**
+ * Add N days to an Eastern Time date string (YYYY-MM-DD)
+ */
+function addDaysToEasternDate(dateStr, days) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+
+  // Create a UTC date to do arithmetic (we'll convert back after)
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + days);
+
+  const newYear = date.getUTCFullYear();
+  const newMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const newDay = String(date.getUTCDate()).padStart(2, '0');
+
+  return `${newYear}-${newMonth}-${newDay}`;
+}
+
+/**
+ * Get day of week for an Eastern Time date string (0=Sunday, 1=Monday, etc)
+ */
+function getDayOfWeekForEasternDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCDay();
+}
+
+/**
  * Get available dates and times for the next N days (starting from today in Eastern Time)
+ * Works entirely with Eastern Time date strings to avoid timezone conversion issues
  */
 function getUpcomingAvailability(daysAhead = 60) {
   const availability = [];
 
   // Get today's date in Eastern Time (America/New_York)
   const todayEastern = getTodayInEasternTime();
-  const [year, month, day] = todayEastern.split('-').map(Number);
-  const today = new Date(year, month - 1, day);
 
   // Start from today in Eastern Time, not tomorrow
   for (let i = 0; i < daysAhead; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() + i);
+    const dateStr = addDaysToEasternDate(todayEastern, i);
+    const dayOfWeek = getDayOfWeekForEasternDate(dateStr);
 
-    const slots = getTimeSlotsForDate(date);
+    // Get business hours for this date
+    let hours = null;
+    if (LOCATION_ONLY_DAYS.includes(dayOfWeek)) {
+      hours = { type: 'location', startHour: 6, endHour: 12 };
+    } else {
+      hours = BUSINESS_HOURS[dayOfWeek];
+    }
 
-    slots.forEach(slot => {
+    if (!hours) {
+      // Day is closed, skip it
+      continue;
+    }
+
+    // Generate time slots for this date
+    for (let hour = hours.startHour; hour < hours.endHour; hour++) {
+      const time = `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
       availability.push({
-        date: date.toISOString().split('T')[0],
-        time: slot.time,
-        dateObj: new Date(date)
+        date: dateStr,
+        time: time,
+        dateObj: new Date(dateStr) // Keep for backward compatibility
       });
-    });
+    }
   }
 
   return availability;

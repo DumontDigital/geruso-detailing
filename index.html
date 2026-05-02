@@ -739,6 +739,11 @@
       <button id="ownerLogoutBtn" style="background: var(--accent); color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Logout</button>
     </nav>
 
+    <!-- Debug Info: Current Eastern Time -->
+    <div style="background: rgba(0, 255, 65, 0.05); border-bottom: 1px solid var(--border); padding: 12px 24px; color: var(--primary); font-size: 12px; font-weight: 700;">
+      Current Eastern Time: <span id="debugEasternTime">--</span>
+    </div>
+
     <div style="display: flex;">
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
@@ -888,13 +893,37 @@
     window.location.href = '/';
   });
   
+  // Format and display current Eastern Time in debug info
+  function updateEasternTimeDisplay() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+
+    const formattedTime = formatter.format(now);
+    const debugSpan = document.getElementById('debugEasternTime');
+    if (debugSpan) {
+      debugSpan.textContent = formattedTime;
+    }
+  }
+
   function showDashboard() {
     loginScreen.style.display = 'none';
     dashboard.style.display = 'block';
+    updateEasternTimeDisplay();
     loadBookings();
     loadSchedule();
     setupTabNavigation();
     setupAutoRotation();
+    // Update Eastern time display every second
+    setInterval(updateEasternTimeDisplay, 1000);
   }
   
   function setupTabNavigation() {
