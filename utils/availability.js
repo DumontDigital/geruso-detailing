@@ -63,19 +63,16 @@ function getTimeSlotsForDate(date) {
 }
 
 /**
- * Get available dates and times for the next N days
+ * Get available dates and times for the next N days (starting from today)
  */
 function getUpcomingAvailability(daysAhead = 60) {
   const availability = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Start from tomorrow
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
+  // Start from TODAY, not tomorrow
   for (let i = 0; i < daysAhead; i++) {
-    const date = new Date(tomorrow);
+    const date = new Date(today);
     date.setDate(date.getDate() + i);
 
     const slots = getTimeSlotsForDate(date);
