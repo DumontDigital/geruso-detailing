@@ -316,42 +316,26 @@ app.get('/api/owner/bookings', async (req, res) => {
     // Build current datetime in comparable format: YYYY-MM-DD HH:MM (24-hour)
     const currentDateTimeStr = `${currentDateStr} ${currentTimeStr}`;
 
+    console.log(`[Owner Bookings] Endpoint called. DB returned ${result.rows.length} total rows`);
+    console.log(`[Owner Bookings] First row: ${JSON.stringify(result.rows[0], null, 2)}`);
 
     // Filter: Show ONLY real customer bookings - NO fake "Available Slot" rows
-    const filteredBookings = result.rows
-      .map(booking => {
-        // Convert booking_date to YYYY-MM-DD string format manually
-        let bookingDateStr;
-        if (typeof booking.booking_date === 'string') {
-          bookingDateStr = booking.booking_date.split('T')[0];
-        } else if (booking.booking_date instanceof Date) {
-          const year = booking.booking_date.getUTCFullYear();
-          const month = String(booking.booking_date.getUTCMonth() + 1).padStart(2, '0');
-          const day = String(booking.booking_date.getUTCDate()).padStart(2, '0');
-          bookingDateStr = `${year}-${month}-${day}`;
-        } else {
-          bookingDateStr = String(booking.booking_date);
-        }
-        return { ...booking, booking_date: bookingDateStr };
-      })
-      .filter(booking => {
-        // REMOVE all placeholder "Available Slot" rows from owner dashboard
-        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-        const kept = !isPlaceholder;
-        if (!kept && result.rows.length <= 5) {
-          console.log(`[Owner Dashboard] Filtering out placeholder: ${booking.customer_name} (${booking.customer_email})`);
-        }
-        return kept; // Only keep real customer bookings
-      });
+    const filteredBookings = result.rows.filter(booking => {
+      // REMOVE all placeholder "Available Slot" rows from owner dashboard
+      const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+      console.log(`[Owner Bookings] Row: ${booking.customer_name} (${booking.customer_email}) - isPlaceholder: ${isPlaceholder}`);
+      return !isPlaceholder; // Only keep real customer bookings
+    });
 
-    console.log(`[Owner Dashboard] API: ${result.rows.length} total → ${filteredBookings.length} real bookings`);
+    console.log(`[Owner Bookings] FILTERED RESULT: ${filteredBookings.length} rows after filter`);
+
     res.json({
       bookings: filteredBookings,
       meta: {
         total_from_db: result.rows.length,
         after_filter: filteredBookings.length,
         filter_applied: true,
-        timestamp: new Date().toISOString()
+        TEST_MARKER_9527: "If you see this value, the new code is deployed"
       }
     });
   } catch (error) {
