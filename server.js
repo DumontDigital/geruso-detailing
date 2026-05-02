@@ -345,7 +345,15 @@ app.get('/api/owner/bookings', async (req, res) => {
       });
 
     console.log(`[Owner Dashboard] API: ${result.rows.length} total → ${filteredBookings.length} real bookings`);
-    res.json({ bookings: filteredBookings });
+    res.json({
+      bookings: filteredBookings,
+      meta: {
+        total_from_db: result.rows.length,
+        after_filter: filteredBookings.length,
+        filter_applied: true,
+        timestamp: new Date().toISOString()
+      }
+    });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
