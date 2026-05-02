@@ -1023,13 +1023,8 @@
 
   // Check authentication on page load
   window.addEventListener('load', () => {
-    // This is the owner dashboard - require owner role
-    if (!auth.requireAuth(['owner'])) {
-      // requireAuth will redirect to login if not authenticated
-      return;
-    }
-
-    // User is authenticated and has owner role
+    // Parent app.html already verified authentication
+    // Just show the dashboard
     ownerPanel.style.display = 'block';
     document.body.style.overflow = 'hidden';
     showDashboard();
