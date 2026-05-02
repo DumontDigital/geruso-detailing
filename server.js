@@ -65,7 +65,7 @@ app.get('/admin/login', (req, res) => {
 // Serves dashboard - client-side checks auth and redirects to /admin/login if needed
 app.get('/admin', (req, res) => {
   try {
-    const filePath = path.join(__dirname, 'admin.html');
+    const filePath = path.join(__dirname, 'admin-dashboard.html');
     console.log('[Admin] Main entry point - serving admin dashboard');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.sendFile(filePath);
