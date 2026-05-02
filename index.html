@@ -1071,88 +1071,36 @@
         return;
       }
 
-      // Get current time in Eastern Time as numeric timestamp
-      const nowET = getCurrentTimeET();
-      const todayET = getTodayET();
-      const currentTimestamp = getTimestamp(todayET,
-        `${nowET.hour > 12 ? nowET.hour - 12 : (nowET.hour === 0 ? 12 : nowET.hour)}:${String(nowET.minute).padStart(2, '0')} ${nowET.hour >= 12 ? 'PM' : 'AM'}`);
+      // Render all bookings (API already filters past slots on backend)
+      data.bookings.forEach(booking => {
+        const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
+                          booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
 
-      // Add timestamp to each booking and filter/sort
-      const bookingsWithTimestamp = data.bookings
-        .map(booking => {
-          const timestamp = getTimestamp(booking.booking_date, booking.booking_time);
-          return { ...booking, timestamp };
-        })
-        .filter(booking => {
-          const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-
-          // Keep all real customer bookings
-          if (!isPlaceholder) {
-            return true;
-          }
-
-          // For placeholder slots, only keep if timestamp > currentTimestamp
-          if (!booking.timestamp) {
-            return false;
-          }
-
-          const isInFuture = booking.timestamp > currentTimestamp;
-
-          if (!isInFuture) {
-            console.log(`[Frontend] Filtering past slot: timestamp ${booking.timestamp} <= current ${currentTimestamp}`);
-          }
-
-          return isInFuture;
-        })
-        // SORT by numeric timestamp (real datetime comparison)
-        .sort((a, b) => {
-          // Real bookings first, then available slots in chronological order
-          const aIsPlaceholder = a.customer_email === 'booking.test@gmail.com';
-          const bIsPlaceholder = b.customer_email === 'booking.test@gmail.com';
-
-          // Both same type: sort by timestamp
-          if (aIsPlaceholder === bIsPlaceholder) {
-            return (a.timestamp || 0) - (b.timestamp || 0);
-          }
-
-          // Real bookings before placeholders
-          return aIsPlaceholder ? 1 : -1;
-        });
-
-      // Render sorted, filtered bookings
-      if (bookingsWithTimestamp.length > 0) {
-        bookingsWithTimestamp.forEach(booking => {
-          const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
-                            booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
-
-          tbody.innerHTML += `
-            <tr style="border-bottom: 1px solid var(--border);">
-              <td style="padding: 12px;">
-                <div style="font-weight: 700;">${booking.customer_name}</div>
-                <small style="color: var(--text-muted);">${booking.customer_email}</small>
-              </td>
-              <td style="padding: 12px;">${formatBookingDateTime(booking.booking_date, booking.booking_time)}</td>
-              <td style="padding: 12px;">${booking.service_type}</td>
-              <td style="padding: 12px;">
-                <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${booking.status}</span>
-              </td>
-              <td style="padding: 12px;">
-                <div style="display: flex; gap: 8px;">
-                  ${booking.status === 'pending' ?
-                    `<button onclick="ownerConfirmBooking('${booking.id}')" style="padding: 4px 8px; background: var(--success); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Confirm</button>` : ''}
-                  ${booking.status !== 'completed' ?
-                    `<button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Complete</button>` : ''}
-                  ${booking.status !== 'cancelled' ?
-                    `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Cancel</button>` : ''}
-                  <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Delete</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        });
-      } else {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
-      }
+        tbody.innerHTML += `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px;">
+              <div style="font-weight: 700;">${booking.customer_name}</div>
+              <small style="color: var(--text-muted);">${booking.customer_email}</small>
+            </td>
+            <td style="padding: 12px;">${formatBookingDateTime(booking.booking_date, booking.booking_time)}</td>
+            <td style="padding: 12px;">${booking.service_type}</td>
+            <td style="padding: 12px;">
+              <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${booking.status}</span>
+            </td>
+            <td style="padding: 12px;">
+              <div style="display: flex; gap: 8px;">
+                ${booking.status === 'pending' ?
+                  `<button onclick="ownerConfirmBooking('${booking.id}')" style="padding: 4px 8px; background: var(--success); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Confirm</button>` : ''}
+                ${booking.status !== 'completed' ?
+                  `<button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Complete</button>` : ''}
+                ${booking.status !== 'cancelled' ?
+                  `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Cancel</button>` : ''}
+                <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
 
     } catch (error) {
       console.error('Error loading bookings:', error);
