@@ -429,15 +429,8 @@
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
 
-          // Redirect based on role
-          const role = data.user.role;
-          if (role === 'owner') {
-            window.location.href = '/owner-dashboard.html';
-          } else if (role === 'dev') {
-            window.location.href = '/dev-dashboard.html';
-          } else {
-            window.location.href = '/booking.html';
-          }
+          // Redirect to app which will show appropriate view based on role
+          window.location.href = '/';
         } else {
           errorDiv.textContent = data.error || 'Login failed';
           errorDiv.classList.add('show');
