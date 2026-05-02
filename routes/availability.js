@@ -137,11 +137,11 @@ router.post('/generate-schedule', verifyToken, async (req, res) => {
       let isAvailable = false;
 
       if (dayNum === 0 || dayNum === 6) { // Sunday or Saturday
-        hours = { startHour: 6, endHour: 11 };
+        hours = { startHour: 6, endHour: 12 }; // 6 AM - 11 AM (endHour is exclusive in slot generation)
         serviceType = 'location';
         isAvailable = true;
       } else if (dayNum === 4 || dayNum === 5) { // Thursday or Friday
-        hours = { startHour: 12, endHour: 18 };
+        hours = { startHour: 12, endHour: 18 }; // 12 PM - 5 PM (endHour is exclusive in slot generation)
         serviceType = 'mobile';
         isAvailable = true;
       } else {

@@ -47,7 +47,7 @@ function getBusinessHoursForDate(date) {
   const dayOfWeek = date.getDay();
 
   if (LOCATION_ONLY_DAYS.includes(dayOfWeek)) {
-    return { type: 'location', startHour: 6, endHour: 11 };
+    return { type: 'location', startHour: 6, endHour: 12 }; // endHour 12 means up to 11 AM inclusive (loop uses < operator)
   }
 
   return BUSINESS_HOURS[dayOfWeek];
