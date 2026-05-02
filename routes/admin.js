@@ -215,4 +215,212 @@ router.post('/reset-complete-schedule', verifyToken, async (req, res) => {
   }
 });
 
+// ===== BOOKING MANAGEMENT ENDPOINTS =====
+
+// Get a single booking (admin only)
+router.get('/booking/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    res.status(500).json({ error: 'Failed to fetch booking' });
+  }
+});
+
+// Update a booking (admin only)
+router.put('/booking/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, status } = req.body;
+
+    const result = await pool.query(
+      `UPDATE bookings SET customer_name = $1, customer_email = $2, customer_phone = $3, service_address = $4, service_type = $5, booking_date = $6, booking_time = $7, vehicle_type = $8, notes = $9, status = $10, updated_at = CURRENT_TIMESTAMP WHERE id = $11 RETURNING *`,
+      [customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, status, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      success: true,
+      booking: result.rows[0],
+      message: 'Booking updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Time slot already booked' });
+    }
+    res.status(500).json({ error: 'Failed to update booking' });
+  }
+});
+
+// Delete a booking (admin only)
+router.delete('/booking/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM bookings WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Booking deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ error: 'Failed to delete booking' });
+  }
+});
+
+// Mark booking as confirmed (admin only)
+router.post('/booking/:id/mark-confirmed', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['confirmed', id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      success: true,
+      booking: result.rows[0],
+      message: 'Booking marked as confirmed'
+    });
+  } catch (error) {
+    console.error('Error marking booking as confirmed:', error);
+    res.status(500).json({ error: 'Failed to mark booking as confirmed' });
+  }
+});
+
+// Cancel a booking (admin only)
+router.post('/booking/:id/cancel', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['cancelled', id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      success: true,
+      booking: result.rows[0],
+      message: 'Booking cancelled successfully'
+    });
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ error: 'Failed to cancel booking' });
+  }
+});
+
+// ===== SERVICES ENDPOINTS (PLACEHOLDER - HARDCODED SERVICES) =====
+
+// Get all services (admin only)
+router.get('/services', verifyToken, async (req, res) => {
+  try {
+    // Return hardcoded services for now until we have a services table
+    const services = [
+      { id: '1', name: 'Full Motorcycle Service', price: 70, tag: 'MOBILE', description: 'Complete motorcycle detailing service' },
+      { id: '2', name: 'Interior Detailing', price: 100, tag: 'MOBILE', description: 'Interior cleaning and detailing' },
+      { id: '3', name: 'Car Wash', price: 85, tag: 'MOBILE', description: 'Professional car washing' },
+      { id: '4', name: 'Ceramic Coating', price: 400, tag: 'LOCATION ONLY', description: 'Professional ceramic coating service' },
+      { id: '5', name: 'Premium Package', price: 170, tag: 'MOBILE', description: 'Premium detailing package' },
+      { id: '6', name: 'Ultra Premium', price: 335, tag: 'MOBILE', description: 'Ultra premium detailing package' },
+      { id: '7', name: 'Pet Hair / Odor Elimination', price: 50, tag: 'EXTRA FEE', description: 'Pet hair and odor removal' },
+      { id: '8', name: 'Headlight Restoration', price: 50, tag: 'EXTRA FEE', description: 'Headlight restoration service' },
+      { id: '9', name: 'Engine Bay Cleaning', price: 75, tag: 'MOBILE', description: 'Engine bay cleaning service' },
+      { id: '10', name: 'Full Vehicle Polish', price: 250, tag: 'LOCATION ONLY', description: 'Full vehicle polishing service' }
+    ];
+
+    res.json(services);
+  } catch (error) {
+    console.error('Error fetching services:', error);
+    res.status(500).json({ error: 'Failed to fetch services' });
+  }
+});
+
+// ===== ADD-ONS ENDPOINTS (PLACEHOLDER) =====
+
+// Get all add-ons (admin only)
+router.get('/addons', verifyToken, async (req, res) => {
+  try {
+    // Return hardcoded add-ons for now
+    const addons = [
+      { id: '1', name: 'Pet Hair / Odor Elimination', price: 50, description: 'Remove pet hair and odors' },
+      { id: '2', name: 'Headlight Restoration', price: 50, description: 'Restore headlight clarity' }
+    ];
+
+    res.json(addons);
+  } catch (error) {
+    console.error('Error fetching add-ons:', error);
+    res.status(500).json({ error: 'Failed to fetch add-ons' });
+  }
+});
+
+// ===== CONTENT ENDPOINTS (PLACEHOLDER) =====
+
+// Get website content (admin only)
+router.get('/content', verifyToken, async (req, res) => {
+  try {
+    // Return placeholder content data
+    const content = {
+      businessPhone: '401-490-1236',
+      businessEmail: 'info@geruso-detailing.com',
+      businessAddress: 'North Providence, RI',
+      heroText: 'Your Vehicle, Perfected',
+      servicesDescription: 'Professional car detailing services including washing, waxing, ceramic coating and more'
+    };
+
+    res.json(content);
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+// Update website content (admin only)
+router.post('/content', verifyToken, async (req, res) => {
+  try {
+    // Placeholder - would save to database in production
+    const content = req.body;
+    console.log('[Admin] Content updated:', content);
+
+    res.json({
+      success: true,
+      message: 'Content updated successfully (placeholder - not persisted yet)',
+      content
+    });
+  } catch (error) {
+    console.error('Error updating content:', error);
+    res.status(500).json({ error: 'Failed to update content' });
+  }
+});
+
 module.exports = router;
