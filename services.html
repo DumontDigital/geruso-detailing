@@ -91,7 +91,11 @@
   .service-price-value small { font-size: 12px; color: var(--text-muted); font-weight: 600; }
 
   .service-description { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
-  .service-tag { display: inline-block; font-size: 10px; padding: 6px 12px; background: rgba(0,255,65,0.1); color: var(--primary); border-radius: 6px; margin-bottom: 20px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .service-tag { display: inline-block; font-size: 10px; padding: 6px 12px; background: rgba(0,255,65,0.1); color: var(--primary); border-radius: 6px; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .service-availability { display: flex; flex-direction: column; margin-bottom: 16px; }
+  .service-availability-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--primary); margin-bottom: 2px; }
+  .service-availability-value { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
   .btn-book { width: 100%; padding: 14px 24px; background: var(--primary); color: #000; font-weight: 700; font-size: 14px; border: none; border-radius: 8px; text-decoration: none; display: inline-block; text-align: center; transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
   .btn-book:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
@@ -300,6 +304,10 @@
       <!-- Service 1 -->
       <div class="service-card" data-service-name="Full Motorcycle Service" data-service-tag="MOBILE" data-service-price="70">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Full Motorcycle Service</div>
         <div class="service-meta">
           <div class="service-time">
@@ -318,6 +326,10 @@
       <!-- Service 2 -->
       <div class="service-card" data-service-name="Interior Detailing" data-service-tag="MOBILE" data-service-price="100">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Interior Detailing</div>
         <div class="service-meta">
           <div class="service-time">
@@ -336,6 +348,10 @@
       <!-- Service 3 -->
       <div class="service-card" data-service-name="Car Wash" data-service-tag="MOBILE" data-service-price="85">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Car Wash</div>
         <div class="service-meta">
           <div class="service-time">
@@ -354,6 +370,10 @@
       <!-- Service 4 -->
       <div class="service-card" data-service-name="Ceramic Coating" data-service-tag="LOCATION ONLY" data-service-price="400">
         <div class="service-tag">LOCATION ONLY</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Sat–Sun, 6 AM–11 AM</div>
+        </div>
         <div class="service-name">Ceramic Coating</div>
         <div class="service-meta">
           <div class="service-time">
@@ -372,6 +392,10 @@
       <!-- Service 5 -->
       <div class="service-card" data-service-name="Premium Package" data-service-tag="MOBILE" data-service-price="170">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Premium Package</div>
         <div class="service-meta">
           <div class="service-time">
@@ -390,6 +414,10 @@
       <!-- Service 6 -->
       <div class="service-card" data-service-name="Ultra Premium" data-service-tag="MOBILE" data-service-price="335">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Ultra Premium</div>
         <div class="service-meta">
           <div class="service-time">
@@ -408,6 +436,10 @@
       <!-- Service 7 -->
       <div class="service-card" data-service-name="Pet Hair / Odor Elimination" data-service-tag="EXTRA FEE" data-service-price="50">
         <div class="service-tag">EXTRA FEE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Pet Hair / Odor Elimination</div>
         <div class="service-meta">
           <div class="service-time">
@@ -426,6 +458,10 @@
       <!-- Service 8 -->
       <div class="service-card" data-service-name="Headlight Restoration" data-service-tag="EXTRA FEE" data-service-price="50">
         <div class="service-tag">EXTRA FEE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Headlight Restoration</div>
         <div class="service-meta">
           <div class="service-time">
@@ -444,6 +480,10 @@
       <!-- Service 9 -->
       <div class="service-card" data-service-name="Engine Bay Cleaning" data-service-tag="MOBILE" data-service-price="75">
         <div class="service-tag">MOBILE</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Thu–Fri, 12 PM–6 PM</div>
+        </div>
         <div class="service-name">Engine Bay Cleaning</div>
         <div class="service-meta">
           <div class="service-time">
@@ -462,6 +502,10 @@
       <!-- Service 10 -->
       <div class="service-card" data-service-name="Full Vehicle Polish" data-service-tag="LOCATION ONLY" data-service-price="250">
         <div class="service-tag">LOCATION ONLY</div>
+        <div class="service-availability">
+          <div class="service-availability-label">Available</div>
+          <div class="service-availability-value">Sat–Sun, 6 AM–11 AM</div>
+        </div>
         <div class="service-name">Full Vehicle Polish</div>
         <div class="service-meta">
           <div class="service-time">
