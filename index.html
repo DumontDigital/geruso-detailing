@@ -1061,7 +1061,7 @@
   async function loadBookings() {
     try {
       const response = await fetch('/api/owner/bookings');
-      const data = response.json();
+      const data = await response.json();
 
       const tbody = document.getElementById('bookingsList');
       tbody.innerHTML = '';
