@@ -316,34 +316,15 @@ app.get('/api/owner/bookings', async (req, res) => {
     // Build current datetime in comparable format: YYYY-MM-DD HH:MM (24-hour)
     const currentDateTimeStr = `${currentDateStr} ${currentTimeStr}`;
 
-    console.log(`[API] ==== CRITICAL DEBUG ====`);
-    console.log(`[API] Current Eastern Time: ${currentDateTimeStr}`);
-    console.log(`[API] Full currentET object:`, currentET);
-    console.log(`[API] Total bookings from DB: ${result.rows.length}`);
 
-    const may2BookingsInDB = result.rows.filter(b => {
-      if (typeof b.booking_date === 'string') {
-        return b.booking_date.split('T')[0] === '2026-05-02';
-      } else if (b.booking_date instanceof Date) {
-        const y = b.booking_date.getUTCFullYear();
-        const m = String(b.booking_date.getUTCMonth() + 1).padStart(2, '0');
-        const d = String(b.booking_date.getUTCDate()).padStart(2, '0');
-        return `${y}-${m}-${d}` === '2026-05-02';
-      }
-      return false;
-    });
-    console.log(`[API] May 2 bookings IN DATABASE: ${may2BookingsInDB.length}`);
-
-    // Filter out past available slots, but keep all real customer bookings
+    // Filter: Show ONLY real customer bookings - NO fake "Available Slot" rows
     const filteredBookings = result.rows
       .map(booking => {
         // Convert booking_date to YYYY-MM-DD string format manually
         let bookingDateStr;
         if (typeof booking.booking_date === 'string') {
-          // Already a string
           bookingDateStr = booking.booking_date.split('T')[0];
         } else if (booking.booking_date instanceof Date) {
-          // Convert Date object to YYYY-MM-DD
           const year = booking.booking_date.getUTCFullYear();
           const month = String(booking.booking_date.getUTCMonth() + 1).padStart(2, '0');
           const day = String(booking.booking_date.getUTCDate()).padStart(2, '0');
@@ -351,65 +332,14 @@ app.get('/api/owner/bookings', async (req, res) => {
         } else {
           bookingDateStr = String(booking.booking_date);
         }
-
         return { ...booking, booking_date: bookingDateStr };
       })
       .filter(booking => {
+        // REMOVE all placeholder "Available Slot" rows from owner dashboard
         const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-
-        // Keep all real customer bookings regardless of date/time
-        if (!isPlaceholder) {
-          return true;
-        }
-
-        // For placeholder available slots, filter out any slot that is NOT in the future
-        const bookingDateStr = booking.booking_date; // YYYY-MM-DD
-
-        // Parse slot time in HH:MM AM/PM format to 24-hour HH:MM
-        const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
-        const timeMatch = booking.booking_time.match(timeRegex);
-
-        if (!timeMatch) {
-          // If we can't parse the time, keep the slot
-          return true;
-        }
-
-        let hour = parseInt(timeMatch[1]);
-        const minute = parseInt(timeMatch[2]);
-        const ampm = timeMatch[3].toUpperCase();
-
-        // Convert to 24-hour format
-        if (ampm === 'PM' && hour !== 12) {
-          hour += 12;
-        } else if (ampm === 'AM' && hour === 12) {
-          hour = 0;
-        }
-
-        const slotTimeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-
-        // Build full slot datetime in comparable format: YYYY-MM-DD HH:MM
-        const slotDateTimeStr = `${bookingDateStr} ${slotTimeStr}`;
-
-        // Compare: slot must be GREATER than current datetime
-        const isInFuture = slotDateTimeStr > currentDateTimeStr;
-
-        if (!isInFuture) {
-          console.log(`[API] Filtering out past/present slot: ${slotDateTimeStr} <= ${currentDateTimeStr}`);
-        }
-
-        return isInFuture;
+        return !isPlaceholder; // Only keep real customer bookings
       });
 
-    const may2InResponse = filteredBookings.filter(b => {
-      if (typeof b.booking_date === 'string') {
-        return b.booking_date.split('T')[0] === '2026-05-02';
-      }
-      return false;
-    });
-
-    console.log(`[API] May 2 bookings IN RESPONSE: ${may2InResponse.length}`);
-    console.log(`[API] Total returned: ${filteredBookings.length} bookings (was ${result.rows.length} before filtering)`);
-    console.log(`[API] ========================\n`);
     res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
