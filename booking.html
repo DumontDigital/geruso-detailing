@@ -68,37 +68,6 @@
 
     @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
-    /* Tab Button Styling */
-    .tab-btn {
-      padding: 16px 0 !important;
-      background: none !important;
-      border: none !important;
-      color: var(--text-muted) !important;
-      cursor: pointer !important;
-      font-weight: 500 !important;
-      border-bottom: 3px solid transparent !important;
-      transition: all 0.2s !important;
-      font-size: 15px !important;
-    }
-
-    .tab-btn.active {
-      color: var(--primary) !important;
-      border-bottom-color: var(--primary) !important;
-    }
-
-    .tab-btn:hover {
-      color: var(--primary) !important;
-    }
-
-    /* Section View Styling */
-    .section-view {
-      display: none;
-    }
-
-    .section-view.active {
-      display: block;
-    }
-
     /* Booking Specific Styles */
     .booking-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
 
@@ -265,7 +234,7 @@
 </head>
 <body>
 <nav>
-  <a href="#" class="nav-brand" id="navBrand" onclick="if(window.goToHome) window.goToHome(); return false;">
+  <a href="/" class="nav-brand" id="navBrand">
     <div class="nav-logo"></div>
     <div class="nav-brand-text">
       <span class="nav-brand-name">Geruso Detailing</span>
@@ -291,44 +260,6 @@
   </div>
 </nav>
 
-
-<!-- Tab Navigation -->
-<div style="border-bottom: 1px solid var(--border); background: var(--light-bg); sticky; top: 70px; z-index: 50; display: flex; padding: 0 48px; gap: 32px;">
-  <button id="homeTab" class="tab-btn active" style="padding: 16px 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 500; border-bottom: 3px solid transparent; transition: all 0.2s;">Home</button>
-  <button id="scheduleTab" class="tab-btn" style="padding: 16px 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 500; border-bottom: 3px solid transparent; transition: all 0.2s;">Schedule</button>
-</div>
-
-<!-- Home Section -->
-<section id="homeSection" class="section-view active" style="display: flex !important;">
-  <div class="section-inner" style="max-width: 900px; margin: 60px auto; text-align: center; padding: 0 48px;">
-    <h1 class="section-heading" style="font-size: 48px; margin-bottom: 20px;">Welcome to Geruso Detailing</h1>
-    <p class="section-sub" style="font-size: 18px; margin-bottom: 40px; color: var(--text-muted);">Professional car detailing services in Rhode Island. Mobile service to your location or at our Mapleville facility.</p>
-    <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 60px;">
-      <button class="btn-primary" onclick="document.getElementById('scheduleTab').click()" style="padding: 16px 40px; font-size: 16px;">Book Now</button>
-      <a href="services.html" class="btn-secondary" style="padding: 16px 40px; font-size: 16px; text-decoration: none; display: inline-block;">View Services</a>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
-      <div style="background: var(--light-bg2); padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-        <div style="font-size: 32px; margin-bottom: 12px;">🚗</div>
-        <h3 style="margin-bottom: 8px;">Mobile Service</h3>
-        <p style="color: var(--text-muted);">We come to you. Service your vehicle anywhere in Rhode Island.</p>
-      </div>
-      <div style="background: var(--light-bg2); padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-        <div style="font-size: 32px; margin-bottom: 12px;">✨</div>
-        <h3 style="margin-bottom: 8px;">Premium Quality</h3>
-        <p style="color: var(--text-muted);">Expert detailing with premium products for perfect results.</p>
-      </div>
-      <div style="background: var(--light-bg2); padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-        <div style="font-size: 32px; margin-bottom: 12px;">⏱️</div>
-        <h3 style="margin-bottom: 8px;">Easy Booking</h3>
-        <p style="color: var(--text-muted);">Quick online booking with flexible scheduling options.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Schedule Section (Booking Form) -->
-<section id="scheduleSection" class="section-view" style="display: none;">
 <section id="booking">
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
@@ -464,7 +395,6 @@
     </div>
   </div>
 </section>
-</section><!-- End of scheduleSection -->
 
 <footer>
   <div class="footer-inner">
@@ -1248,41 +1178,6 @@
 
   // Initial render
   renderCalendar();
-
-  // ========================================
-  // TAB SWITCHING FUNCTIONALITY
-  // ========================================
-  window.goToHome = function() {
-    document.getElementById('homeTab').click();
-  };
-
-  document.getElementById('homeTab').addEventListener('click', () => {
-    // Hide schedule section, show home section
-    document.getElementById('scheduleSection').style.display = 'none';
-    document.getElementById('homeSection').style.display = 'flex';
-
-    // Update tab styling
-    document.getElementById('homeTab').classList.add('active');
-    document.getElementById('scheduleTab').classList.remove('active');
-    document.getElementById('homeTab').style.borderBottomColor = 'var(--primary)';
-    document.getElementById('homeTab').style.color = 'var(--primary)';
-    document.getElementById('scheduleTab').style.borderBottomColor = 'transparent';
-    document.getElementById('scheduleTab').style.color = 'var(--text-muted)';
-  });
-
-  document.getElementById('scheduleTab').addEventListener('click', () => {
-    // Hide home section, show schedule section
-    document.getElementById('homeSection').style.display = 'none';
-    document.getElementById('scheduleSection').style.display = 'block';
-
-    // Update tab styling
-    document.getElementById('scheduleTab').classList.add('active');
-    document.getElementById('homeTab').classList.remove('active');
-    document.getElementById('scheduleTab').style.borderBottomColor = 'var(--primary)';
-    document.getElementById('scheduleTab').style.color = 'var(--primary)';
-    document.getElementById('homeTab').style.borderBottomColor = 'transparent';
-    document.getElementById('homeTab').style.color = 'var(--text-muted)';
-  });
 </script>
 
 <!-- Cart Modal (Outside tab sections) -->
