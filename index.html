@@ -1029,10 +1029,39 @@
     return `${year}-${month}-${day}`;
   }
 
+  // Helper: Convert date (YYYY-MM-DD) and time (H:MM AM/PM) to numeric timestamp for comparison
+  function getTimestamp(dateStr, timeStr) {
+    // Parse date: YYYY-MM-DD
+    const dateParts = dateStr.split('T')[0].split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    const day = parseInt(dateParts[2]);
+
+    // Parse time: H:MM AM/PM or HH:MM AM/PM
+    const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+    const timeMatch = timeStr.match(timeRegex);
+
+    if (!timeMatch) return null;
+
+    let hour = parseInt(timeMatch[1]);
+    const minute = parseInt(timeMatch[2]);
+    const ampm = timeMatch[3].toUpperCase();
+
+    // Convert to 24-hour format
+    if (ampm === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (ampm === 'AM' && hour === 12) {
+      hour = 0;
+    }
+
+    // Create numeric timestamp: YYYYMMDDHHMM
+    return year * 100000000 + month * 1000000 + day * 10000 + hour * 100 + minute;
+  }
+
   async function loadBookings() {
     try {
       const response = await fetch('/api/owner/bookings');
-      const data = await response.json();
+      const data = response.json();
 
       const tbody = document.getElementById('bookingsList');
       tbody.innerHTML = '';
@@ -1042,58 +1071,57 @@
         return;
       }
 
-      // FRONTEND FILTERING: Get current Eastern Time for safety check
+      // Get current time in Eastern Time as numeric timestamp
       const nowET = getCurrentTimeET();
       const todayET = getTodayET();
-      const currentDateTimeStr = `${todayET} ${String(nowET.hour).padStart(2, '0')}:${String(nowET.minute).padStart(2, '0')}`;
+      const currentTimestamp = getTimestamp(todayET,
+        `${nowET.hour > 12 ? nowET.hour - 12 : (nowET.hour === 0 ? 12 : nowET.hour)}:${String(nowET.minute).padStart(2, '0')} ${nowET.hour >= 12 ? 'PM' : 'AM'}`);
 
-      // Filter: Keep real bookings, filter out past placeholder slots
-      const filteredBookings = data.bookings.filter(booking => {
-        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+      // Add timestamp to each booking and filter/sort
+      const bookingsWithTimestamp = data.bookings
+        .map(booking => {
+          const timestamp = getTimestamp(booking.booking_date, booking.booking_time);
+          return { ...booking, timestamp };
+        })
+        .filter(booking => {
+          const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
 
-        // Keep all real customer bookings
-        if (!isPlaceholder) {
-          return true;
-        }
+          // Keep all real customer bookings
+          if (!isPlaceholder) {
+            return true;
+          }
 
-        // For placeholder slots, check if they're in the future
-        const bookingDateStr = booking.booking_date.split('T')[0]; // Extract YYYY-MM-DD
+          // For placeholder slots, only keep if timestamp > currentTimestamp
+          if (!booking.timestamp) {
+            return false;
+          }
 
-        // Parse time from "H:MM AM/PM" or "HH:MM AM/PM" format
-        const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
-        const timeMatch = booking.booking_time.match(timeRegex);
+          const isInFuture = booking.timestamp > currentTimestamp;
 
-        if (!timeMatch) {
-          return false; // Invalid time format, skip
-        }
+          if (!isInFuture) {
+            console.log(`[Frontend] Filtering past slot: timestamp ${booking.timestamp} <= current ${currentTimestamp}`);
+          }
 
-        let hour = parseInt(timeMatch[1]);
-        const minute = parseInt(timeMatch[2]);
-        const ampm = timeMatch[3].toUpperCase();
+          return isInFuture;
+        })
+        // SORT by numeric timestamp (real datetime comparison)
+        .sort((a, b) => {
+          // Real bookings first, then available slots in chronological order
+          const aIsPlaceholder = a.customer_email === 'booking.test@gmail.com';
+          const bIsPlaceholder = b.customer_email === 'booking.test@gmail.com';
 
-        // Convert to 24-hour format
-        if (ampm === 'PM' && hour !== 12) {
-          hour += 12;
-        } else if (ampm === 'AM' && hour === 12) {
-          hour = 0;
-        }
+          // Both same type: sort by timestamp
+          if (aIsPlaceholder === bIsPlaceholder) {
+            return (a.timestamp || 0) - (b.timestamp || 0);
+          }
 
-        const slotTimeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        const slotDateTimeStr = `${bookingDateStr} ${slotTimeStr}`;
+          // Real bookings before placeholders
+          return aIsPlaceholder ? 1 : -1;
+        });
 
-        // Only show slots where slotDateTime > currentDateTime (strictly greater)
-        const isInFuture = slotDateTimeStr > currentDateTimeStr;
-
-        if (!isInFuture) {
-          console.log(`[Frontend] Filtering past slot: ${slotDateTimeStr} <= ${currentDateTimeStr}`);
-        }
-
-        return isInFuture;
-      });
-
-      // Render filtered bookings
-      if (filteredBookings.length > 0) {
-        filteredBookings.forEach(booking => {
+      // Render sorted, filtered bookings
+      if (bookingsWithTimestamp.length > 0) {
+        bookingsWithTimestamp.forEach(booking => {
           const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
                             booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
 
