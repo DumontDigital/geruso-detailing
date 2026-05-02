@@ -43,6 +43,7 @@ app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
+  // GERUSO NEW BUILD TEST - server.js is executing
   res.sendFile(path.join(__dirname, 'app.html'));
 });
 
