@@ -506,7 +506,25 @@
       return;
     }
 
-    tbody.innerHTML = bookings.map(booking => {
+    // Extra defensive filter: Remove any May 1, 2026 entries (these should never appear)
+    const filtered = bookings.filter(booking => {
+      const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
+      return bookingDate !== '2026-05-01';
+    });
+
+    // Also ensure we only show today and forward (rolling window)
+    const today = getTodayInEasternTime();
+    const rollingFiltered = filtered.filter(booking => {
+      const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
+      return bookingDate >= today;
+    });
+
+    if (rollingFiltered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rollingFiltered.map(booking => {
       const price = getServicePrice(booking.service_type);
       const bookingDate = new Date(booking.booking_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       const isPlaceholder = booking.is_placeholder || (booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot');
@@ -604,14 +622,32 @@
   // Load availability
   async function loadAvailability() {
     try {
-      const response = await fetch('/api/availability', {
+      // Get current month/year for availability query
+      const today = getTodayInEasternTime();
+      const [year, month] = today.split('-');
+
+      const response = await fetch(`/api/availability?year=${year}&month=${month}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
       const tbody = document.getElementById('availabilityTableBody');
+
       if (!data.availability || data.availability.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No availability set</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+              <div>No availability data for this month</div>
+              <small style="font-size: 12px; margin-top: 8px;">
+                Availability is generated from the business hours configuration.
+                Current schedule: Thu-Fri 12 PM-6 PM (Mobile), Sat-Sun 6 AM-11 AM (Location), Mon-Wed Closed
+              </small>
+            </td>
+          </tr>`;
         return;
       }
 
@@ -619,11 +655,11 @@
         <tr>
           <td>${new Date(av.date).toLocaleDateString()}</td>
           <td>${av.day_of_week}</td>
-          <td>${av.start_time} - ${av.end_time}</td>
+          <td>${av.start_time || '—'} - ${av.end_time || '—'}</td>
           <td><span class="status-badge status-${av.is_available ? 'confirmed' : 'pending'}">${av.is_available ? 'Available' : 'Closed'}</span></td>
           <td>
             <div class="action-buttons">
-              <button class="action-btn">Edit</button>
+              <button class="action-btn" title="Edit availability for this day">Edit</button>
             </div>
           </td>
         </tr>
