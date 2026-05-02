@@ -18,6 +18,7 @@
       --text-light: #888888;
       --success: #10b981;
       --error: #ef4444;
+      --warning: #f97316;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,6 +45,10 @@
     .content-title { font-size: 32px; font-weight: 700; }
     .content-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
 
+    /* Section visibility */
+    .section { display: none; }
+    .section.active { display: block; }
+
     /* Stats Cards */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
     .stat-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
@@ -51,7 +56,7 @@
     .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
     .stat-detail { font-size: 12px; color: var(--text-light); margin-top: 12px; }
 
-    /* Bookings Table */
+    /* Table Section */
     .table-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
     .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .table-title { font-size: 18px; font-weight: 700; }
@@ -69,289 +74,307 @@
     .status-confirmed { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
     .status-paid { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
     .status-completed { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
+    .status-no-show { background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); }
     .status-cancelled { background: rgba(239,68,68,0.3); color: var(--error); border: 1px solid rgba(239,68,68,0.6); font-weight: 800; }
 
-    /* Placeholder row styling */
-    tbody tr.placeholder-row { background: rgba(16,185,129,0.08); }
-    tbody tr.placeholder-row:hover { background: rgba(16,185,129,0.15); }
-
-    /* Cancelled booking row styling */
-    tbody tr.cancelled-row { opacity: 0.7; background: rgba(239,68,68,0.08); }
-    tbody tr.cancelled-row:hover { background: rgba(239,68,68,0.15); }
-    tbody tr.cancelled-row td { color: var(--text-light); }
-
-    .action-buttons { display: flex; gap: 8px; }
+    .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .action-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--primary); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
     .action-btn:hover { border-color: var(--primary); background: rgba(0,255,65,0.1); }
+    .action-btn.success { color: var(--success); border-color: var(--success); }
+    .action-btn.success:hover { background: rgba(16,185,129,0.1); }
+    .action-btn.error { color: var(--error); border-color: var(--error); }
+    .action-btn.error:hover { background: rgba(239,68,68,0.1); }
 
-    .photo-btn { padding: 6px 12px; background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 6px; color: var(--primary); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-    .photo-btn:hover { background: rgba(0,255,65,0.2); border-color: var(--primary-light); }
-
-    /* Modal */
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-content { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; }
-    .modal-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px; }
+    .form-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .form-section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
     .form-group { margin-bottom: 18px; }
     .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
-    .form-input, .form-select { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; width: 100%; transition: border 0.2s; }
-    .form-input:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+    .form-input, .form-select, .form-textarea { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; width: 100%; transition: border 0.2s; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+    .form-textarea { resize: vertical; min-height: 100px; }
 
-    .btn-primary { padding: 10px 20px; background: var(--primary); color: #000; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s; }
-    .btn-primary:hover { background: var(--primary-light); }
+    /* Buttons */
+    .btn-primary { background: var(--primary); color: #000; font-weight: 700; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); }
+    .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-success { background: var(--success); color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-error { background: var(--error); color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
-    .message-box { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; }
-    .message-box.success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: var(--success); }
-    .message-box.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: var(--error); }
+    .button-group { display: flex; gap: 12px; margin-top: 24px; }
+    .button-group .btn-primary, .button-group .btn-secondary { flex: 1; }
 
-    .empty-state { text-align: center; padding: 60px 40px; color: var(--text-muted); }
-    .empty-state p { font-size: 14px; }
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; }
+    .modal-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 0; }
+    .modal-close:hover { color: var(--text); }
 
-    @media(max-width: 960px) {
+    /* Items List */
+    .items-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .item-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .item-card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .item-card-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .item-card-price { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+    .item-card-actions { display: flex; gap: 8px; }
+
+    /* Responsive */
+    @media (max-width: 960px) {
       .dashboard-wrapper { grid-template-columns: 1fr; }
-      .sidebar { flex-direction: row; padding: 12px 20px; border-bottom: 1px solid var(--border); height: auto; overflow-x: auto; }
-      .sidebar-header { margin-bottom: 0; white-space: nowrap; }
-      .sidebar-nav { flex-direction: row; gap: 16px; }
-      .sidebar-footer { margin-top: 0; padding-top: 0; border-top: none; border-left: 1px solid var(--border); padding-left: 16px; }
-      .stats-grid { grid-template-columns: 1fr; }
-      .main-content { padding: 20px; }
-      .content-title { font-size: 24px; }
-      table { font-size: 12px; }
-      td, th { padding: 10px 8px; }
-      th { font-size: 10px; }
-      .action-buttons { flex-direction: column; gap: 6px; }
-      .action-btn { padding: 6px 10px; font-size: 10px; }
-      .status-badge { padding: 4px 8px; font-size: 10px; }
-      #bookingsTableContainer { overflow-x: scroll; -webkit-overflow-scrolling: touch; }
-    }
-
-    @media(max-width: 768px) {
-      .main-content { padding: 16px; }
-      .content-title { font-size: 20px; }
-      table { font-size: 11px; }
-      td, th { padding: 8px 6px; }
+      .sidebar { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
       .modal-content { width: 95%; padding: 20px; }
-    }
-
-    @media(max-width: 480px) {
-      .sidebar { flex-wrap: wrap; }
-      .sidebar-nav { width: 100%; flex-wrap: wrap; gap: 8px; }
-      .sidebar-footer { width: 100%; border-left: none; padding-left: 0; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 12px; }
-      .main-content { padding: 12px; }
-      .content-title { font-size: 18px; }
-      .table-section { padding: 16px; }
-      table { font-size: 10px; }
-      td, th { padding: 6px 4px; }
-      .action-btn { padding: 5px 8px; font-size: 9px; white-space: nowrap; }
-      .status-badge { padding: 3px 6px; font-size: 9px; }
     }
   </style>
 </head>
 <body>
 <div class="dashboard-wrapper">
-  <!-- Sidebar -->
+  <!-- Sidebar Navigation -->
   <div class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">Geruso Admin</div>
+      <div class="sidebar-title">Admin Dashboard</div>
     </div>
-    <nav class="sidebar-nav">
-      <div class="sidebar-item active" data-page="bookings">Bookings</div>
-      <div class="sidebar-item" data-page="availability">Availability</div>
-      <div class="sidebar-item" data-page="overview">Overview</div>
-    </nav>
+    <div class="sidebar-nav">
+      <div class="sidebar-item active" onclick="showSection('overview')">📊 Overview</div>
+      <div class="sidebar-item" onclick="showSection('bookings')">📅 Bookings</div>
+      <div class="sidebar-item" onclick="showSection('services')">🔧 Services</div>
+      <div class="sidebar-item" onclick="showSection('addons')">➕ Add-ons</div>
+      <div class="sidebar-item" onclick="showSection('schedule')">⏰ Schedule</div>
+      <div class="sidebar-item" onclick="showSection('content')">📝 Content</div>
+    </div>
     <div class="sidebar-footer">
-      <button class="btn-logout" id="logoutBtn">Logout</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </div>
 
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Bookings Page -->
-    <div id="bookingsPage" class="page active">
+    <!-- OVERVIEW SECTION -->
+    <div id="overview-section" class="section active">
       <div class="content-header">
         <div>
-          <h1 class="content-title">Bookings</h1>
-          <p class="content-sub">Manage all customer bookings and appointments</p>
-        </div>
-      </div>
-
-      <div class="table-section">
-        <div style="padding: 12px; background: rgba(0,255,65,0.08); border: 1px solid rgba(0,255,65,0.2); border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: var(--text-light);">
-          ✓ Data: <strong>/api/admin/bookings</strong> | First Date: <strong id="debugFirstDate">—</strong>
-        </div>
-        <div class="table-header">
-          <h3 class="table-title">All Bookings</h3>
-          <div style="flex: 1;"></div>
-        </div>
-
-        <!-- Search and Filter Controls -->
-        <fieldset style="border: none; padding: 0; margin: 0 0 20px 0;">
-          <legend style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px;">Filters</legend>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <div style="display: flex; flex-direction: column;">
-              <label for="searchInput" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Search by name, phone, or email</label>
-              <input type="text" id="searchInput" class="table-filter" placeholder="Search..." style="grid-column: span 1;">
-            </div>
-            <div style="display: flex; flex-direction: column;">
-              <label for="dateFilter" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Filter by date</label>
-              <input type="date" id="dateFilter" class="table-filter" style="grid-column: span 1;">
-            </div>
-            <div style="display: flex; flex-direction: column;">
-              <label for="statusFilter" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Filter by status</label>
-              <select class="table-filter" id="statusFilter" style="grid-column: span 1;">
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="paid">Paid</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-            <div style="display: flex; align-items: flex-end;">
-              <button class="table-filter" id="clearFiltersBtn" style="background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); cursor: pointer; font-weight: 600; width: 100%;" aria-label="Clear all filters">Clear Filters</button>
-            </div>
-          </div>
-        </fieldset>
-
-        <div id="bookingsTableContainer" style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th style="min-width: 120px;">Date</th>
-                <th style="min-width: 80px;">Time</th>
-                <th style="min-width: 140px;">Customer</th>
-                <th style="min-width: 100px;">Phone</th>
-                <th style="min-width: 160px;">Email</th>
-                <th style="min-width: 140px;">Service</th>
-                <th style="min-width: 160px;">Address</th>
-                <th style="min-width: 80px;">Price</th>
-                <th style="min-width: 100px;">Payment</th>
-                <th style="min-width: 100px;">Status</th>
-                <th style="min-width: 200px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="bookingsTableBody">
-              <tr>
-                <td colspan="11" style="text-align: center; color: var(--text-muted);">Loading bookings...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Availability Page -->
-    <div id="availabilityPage" class="page">
-      <div class="content-header">
-        <div>
-          <h1 class="content-title">Availability</h1>
-          <p class="content-sub">Set service availability and hours</p>
-        </div>
-        <button class="btn-primary" id="addAvailabilityBtn">Add Availability</button>
-      </div>
-
-      <div id="messageBox"></div>
-
-      <div class="table-section">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Hours</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="availabilityTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading availability...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Overview Page -->
-    <div id="overviewPage" class="page">
-      <div class="content-header">
-        <div>
-          <h1 class="content-title">Dashboard Overview</h1>
-          <p class="content-sub">Quick statistics and insights</p>
+          <h1 class="content-title">Dashboard</h1>
+          <p class="content-sub">Welcome back! Here's your booking overview.</p>
         </div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Today's Bookings</div>
-          <div class="stat-value" id="todayCount">0</div>
-          <div class="stat-detail">Appointments scheduled</div>
+          <div class="stat-value" id="todayCount">-</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">This Week</div>
-          <div class="stat-value" id="weekCount">0</div>
-          <div class="stat-detail">Total bookings</div>
+          <div class="stat-value" id="weekCount">-</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pending Confirmations</div>
-          <div class="stat-value" id="pendingCount">0</div>
-          <div class="stat-detail">Awaiting confirmation</div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="pendingCount">-</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Monthly Revenue</div>
-          <div class="stat-value" id="revenueCount">$0</div>
-          <div class="stat-detail">Confirmed bookings</div>
+          <div class="stat-label">Week Revenue</div>
+          <div class="stat-value" id="revenue">$0</div>
         </div>
       </div>
 
       <div class="table-section">
-        <h3 class="table-title">Next 7 Days</h3>
+        <div class="table-header">
+          <h2 class="table-title">Upcoming Bookings</h2>
+        </div>
         <table>
           <thead>
             <tr>
               <th>Date</th>
+              <th>Time</th>
               <th>Customer</th>
               <th>Service</th>
-              <th>Time</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="upcomingTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading upcoming bookings...</td>
-            </tr>
+            <tr><td colspan="6">Loading...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- BOOKINGS SECTION -->
+    <div id="bookings-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Bookings</h1>
+          <p class="content-sub">View, edit, and manage all bookings.</p>
+        </div>
+      </div>
+
+      <div class="table-section">
+        <div class="table-header">
+          <h2 class="table-title">All Bookings</h2>
+          <div class="table-controls">
+            <select class="table-filter" id="statusFilter" onchange="loadBookings()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="no-show">No Show</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="text" class="table-filter" id="searchFilter" placeholder="Search name/email..." onkeyup="loadBookings()">
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Customer</th>
+              <th>Service</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody">
+            <tr><td colspan="6">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SERVICES SECTION -->
+    <div id="services-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Services</h1>
+          <p class="content-sub">Edit services, pricing, and availability.</p>
+        </div>
+        <button class="btn-primary" onclick="openAddServiceModal()">+ Add Service</button>
+      </div>
+
+      <div class="items-list" id="servicesList">
+        <p>Loading services...</p>
+      </div>
+    </div>
+
+    <!-- ADD-ONS SECTION -->
+    <div id="addons-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Add-ons</h1>
+          <p class="content-sub">Edit add-on services and pricing.</p>
+        </div>
+        <button class="btn-primary" onclick="openAddAddonModal()">+ Add Add-on</button>
+      </div>
+
+      <div class="items-list" id="addonsList">
+        <p>Loading add-ons...</p>
+      </div>
+    </div>
+
+    <!-- SCHEDULE SECTION -->
+    <div id="schedule-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Schedule</h1>
+          <p class="content-sub">Configure business hours and availability.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-section">
+          <div class="form-section-title">Mobile Service Hours</div>
+          <div class="form-group">
+            <label class="form-label">Days</label>
+            <div style="padding: 12px; background: var(--light-bg); border-radius: 6px; color: var(--text);">Thursday & Friday</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hours</label>
+            <input type="text" class="form-input" value="12:00 PM – 6:00 PM" disabled>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">At-Location Service Hours</div>
+          <div class="form-group">
+            <label class="form-label">Days</label>
+            <div style="padding: 12px; background: var(--light-bg); border-radius: 6px; color: var(--text);">Saturday & Sunday</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hours</label>
+            <input type="text" class="form-input" value="6:00 AM – 11:00 AM" disabled>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section" style="margin-top: 20px;">
+        <div class="form-section-title">Closed Days</div>
+        <p style="color: var(--text-muted);">Monday, Tuesday, Wednesday</p>
+      </div>
+
+      <p style="color: var(--text-light); margin-top: 24px; font-size: 13px;">Note: Schedule is managed in the booking.html file. To modify hours, update the businessHours configuration.</p>
+    </div>
+
+    <!-- CONTENT SECTION -->
+    <div id="content-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Content</h1>
+          <p class="content-sub">Edit website text and information.</p>
+        </div>
+      </div>
+
+      <div class="form-section" style="max-width: 800px;">
+        <div class="form-section-title">Business Information</div>
+
+        <div class="form-group">
+          <label class="form-label">Business Phone</label>
+          <input type="tel" class="form-input" id="businessPhone" placeholder="401-490-1236" value="401-490-1236">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Business Email</label>
+          <input type="email" class="form-input" id="businessEmail" placeholder="info@gerusodetailing.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Business Address</label>
+          <input type="text" class="form-input" id="businessAddress" placeholder="Mapleville, RI" value="Mapleville, RI">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hero Section Text</label>
+          <textarea class="form-textarea" id="heroText" placeholder="Main headline..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Services Description</label>
+          <textarea class="form-textarea" id="servicesText" placeholder="Services section description..."></textarea>
+        </div>
+
+        <div class="button-group">
+          <button class="btn-primary" onclick="saveContent()">Save Changes</button>
+          <button class="btn-secondary" onclick="loadContent()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div class="modal" id="confirmModal">
-  <div class="modal-content" style="max-width: 400px;">
-    <div class="modal-header">
-      <span id="confirmTitle">Confirm Action</span>
-      <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
-    </div>
-    <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 24px;"></p>
-    <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button onclick="closeConfirmModal()" style="padding: 10px 20px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-weight: 600;">Cancel</button>
-      <button id="confirmActionBtn" style="padding: 10px 20px; background: var(--error); border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">Confirm</button>
-    </div>
-  </div>
-</div>
+<!-- MODALS -->
 
 <!-- Edit Booking Modal -->
-<div class="modal" id="editModal">
+<div class="modal" id="editBookingModal">
   <div class="modal-content">
     <div class="modal-header">
       <span>Edit Booking</span>
-      <button class="modal-close" id="closeModalBtn">&times;</button>
+      <button class="modal-close" onclick="closeEditBookingModal()">&times;</button>
     </div>
-    <div id="modalMessage"></div>
-    <form id="editForm">
+    <div id="editBookingMessage" style="margin-bottom: 20px;"></div>
+    <form id="editBookingForm">
       <div class="form-group">
         <label class="form-label">Customer Name</label>
         <input type="text" class="form-input" id="editName" required>
@@ -365,685 +388,442 @@
         <input type="tel" class="form-input" id="editPhone" required>
       </div>
       <div class="form-group">
+        <label class="form-label">Service Type</label>
+        <select class="form-select" id="editService" required>
+          <option>Full Motorcycle Service</option>
+          <option>Interior Detailing</option>
+          <option>Car Wash</option>
+          <option>Ceramic Coating</option>
+          <option>Premium Package</option>
+          <option>Ultra Premium</option>
+          <option>Pet Hair / Odor Elimination</option>
+          <option>Headlight Restoration</option>
+          <option>Engine Bay Cleaning</option>
+          <option>Full Vehicle Polish</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Date</label>
+        <input type="date" class="form-input" id="editDate" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Time</label>
+        <input type="time" class="form-input" id="editTime" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Address</label>
+        <input type="text" class="form-input" id="editAddress" placeholder="Customer address or location">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vehicle Type</label>
+        <select class="form-select" id="editVehicleType">
+          <option value="">Select...</option>
+          <option value="Car">Car</option>
+          <option value="Motorcycle">Motorcycle</option>
+          <option value="SUV">SUV</option>
+          <option value="Truck">Truck</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="editNotes" placeholder="Additional notes..."></textarea>
+      </div>
+      <div class="form-group">
         <label class="form-label">Status</label>
-        <select class="form-select" id="editStatus">
+        <select class="form-select" id="editStatus" required>
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
           <option value="completed">Completed</option>
+          <option value="no-show">No Show</option>
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
-      <button type="submit" class="btn-primary" style="width: 100%;">Save Changes</button>
+      <div class="button-group">
+        <button type="button" class="btn-primary" onclick="saveBookingEdit()">Save Changes</button>
+        <button type="button" class="btn-secondary" onclick="closeEditBookingModal()">Cancel</button>
+        <button type="button" class="btn-error" onclick="deleteBooking()">Delete Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/Edit Service Modal -->
+<div class="modal" id="serviceModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="serviceModalTitle">Add Service</span>
+      <button class="modal-close" onclick="closeServiceModal()">&times;</button>
+    </div>
+    <form id="serviceForm">
+      <div class="form-group">
+        <label class="form-label">Service Name</label>
+        <input type="text" class="form-input" id="serviceName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="serviceDesc"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price ($)</label>
+        <input type="number" class="form-input" id="servicePrice" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estimated Time</label>
+        <input type="text" class="form-input" id="serviceTime" placeholder="2 hours" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="serviceType" required>
+          <option value="MOBILE">Mobile</option>
+          <option value="LOCATION ONLY">At-Location</option>
+          <option value="EXTRA FEE">Add-on</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <input type="checkbox" id="serviceActive" checked> Active
+        </label>
+      </div>
+      <div class="button-group">
+        <button type="button" class="btn-primary" onclick="saveService()">Save Service</button>
+        <button type="button" class="btn-secondary" onclick="closeServiceModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/Edit Add-on Modal -->
+<div class="modal" id="addonModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="addonModalTitle">Add Add-on</span>
+      <button class="modal-close" onclick="closeAddonModal()">&times;</button>
+    </div>
+    <form id="addonForm">
+      <div class="form-group">
+        <label class="form-label">Add-on Name</label>
+        <input type="text" class="form-input" id="addonName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="addonDesc"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price ($)</label>
+        <input type="number" class="form-input" id="addonPrice" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <input type="checkbox" id="addonActive" checked> Active
+        </label>
+      </div>
+      <div class="button-group">
+        <button type="button" class="btn-primary" onclick="saveAddon()">Save Add-on</button>
+        <button type="button" class="btn-secondary" onclick="closeAddonModal()">Cancel</button>
+      </div>
     </form>
   </div>
 </div>
 
 <script>
-  // Service pricing configuration
-  const servicePriceMap = {
-    'Full Motorcycle Service': { price: 70, display: '$70' },
-    'Interior Detailing': { price: 100, display: 'Starting from $100' },
-    'Car Wash': { price: 85, display: 'Starting from $85' },
-    'Ceramic Coating': { price: 400, display: '$400' },
-    'Premium Package': { price: 170, display: 'Starting from $170' },
-    'Ultra Premium': { price: 335, display: '$335' },
-    'Pet Hair / Odor Elimination': { price: 50, display: '$50 Extra Fee' },
-    'Headlight Restoration': { price: 50, display: '$50 per Headlight' },
-    'Engine Bay Cleaning': { price: 75, display: '$75' },
-    'Full Vehicle Polish': { price: 250, display: 'Starting from $250' }
-  };
-
-  // Extract price display from service type
-  function getServicePrice(serviceType) {
-    for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
-      if (serviceType.includes(serviceName)) {
-        return priceData.display;
-      }
-    }
-    return 'Contact for pricing';
-  }
+  let token = localStorage.getItem('adminToken');
+  let currentEditingBookingId = null;
 
   // Check authentication
-  const token = localStorage.getItem('adminToken');
   if (!token) {
     window.location.href = '/admin/login';
   }
 
-  // Page navigation
-  document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      item.classList.add('active');
-      const page = item.dataset.page;
-      document.getElementById(page + 'Page').classList.add('active');
-      loadPageData(page);
-    });
-  });
+  // Section navigation
+  function showSection(sectionName) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
 
-  // MIDNIGHT EASTERN TIME ROTATION
-  function setupMidnightRotation() {
-    const checkMidnight = () => {
-      const now = new Date();
-      const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    // Show selected section
+    document.getElementById(sectionName + '-section').classList.add('active');
+    event.target.classList.add('active');
 
-      // Check if hour is 0 (midnight) and we haven't rotated yet today
-      if (eastern.getHours() === 0 && eastern.getMinutes() < 1) {
-        console.log('🌙 [ADMIN-DASHBOARD] Midnight Eastern Time detected - rotating schedule');
-        if (document.getElementById('bookingsPage')?.classList.contains('active')) {
-          loadBookings();
-          loadAvailability();
-        }
-      }
-    };
-
-    // Check every 30 seconds for midnight
-    setInterval(checkMidnight, 30000);
+    // Load section data
+    if (sectionName === 'bookings') loadBookings();
+    else if (sectionName === 'services') loadServices();
+    else if (sectionName === 'addons') loadAddons();
+    else if (sectionName === 'content') loadContent();
+    else loadDashboard();
   }
 
-  // AUTO-LOAD: Call loadBookings() on page initialization if Bookings tab is active
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 [ADMIN-DASHBOARD] Page initialized, checking active tab');
-    const activeBookingsTab = document.querySelector('.sidebar-item.active[data-page="bookings"]');
-    if (activeBookingsTab) {
-      console.log('📖 [ADMIN-DASHBOARD] Bookings tab is active, loading bookings...');
-      loadBookings();
-    }
-    setupMidnightRotation();
-  });
-
-  // Also load if Bookings page is visible
-  if (document.getElementById('bookingsPage')?.classList.contains('active')) {
-    console.log('📖 [ADMIN-DASHBOARD] Bookings page visible on load, triggering loadBookings');
-    setTimeout(() => {
-      if (!allBookings.length) {
-        loadBookings();
-      }
-    }, 100);
-  }
-
-  // Logout
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/admin/login';
-  });
-
-  // Load page data
-  async function loadPageData(page) {
-    if (page === 'bookings') loadBookings();
-    if (page === 'availability') loadAvailability();
-    if (page === 'overview') loadOverview();
-  }
-
-  // Store all bookings for filtering
-  let allBookings = [];
-
-  // Get today's date in Eastern Time (America/New_York timezone)
-  function getTodayInEasternTime() {
-    const now = new Date();
-    const easternFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-
-    const parts = easternFormatter.formatToParts(now);
-    const year = parts.find(p => p.type === 'year').value;
-    const month = parts.find(p => p.type === 'month').value;
-    const day = parts.find(p => p.type === 'day').value;
-
-    return `${year}-${month}-${day}`;
-  }
-
-  // Convert time string (e.g., "6:00 AM") to numeric value for sorting
-  function parseTimeToMinutes(timeStr) {
-    const match = timeStr.match(/(\d+):(\d+)\s+(AM|PM)/i);
-    if (!match) return 0;
-
-    let [, hours, minutes, period] = match;
-    hours = parseInt(hours);
-    minutes = parseInt(minutes);
-
-    // Convert to 24-hour format for proper sorting
-    if (period.toUpperCase() === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (period.toUpperCase() === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    return hours * 60 + minutes; // Return minutes since midnight
-  }
-
-  // Load bookings - CRITICAL: Only use /api/admin/bookings endpoint
-  async function loadBookings() {
+  // Load dashboard stats
+  async function loadDashboard() {
     try {
-      console.log('🔄 [ADMIN-DASHBOARD] Starting loadBookings()');
-
-      const apiUrl = '/api/admin/bookings'; // MUST use admin endpoint only
-      console.log(`📡 [ADMIN-DASHBOARD] Fetching from: ${apiUrl}`);
-
-      const response = await fetch(apiUrl, {
+      const res = await fetch('/api/admin/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!res.ok) throw new Error('Failed to load dashboard');
 
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}`);
-      }
+      const data = await res.json();
+      document.getElementById('todayCount').textContent = data.todayCount;
+      document.getElementById('weekCount').textContent = data.weekCount;
+      document.getElementById('pendingCount').textContent = data.pendingCount;
+      document.getElementById('revenue').textContent = '$' + data.revenue;
 
-      const data = await response.json();
-      console.log(`✓ [ADMIN-DASHBOARD] API response received: ${data.bookings?.length || 0} bookings`);
-
-      if (!data.bookings || data.bookings.length === 0) {
-        console.log('⚠️  [ADMIN-DASHBOARD] No bookings in response');
-        allBookings = [];
-        renderBookingsTable([]);
-        return;
-      }
-
-      // Log first booking for verification
-      console.log(`📅 [ADMIN-DASHBOARD] First booking date: ${data.bookings[0].booking_date?.split('T')[0]}`);
-
-      // Sort by date ascending, then by time ascending (rotating schedule from today forward)
-      allBookings = data.bookings.sort((a, b) => {
-        const dateA = new Date(a.booking_date).toISOString().split('T')[0];
-        const dateB = new Date(b.booking_date).toISOString().split('T')[0];
-        if (dateA !== dateB) {
-          return dateA.localeCompare(dateB);
-        }
-        const timeAMinutes = parseTimeToMinutes(a.booking_time);
-        const timeBMinutes = parseTimeToMinutes(b.booking_time);
-        return timeAMinutes - timeBMinutes;
-      });
-
-      // Filter to show only today and future dates for rolling schedule (using Eastern Time)
-      const today = getTodayInEasternTime();
-      console.log(`📍 [ADMIN-DASHBOARD] Today (Eastern): ${today}`);
-
-      const rollingBookings = allBookings.filter(booking => {
-        const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-        return bookingDate >= today;
-      });
-
-      console.log(`✓ [ADMIN-DASHBOARD] After filtering: ${rollingBookings.length} bookings to display`);
-      if (rollingBookings.length > 0) {
-        console.log(`✓ [ADMIN-DASHBOARD] First visible date: ${rollingBookings[0].booking_date?.split('T')[0]}`);
-      }
-
-      renderBookingsTable(rollingBookings);
-      setupFilterListeners();
-    } catch (error) {
-      console.error('❌ [ADMIN-DASHBOARD] Error loading bookings:', error);
-      alert('Error loading bookings: ' + error.message);
-    }
-  }
-
-  // Render bookings table with current filters
-  function renderBookingsTable(bookings) {
-    const tbody = document.getElementById('bookingsTableBody');
-
-    // Update debug display
-    const debugElement = document.getElementById('debugFirstDate');
-    if (debugElement && bookings && bookings.length > 0) {
-      const firstDate = new Date(bookings[0].booking_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      debugElement.textContent = firstDate;
-      console.log(`✓ [RENDER] Debug display updated: First date = ${firstDate}`);
-    }
-
-    if (!bookings || bookings.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
-      if (debugElement) {
-        debugElement.textContent = 'No data';
-      }
-      return;
-    }
-
-    // CRITICAL DEFENSIVE FILTERS - Apply MULTIPLE layers
-
-    // Layer 1: Exclude any May 1, 2026 entries (should never exist but double-check)
-    const filtered = bookings.filter(booking => {
-      const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-      const hasMay1 = bookingDate === '2026-05-01';
-      if (hasMay1) {
-        console.warn(`⚠️  [RENDER] WARNING: May 1 row detected and filtered out: ${booking.customer_name}`);
-      }
-      return !hasMay1;
-    });
-
-    // Layer 2: Rolling window - only today and forward (Eastern Time)
-    const today = getTodayInEasternTime();
-    const rollingFiltered = filtered.filter(booking => {
-      const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-      const isValid = bookingDate >= today;
-      if (!isValid) {
-        console.warn(`⚠️  [RENDER] WARNING: Pre-today row filtered out: ${bookingDate} (today=${today})`);
-      }
-      return isValid;
-    });
-
-    console.log(`✓ [RENDER] After all filters: ${rollingFiltered.length} rows to display`);
-
-    if (rollingFiltered.length === 0) {
-      const noDataMsg = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
-      tbody.innerHTML = noDataMsg;
-      console.log('📭 [RENDER] No bookings to display');
-      return;
-    }
-
-    tbody.innerHTML = rollingFiltered.map(booking => {
-      const price = getServicePrice(booking.service_type);
-      // FIX: Use ISO split to avoid timezone conversion bug
-      // new Date("2026-05-02T00:00:00.000Z").toLocaleDateString() returns May 1 in ET!
-      const dateObj = new Date(booking.booking_date);
-      const isoDate = dateObj.toISOString().split('T')[0]; // 2026-05-02
-      const [year, month, day] = isoDate.split('-');
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const bookingDate = `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
-      const isPlaceholder = booking.is_placeholder || (booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot');
-      const isCancelled = booking.status === 'cancelled';
-
-      let rowClass = '';
-      let textStyle = '';
-      let nameStyle = '';
-
-      if (isPlaceholder) {
-        rowClass = 'placeholder-row';
-        textStyle = 'color: var(--text-light); font-style: italic;';
-        nameStyle = 'color: var(--success); font-weight: 600;';
-      } else if (isCancelled) {
-        rowClass = 'cancelled-row';
-        textStyle = 'color: var(--text-light);';
-      }
-
-      const customerDisplay = isPlaceholder ? '<span style="' + nameStyle + '">✓ Available Slot</span>' : booking.customer_name;
-
-      return `
-        <tr class="${rowClass}">
-          <td style="${textStyle}"><strong>${bookingDate}</strong></td>
-          <td style="${textStyle}"><strong>${booking.booking_time}</strong></td>
-          <td style="${textStyle}">${customerDisplay}</td>
-          <td style="${textStyle}">${booking.customer_phone}</td>
-          <td style="${textStyle}"><span title="${booking.customer_email}" style="cursor: help;">${booking.customer_email.substring(0, 25)}${booking.customer_email.length > 25 ? '...' : ''}</span></td>
-          <td style="${textStyle}">${booking.service_type}</td>
-          <td style="${textStyle}"><span title="${booking.service_address}">${booking.service_address.substring(0, 35)}${booking.service_address.length > 35 ? '...' : ''}</span></td>
-          <td style="${textStyle}; color: var(--primary); font-weight: 600;">${price}</td>
-          <td style="${textStyle}"><span class="status-badge status-${booking.payment_status}">${booking.payment_status}</span></td>
-          <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
-          <td>
-            <div class="action-buttons" style="flex-wrap: wrap;">
-              ${booking.status === 'pending' ? `<button class="action-btn" onclick="showConfirmCancel('${booking.id}', '${booking.customer_name.replace(/'/g, "\\'")}', '${bookingDate}', '${booking.booking_time}')" style="color: #f97316; border-color: #f97316; font-size: 11px;">Confirm</button>` : ''}
-              ${booking.status !== 'cancelled' ? `<button class="action-btn" onclick="showConfirmCancel('${booking.id}', '${booking.customer_name.replace(/'/g, "\\'")}', '${bookingDate}', '${booking.booking_time}')" style="color: var(--error); border-color: var(--error); font-size: 11px;">Cancel</button>` : ''}
-              ${booking.status === 'pending' || booking.status === 'confirmed' ? `<button class="action-btn" onclick="markPaid('${booking.id}')" style="color: #3b82f6; border-color: #3b82f6; font-size: 11px;">Mark Paid</button>` : ''}
-              ${!isPlaceholder ? `<button class="action-btn" onclick="deleteBooking('${booking.id}')" style="color: var(--error); border-color: var(--error); font-size: 11px;">Delete</button>` : ''}
-            </div>
-          </td>
+      // Load upcoming bookings table
+      const tbody = document.getElementById('upcomingTableBody');
+      tbody.innerHTML = data.upcomingBookings.map(b => `
+        <tr>
+          <td>${new Date(b.booking_date).toLocaleDateString()}</td>
+          <td>${b.booking_time}</td>
+          <td>${b.customer_name}</td>
+          <td>${b.service_type}</td>
+          <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+          <td><div class="action-buttons">
+            <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
+            <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
+            <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
+          </div></td>
         </tr>
-      `}).join('');
+      `).join('');
+    } catch (error) {
+      console.error('Dashboard error:', error);
+    }
   }
 
-  // Setup filter event listeners
-  function setupFilterListeners() {
-    const searchInput = document.getElementById('searchInput');
-    const dateFilter = document.getElementById('dateFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const clearBtn = document.getElementById('clearFiltersBtn');
+  // Load bookings
+  async function loadBookings() {
+    try {
+      const status = document.getElementById('statusFilter').value;
+      const search = document.getElementById('searchFilter').value;
+      const query = new URLSearchParams({ status, search }).toString();
 
-    const applyFilters = () => {
-      const searchTerm = searchInput.value.toLowerCase();
-      const selectedDate = dateFilter.value;
-      const selectedStatus = statusFilter.value;
-      const today = getTodayInEasternTime();
-
-      const filtered = allBookings.filter(booking => {
-        const matchesSearch = !searchTerm ||
-          booking.customer_name.toLowerCase().includes(searchTerm) ||
-          booking.customer_phone.includes(searchTerm) ||
-          booking.customer_email.toLowerCase().includes(searchTerm);
-
-        const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-
-        // If date filter is specified, show only that date
-        // Otherwise show rolling window (today and future)
-        const matchesDate = selectedDate ? (bookingDate === selectedDate) : (bookingDate >= today);
-
-        const matchesStatus = !selectedStatus || booking.status === selectedStatus;
-
-        return matchesSearch && matchesDate && matchesStatus;
+      const res = await fetch(`/api/admin/bookings?${query}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!res.ok) throw new Error('Failed to load bookings');
 
-      renderBookingsTable(filtered);
+      const bookings = await res.json();
+      const tbody = document.getElementById('bookingsTableBody');
+      tbody.innerHTML = bookings.map(b => `
+        <tr>
+          <td>${new Date(b.booking_date).toLocaleDateString()}</td>
+          <td>${b.booking_time}</td>
+          <td>${b.customer_name}</td>
+          <td>${b.service_type.split('-')[0].trim()}</td>
+          <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+          <td><div class="action-buttons">
+            <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
+            <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
+            <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
+          </div></td>
+        </tr>
+      `).join('');
+    } catch (error) {
+      console.error('Load bookings error:', error);
+    }
+  }
+
+  // Edit booking modal
+  async function editBookingModal(bookingId) {
+    try {
+      const res = await fetch(`/api/admin/booking/${bookingId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to load booking');
+
+      const booking = await res.json();
+      currentEditingBookingId = bookingId;
+
+      document.getElementById('editName').value = booking.customer_name;
+      document.getElementById('editEmail').value = booking.customer_email;
+      document.getElementById('editPhone').value = booking.customer_phone;
+      document.getElementById('editService').value = booking.service_type;
+      document.getElementById('editDate').value = booking.booking_date;
+      document.getElementById('editTime').value = booking.booking_time;
+      document.getElementById('editAddress').value = booking.service_address || '';
+      document.getElementById('editVehicleType').value = booking.vehicle_type || '';
+      document.getElementById('editNotes').value = booking.notes || '';
+      document.getElementById('editStatus').value = booking.status;
+
+      document.getElementById('editBookingModal').classList.add('active');
+    } catch (error) {
+      alert('Error loading booking: ' + error.message);
+    }
+  }
+
+  function closeEditBookingModal() {
+    document.getElementById('editBookingModal').classList.remove('active');
+    currentEditingBookingId = null;
+  }
+
+  async function saveBookingEdit() {
+    if (!currentEditingBookingId) return;
+
+    const data = {
+      customer_name: document.getElementById('editName').value,
+      customer_email: document.getElementById('editEmail').value,
+      customer_phone: document.getElementById('editPhone').value,
+      service_type: document.getElementById('editService').value,
+      booking_date: document.getElementById('editDate').value,
+      booking_time: document.getElementById('editTime').value,
+      service_address: document.getElementById('editAddress').value,
+      vehicle_type: document.getElementById('editVehicleType').value,
+      notes: document.getElementById('editNotes').value,
+      status: document.getElementById('editStatus').value
     };
 
-    searchInput.addEventListener('input', applyFilters);
-    dateFilter.addEventListener('change', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
-    clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      dateFilter.value = '';
-      statusFilter.value = '';
-      // When clearing filters, return to rolling schedule (today and future in Eastern Time)
-      const today = getTodayInEasternTime();
-      const rollingBookings = allBookings.filter(booking => {
-        const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-        return bookingDate >= today;
-      });
-      renderBookingsTable(rollingBookings);
-    });
-  }
-
-  // Toggle availability for a day
-  async function toggleAvailability(dateStr, currentlyAvailable) {
     try {
-      const newStatus = !currentlyAvailable;
-      const response = await fetch('/api/availability', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/booking/${currentEditingBookingId}`, {
+        method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          date: dateStr.split('T')[0],
-          isAvailable: newStatus,
-          dayOfWeek: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' })
-        })
+        body: JSON.stringify(data)
       });
 
-      if (response.ok) {
-        loadAvailability();
-      } else {
-        alert('Failed to update availability');
-      }
+      if (!res.ok) throw new Error('Failed to save booking');
+
+      alert('✓ Booking updated');
+      closeEditBookingModal();
+      loadBookings();
     } catch (error) {
-      console.error('Error toggling availability:', error);
       alert('Error: ' + error.message);
     }
   }
 
-  // Load availability
-  async function loadAvailability() {
-    try {
-      // Get current month/year for availability query
-      const today = getTodayInEasternTime();
-      const [year, month] = today.split('-');
+  async function deleteBooking() {
+    if (!currentEditingBookingId) return;
+    if (!confirm('Delete this booking permanently?')) return;
 
-      const response = await fetch(`/api/availability?year=${year}&month=${month}`, {
+    try {
+      const res = await fetch(`/api/admin/booking/${currentEditingBookingId}`, {
+        method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!res.ok) throw new Error('Failed to delete booking');
 
-      const data = await response.json();
-      const tbody = document.getElementById('availabilityTableBody');
-
-      if (!data.availability || data.availability.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
-              <div>No availability data for this month</div>
-              <small style="font-size: 12px; margin-top: 8px;">
-                Availability is generated from the business hours configuration.
-                Current schedule: Thu-Fri 12 PM-6 PM (Mobile), Sat-Sun 6 AM-11 AM (Location), Mon-Wed Closed
-              </small>
-            </td>
-          </tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.availability.map(av => {
-        const dateStr = new Date(av.date).toISOString().split('T')[0];
-        const [year, month, day] = dateStr.split('-');
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const displayDate = `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
-
-        return `
-        <tr>
-          <td><strong>${displayDate}</strong></td>
-          <td>${av.day_of_week}</td>
-          <td>${av.start_time || '—'} - ${av.end_time || '—'}</td>
-          <td><span class="status-badge status-${av.is_available ? 'confirmed' : 'pending'}">${av.is_available ? 'Available' : 'Closed'}</span></td>
-          <td>
-            <div class="action-buttons" style="gap: 6px;">
-              <button class="action-btn" title="Toggle availability for ${displayDate}" aria-label="Toggle availability for ${displayDate}" onclick="toggleAvailability('${av.date}', ${av.is_available})">
-                ${av.is_available ? 'Close' : 'Reopen'}
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-      }).join('');
+      alert('✓ Booking deleted');
+      closeEditBookingModal();
+      loadBookings();
     } catch (error) {
-      console.error('Error loading availability:', error);
-    }
-  }
-
-  // Load overview
-  async function loadOverview() {
-    try {
-      const response = await fetch('/api/admin/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-
-      document.getElementById('todayCount').textContent = data.todayCount || 0;
-      document.getElementById('weekCount').textContent = data.weekCount || 0;
-      document.getElementById('pendingCount').textContent = data.pendingCount || 0;
-      document.getElementById('revenueCount').textContent = '$' + (data.revenue || 0);
-
-      // Load upcoming bookings
-      const tbody = document.getElementById('upcomingTableBody');
-      if (!data.upcomingBookings || data.upcomingBookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No upcoming bookings</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.upcomingBookings.map(booking => `
-        <tr>
-          <td>${new Date(booking.booking_date).toISOString().split('T')[0]}</td>
-          <td>${booking.customer_name}</td>
-          <td>${booking.service_type}</td>
-          <td>${booking.booking_time}</td>
-          <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
-        </tr>
-      `).join('');
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    }
-  }
-
-  // Edit booking
-  function editBooking(bookingId) {
-    // TODO: Implement edit booking modal
-    console.log('Edit booking:', bookingId);
-  }
-
-  // Show confirmation modal for cancel/confirm action
-  function showConfirmCancel(bookingId, customerName, bookingDate, bookingTime) {
-    const modal = document.getElementById('confirmModal');
-    const title = document.getElementById('confirmTitle');
-    const message = document.getElementById('confirmMessage');
-    const confirmBtn = document.getElementById('confirmActionBtn');
-
-    // Find the booking to determine if it's pending (Confirm) or not (Cancel)
-    const booking = allBookings.find(b => b.id === bookingId);
-    const isPending = booking && booking.status === 'pending';
-
-    if (isPending) {
-      title.textContent = 'Confirm Booking';
-      message.innerHTML = `<strong>${customerName}</strong><br>${bookingDate} at ${bookingTime}<br><br>Mark this booking as confirmed?`;
-      confirmBtn.textContent = 'Confirm Booking';
-      confirmBtn.style.background = 'var(--success)';
-      confirmBtn.onclick = () => {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Processing...';
-        markConfirmed(bookingId);
-        closeConfirmModal();
-      };
-    } else {
-      title.textContent = 'Cancel Booking';
-      message.innerHTML = `<strong>${customerName}</strong><br>${bookingDate} at ${bookingTime}<br><br>Cancel this booking and reopen the time slot?`;
-      confirmBtn.textContent = 'Cancel Booking';
-      confirmBtn.style.background = 'var(--error)';
-      confirmBtn.onclick = () => {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Processing...';
-        cancelBooking(bookingId);
-      };
-    }
-
-    modal.classList.add('active');
-  }
-
-  // Close confirmation modal
-  function closeConfirmModal() {
-    const modal = document.getElementById('confirmModal');
-    const confirmBtn = document.getElementById('confirmActionBtn');
-    confirmBtn.disabled = false;
-    confirmBtn.textContent = 'Confirm';
-    modal.classList.remove('active');
-  }
-
-  // Cancel booking - reopens time slot
-  async function cancelBooking(bookingId) {
-    try {
-      const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        closeConfirmModal();
-
-        // Show success message
-        const booking = result.booking;
-        const displayDate = new Date(booking.booking_date).toISOString().split('T')[0];
-        alert(`✓ Booking cancelled\n\nDate: ${displayDate}\nTime: ${booking.booking_time}\n\nThe time slot is now available again on the public calendar.`);
-
-        // Reload bookings to show updated status
-        loadBookings();
-      } else {
-        alert('❌ Failed to cancel booking. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error cancelling booking:', error);
-      alert('❌ Error: ' + error.message);
+      alert('Error: ' + error.message);
     }
   }
 
   // Mark booking as confirmed
   async function markConfirmed(bookingId) {
     try {
-      const response = await fetch(`/api/bookings/${bookingId}/mark-confirmed`, {
+      const res = await fetch(`/api/admin/booking/${bookingId}/mark-confirmed`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        alert('✓ Booking marked as confirmed');
-        loadBookings();
-      } else {
-        alert('❌ Failed to mark booking as confirmed');
-      }
+      if (!res.ok) throw new Error('Failed to confirm booking');
+
+      alert('✓ Booking confirmed');
+      loadDashboard();
+      loadBookings();
     } catch (error) {
-      console.error('Error marking booking as confirmed:', error);
-      alert('❌ Error: ' + error.message);
+      alert('Error: ' + error.message);
     }
   }
 
-  // Mark booking as paid
-  async function markPaid(bookingId) {
+  // Cancel booking
+  async function cancelBooking(bookingId) {
+    if (!confirm('Cancel this booking?')) return;
+
     try {
-      const response = await fetch(`/api/bookings/${bookingId}/mark-paid`, {
+      const res = await fetch(`/api/admin/booking/${bookingId}/cancel`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        alert('✓ Booking marked as paid and confirmed');
-        loadBookings();
-      } else {
-        alert('❌ Failed to mark booking as paid');
-      }
+      if (!res.ok) throw new Error('Failed to cancel booking');
+
+      alert('✓ Booking cancelled');
+      loadDashboard();
+      loadBookings();
     } catch (error) {
-      console.error('Error marking booking as paid:', error);
-      alert('❌ Error: ' + error.message);
+      alert('Error: ' + error.message);
     }
   }
 
-  // Delete booking
-  async function deleteBooking(bookingId) {
-    if (!confirm('Are you sure you want to delete this booking? This will reopen the time slot.')) return;
-
-    try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        alert('✓ Booking deleted and slot reopened');
-        loadBookings();
-      } else {
-        alert('❌ Failed to delete booking');
-      }
-    } catch (error) {
-      console.error('Error deleting booking:', error);
-      alert('❌ Error: ' + error.message);
-    }
+  // Services management
+  async function loadServices() {
+    document.getElementById('servicesList').innerHTML = '<p>Loading services...</p>';
+    // Services list will be populated from the service configuration
+    document.getElementById('servicesList').innerHTML = `
+      <div class="item-card">
+        <div class="item-card-title">Services Management</div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Services are currently managed in the services.html file. Add/edit/delete services in the service configuration and they will appear here.</p>
+        <div class="item-card-actions">
+          <button class="action-btn" onclick="alert('Services update functionality coming soon')">Edit</button>
+        </div>
+      </div>
+    `;
   }
 
-  // View vehicle photo in modal
-  function viewPhoto(bookingId, photoPreview) {
-    // Fetch the booking to get the full photo
-    fetch(`/api/bookings/${bookingId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.booking && data.booking.vehicle_photo) {
-        // Create a modal to display the photo
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 2000;
-          padding: 20px;
-        `;
-        modal.innerHTML = `
-          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h2 style="margin: 0; color: var(--primary);">Vehicle Photo</h2>
-              <button onclick="this.closest('div').parentElement.remove()" style="background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer;">✕</button>
-            </div>
-            <img src="${data.booking.vehicle_photo}" style="width: 100%; border-radius: 8px; max-height: 70vh; object-fit: contain;">
-            <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px; margin-bottom: 0;">Customer: ${data.booking.customer_name}</p>
-          </div>
-        `;
-        document.body.appendChild(modal);
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) modal.remove();
-        });
-      }
-    })
-    .catch(error => console.error('Error loading photo:', error));
+  function openAddServiceModal() {
+    document.getElementById('serviceModalTitle').textContent = 'Add Service';
+    document.getElementById('serviceForm').reset();
+    document.getElementById('serviceModal').classList.add('active');
   }
 
-  // Modal controls
-  document.getElementById('closeModalBtn').addEventListener('click', () => {
-    document.getElementById('editModal').classList.remove('active');
-  });
+  function closeServiceModal() {
+    document.getElementById('serviceModal').classList.remove('active');
+  }
 
-  // Initial load
-  loadPageData('bookings');
+  async function saveService() {
+    // Service save functionality
+    alert('✓ Service saved (functionality to be implemented)');
+    closeServiceModal();
+  }
+
+  // Add-ons management
+  async function loadAddons() {
+    document.getElementById('addonsList').innerHTML = `
+      <div class="item-card">
+        <div class="item-card-title">Add-ons Management</div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Add-ons are currently managed in the service configuration. Edit them here to manage pricing and availability.</p>
+        <div class="item-card-actions">
+          <button class="action-btn" onclick="alert('Add-ons update functionality coming soon')">Edit</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function openAddAddonModal() {
+    document.getElementById('addonModalTitle').textContent = 'Add Add-on';
+    document.getElementById('addonForm').reset();
+    document.getElementById('addonModal').classList.add('active');
+  }
+
+  function closeAddonModal() {
+    document.getElementById('addonModal').classList.remove('active');
+  }
+
+  async function saveAddon() {
+    alert('✓ Add-on saved (functionality to be implemented)');
+    closeAddonModal();
+  }
+
+  // Content management
+  async function loadContent() {
+    // Load current content values
+    document.getElementById('businessPhone').value = '401-490-1236';
+  }
+
+  async function saveContent() {
+    alert('✓ Content saved (functionality to be implemented)');
+  }
+
+  // Logout
+  function logout() {
+    localStorage.removeItem('adminToken');
+    window.location.href = '/admin/login';
+  }
+
+  // Initialize on load
+  loadDashboard();
 </script>
 </body>
 </html>
