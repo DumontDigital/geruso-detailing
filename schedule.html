@@ -93,6 +93,91 @@
   .benefit-icon { font-size: 24px; margin-bottom: 12px; color: var(--primary); }
   .benefit-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
   .benefit-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── CART ── */
+  .cart-link {
+    background: var(--primary);
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .cart-link:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
+  }
+
+  .cart-modal {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: var(--light-bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 99;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cart-content {
+    padding: 20px;
+  }
+
+  .cart-content h2 {
+    font-size: 18px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    text-shadow: 0 0 4px rgba(0,255,65,0.2);
+  }
+
+  .cart-total {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .cart-modal button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  #cartItems {
+    margin-bottom: 16px;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 600px) {
+    .cart-modal {
+      width: calc(100% - 40px);
+      right: 20px;
+      left: 20px;
+      top: auto;
+      bottom: 20px;
+    }
+
+    .nav-actions {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+
   @media(max-width:960px){ .mobile-grid{grid-template-columns:1fr} .benefit-grid{grid-template-columns:1fr} }
 </style></head><body>
 <nav>
