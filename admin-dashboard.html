@@ -383,8 +383,10 @@
           <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
           <td>
             <div class="action-buttons">
-              <button class="action-btn" onclick="editBooking('${booking.id}')">Edit</button>
-              <button class="action-btn" onclick="deleteBooking('${booking.id}')">Delete</button>
+              ${booking.status === 'pending' ? `<button class="action-btn" onclick="markConfirmed('${booking.id}')" style="color: #10b981; border-color: #10b981;">Confirm</button>` : ''}
+              ${booking.status !== 'cancelled' ? `<button class="action-btn" onclick="cancelBooking('${booking.id}')">Cancel</button>` : ''}
+              ${booking.status === 'pending' || booking.status === 'confirmed' ? `<button class="action-btn" onclick="markPaid('${booking.id}')" style="color: #3b82f6; border-color: #3b82f6;">Mark Paid</button>` : ''}
+              <button class="action-btn" onclick="deleteBooking('${booking.id}')" style="color: var(--error); border-color: var(--error);">Delete</button>
             </div>
           </td>
         </tr>
@@ -466,6 +468,68 @@
     console.log('Edit booking:', bookingId);
   }
 
+  // Cancel booking - reopens time slot
+  async function cancelBooking(bookingId) {
+    if (!confirm('Cancel this booking? The time slot will become available again.')) return;
+
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('Booking cancelled and slot reopened');
+        loadBookings();
+      } else {
+        alert('Failed to cancel booking');
+      }
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('Error cancelling booking: ' + error.message);
+    }
+  }
+
+  // Mark booking as confirmed
+  async function markConfirmed(bookingId) {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/mark-confirmed`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('Booking marked as confirmed');
+        loadBookings();
+      } else {
+        alert('Failed to mark booking as confirmed');
+      }
+    } catch (error) {
+      console.error('Error marking booking as confirmed:', error);
+      alert('Error marking booking: ' + error.message);
+    }
+  }
+
+  // Mark booking as paid
+  async function markPaid(bookingId) {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('Booking marked as paid and confirmed');
+        loadBookings();
+      } else {
+        alert('Failed to mark booking as paid');
+      }
+    } catch (error) {
+      console.error('Error marking booking as paid:', error);
+      alert('Error marking booking: ' + error.message);
+    }
+  }
+
   // Delete booking
   async function deleteBooking(bookingId) {
     if (!confirm('Are you sure you want to delete this booking?')) return;
@@ -477,10 +541,14 @@
       });
 
       if (response.ok) {
+        alert('Booking deleted');
         loadBookings();
+      } else {
+        alert('Failed to delete booking');
       }
     } catch (error) {
       console.error('Error deleting booking:', error);
+      alert('Error deleting booking: ' + error.message);
     }
   }
 

@@ -901,18 +901,49 @@
 
       console.log('[Booking Response] Status:', response.status, 'Data:', data);
 
-      if (response.ok && data.checkoutUrl) {
-        console.log('[Booking Success] Redirecting to Stripe Checkout...');
-        showMessage('Redirecting to payment...', 'success');
+      if (response.ok && data.success) {
+        // Booking was successful
+        if (data.checkoutUrl) {
+          // Stripe is configured - redirect to payment
+          console.log('[Booking Success] Redirecting to Stripe Checkout...');
+          showMessage('Redirecting to payment...', 'success');
 
-        // Clear cart after successful booking
-        clearCart();
-        console.log('[Booking] Cart cleared');
+          // Clear cart after successful booking
+          clearCart();
+          console.log('[Booking] Cart cleared');
 
-        // Redirect to Stripe Checkout
-        setTimeout(() => {
-          window.location.href = data.checkoutUrl;
-        }, 500);
+          // Redirect to Stripe Checkout
+          setTimeout(() => {
+            window.location.href = data.checkoutUrl;
+          }, 500);
+        } else {
+          // Stripe is not configured - booking saved but no payment processing
+          console.log('[Booking Success] Booking saved (Stripe not configured)');
+          showMessage(data.message || 'Booking request received. Payment is not connected yet.', 'success');
+
+          // Clear cart after successful booking
+          clearCart();
+          console.log('[Booking] Cart cleared');
+
+          // Reload calendar to show the new booked slot
+          await loadBookedTimeSlots();
+          renderCalendar();
+          if (selectedDate) {
+            const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+            renderTimeSlots(dayOfWeek, selectedDate);
+          }
+
+          // Reset form after 3 seconds
+          setTimeout(() => {
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingSummary').style.display = 'none';
+            selectedDate = null;
+            selectedTime = null;
+            renderCalendar();
+            document.getElementById('timeSlotsGrid').innerHTML = '';
+            document.getElementById('timeMessage').textContent = 'Select a date to view available times';
+          }, 3000);
+        }
       } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
         // Handle double booking - time slot was just taken
         showMessage('This time was just booked. Please choose another slot.', 'error');

@@ -8,13 +8,15 @@ const { createCheckoutSession } = require('../stripe');
 const router = express.Router();
 
 // Get booked time slots (public endpoint - no auth required)
+// Only count active bookings: pending, confirmed, paid
+// Exclude: cancelled, deleted, failed, expired
 router.get('/public/booked-slots', async (req, res) => {
   try {
     console.log('[Bookings API] GET /public/booked-slots called');
 
     const result = await pool.query(
-      'SELECT booking_date, booking_time FROM bookings WHERE status != $1',
-      ['cancelled']
+      "SELECT booking_date, booking_time FROM bookings WHERE status IN ('pending', 'confirmed', 'paid')",
+      []
     );
 
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
@@ -24,10 +26,10 @@ router.get('/public/booked-slots', async (req, res) => {
       const dateStr = new Date(booking.booking_date).toISOString().split('T')[0];
       const key = `${dateStr} ${booking.booking_time}`;
       bookedSlots[key] = true;
-      console.log('[Bookings API] Booked slot:', key);
+      console.log('[Bookings API] Active booked slot:', key);
     });
 
-    console.log('[Bookings API] Returning', result.rows.length, 'booked slots');
+    console.log('[Bookings API] Returning', result.rows.length, 'active booked slots');
     res.json({ bookedSlots });
   } catch (error) {
     console.error('[Bookings API] Error fetching booked slots:', error.message);
@@ -36,19 +38,11 @@ router.get('/public/booked-slots', async (req, res) => {
 });
 
 // Create Stripe checkout session for booking (public)
+// Allows booking even without Stripe - will show message if Stripe not configured
 router.post('/checkout', async (req, res) => {
   try {
     console.log('[Bookings API] POST /checkout called');
     console.log('[Bookings API] Request body:', JSON.stringify(req.body, null, 2));
-
-    // Check if Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-      console.warn('[Bookings API] Stripe keys not configured');
-      return res.status(503).json({
-        error: 'Stripe checkout is not connected yet. Please try again later.',
-        code: 'STRIPE_NOT_CONFIGURED'
-      });
-    }
 
     const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto } = req.body;
 
@@ -72,26 +66,87 @@ router.post('/checkout', async (req, res) => {
     const booking = result.rows[0];
     console.log('[Bookings API] Booking created (unpaid):', booking.id);
 
-    // Create Stripe checkout session
-    const stripeSession = await createCheckoutSession(booking);
+    // Send confirmation email to customer
+    console.log('[Bookings API] Sending confirmation email to:', customerEmail);
+    const confirmationResult = await sendBookingConfirmation({
+      customerName,
+      customerEmail,
+      bookingDate,
+      bookingTime,
+      serviceType,
+      serviceAddress,
+      hasPhoto: !!vehiclePhoto
+    });
 
-    // Update booking with Stripe session ID
-    await pool.query(
-      'UPDATE bookings SET stripe_session_id = $1 WHERE id = $2',
-      [stripeSession.id, bookingId]
-    );
+    if (!confirmationResult.success) {
+      console.error('[Bookings API] Failed to send booking confirmation email:', confirmationResult.error);
+    } else {
+      console.log('[Bookings API] Confirmation email sent successfully');
+    }
 
-    console.log('[Bookings API] Stripe session created:', stripeSession.id);
+    // Send owner/admin notification email
+    console.log('[Bookings API] Sending owner notification email');
+    const ownerResult = await sendOwnerNotification({
+      customerName,
+      customerEmail,
+      customerPhone,
+      bookingDate,
+      bookingTime,
+      serviceType,
+      serviceAddress,
+      vehicleType,
+      notes,
+      hasPhoto: !!vehiclePhoto
+    });
 
-    // Return checkout URL
+    if (!ownerResult.success) {
+      console.error('[Bookings API] Failed to send owner notification email:', ownerResult.error);
+    } else {
+      console.log('[Bookings API] Owner notification email sent successfully');
+    }
+
+    // Check if Stripe is configured
+    const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (stripeConfigured) {
+      console.log('[Bookings API] Stripe is configured, creating checkout session...');
+      try {
+        // Create Stripe checkout session
+        const stripeSession = await createCheckoutSession(booking);
+
+        // Update booking with Stripe session ID
+        await pool.query(
+          'UPDATE bookings SET stripe_session_id = $1 WHERE id = $2',
+          [stripeSession.id, bookingId]
+        );
+
+        console.log('[Bookings API] Stripe session created:', stripeSession.id);
+
+        // Return checkout URL for Stripe
+        return res.json({
+          success: true,
+          checkoutUrl: stripeSession.url,
+          bookingId: booking.id,
+          message: 'Redirecting to payment...'
+        });
+      } catch (stripeError) {
+        console.error('[Bookings API] Error creating Stripe session:', stripeError.message);
+        // Fall through to return success with pending status
+      }
+    } else {
+      console.log('[Bookings API] Stripe is NOT configured - booking saved as unpaid');
+    }
+
+    // Return success - booking is saved, Stripe is optional
     res.json({
       success: true,
-      checkoutUrl: stripeSession.url,
-      bookingId: booking.id
+      bookingId: booking.id,
+      message: 'Booking request received. Payment is not connected yet.',
+      stripeConfigured: false
     });
 
   } catch (error) {
-    console.error('[Bookings API] Error creating checkout session:', error.message);
+    console.error('[Bookings API] Error creating booking:', error.message);
 
     // Handle unique constraint violation (double booking)
     if (error.code === '23505') {
@@ -102,7 +157,7 @@ router.post('/checkout', async (req, res) => {
       });
     }
 
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    res.status(500).json({ error: 'Failed to create booking: ' + error.message });
   }
 });
 
@@ -286,6 +341,100 @@ router.delete('/:id', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Delete booking error:', error);
     res.status(500).json({ error: 'Failed to delete booking' });
+  }
+});
+
+// Cancel booking (admin only) - sets status to 'cancelled'
+// This reopens the time slot
+router.post('/:id/cancel', verifyToken, async (req, res) => {
+  try {
+    console.log('[Bookings API] POST /:id/cancel called for booking:', req.params.id);
+
+    const result = await pool.query(
+      `UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      ['cancelled', req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = result.rows[0];
+    console.log('[Bookings API] Booking cancelled successfully:', booking.id);
+    console.log('[Bookings API] Slot reopened:', booking.booking_date, booking.booking_time);
+
+    res.json({
+      success: true,
+      message: 'Booking cancelled and slot reopened',
+      booking
+    });
+  } catch (error) {
+    console.error('[Bookings API] Cancel booking error:', error);
+    res.status(500).json({ error: 'Failed to cancel booking' });
+  }
+});
+
+// Mark booking as paid (admin only)
+// Sets payment_status to 'paid' and status to 'confirmed'
+router.post('/:id/mark-paid', verifyToken, async (req, res) => {
+  try {
+    console.log('[Bookings API] POST /:id/mark-paid called for booking:', req.params.id);
+
+    const result = await pool.query(
+      `UPDATE bookings SET payment_status = $1, status = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3
+       RETURNING *`,
+      ['paid', 'confirmed', req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = result.rows[0];
+    console.log('[Bookings API] Booking marked as paid:', booking.id);
+
+    res.json({
+      success: true,
+      message: 'Booking marked as paid and confirmed',
+      booking
+    });
+  } catch (error) {
+    console.error('[Bookings API] Mark paid error:', error);
+    res.status(500).json({ error: 'Failed to mark booking as paid' });
+  }
+});
+
+// Mark booking as confirmed (admin only)
+// Sets status to 'confirmed'
+router.post('/:id/mark-confirmed', verifyToken, async (req, res) => {
+  try {
+    console.log('[Bookings API] POST /:id/mark-confirmed called for booking:', req.params.id);
+
+    const result = await pool.query(
+      `UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      ['confirmed', req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = result.rows[0];
+    console.log('[Bookings API] Booking marked as confirmed:', booking.id);
+
+    res.json({
+      success: true,
+      message: 'Booking marked as confirmed',
+      booking
+    });
+  } catch (error) {
+    console.error('[Bookings API] Mark confirmed error:', error);
+    res.status(500).json({ error: 'Failed to mark booking as confirmed' });
   }
 });
 
