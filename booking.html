@@ -86,7 +86,7 @@
     .calendar-day.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
     .calendar-day:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
     .calendar-day.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-    .calendar-day.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: var(--light-bg2); }
+    .calendar-day.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: #333; border-color: #555; }
     .calendar-day.today { border-color: var(--primary); }
 
     .time-slots-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
@@ -96,8 +96,8 @@
     .time-slot.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
     .time-slot:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
     .time-slot.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.6; background: var(--light-bg2); border-color: var(--error); }
-    .time-slot.disabled::after { content: 'Taken'; position: absolute; top: -8px; right: 4px; background: var(--error); color: white; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 700; letter-spacing: 0.5px; }
+    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: #333; border-color: #555; }
+    .time-slot.disabled::after { content: 'Unavailable'; position: absolute; top: -8px; right: 4px; background: #666; color: white; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 700; letter-spacing: 0.5px; }
 
     .booking-form { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .form-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; }
@@ -593,6 +593,33 @@
     return 'Contact for pricing';
   }
 
+  // Get current time in Eastern Time
+  function getCurrentTimeET() {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(new Date());
+    const partMap = {};
+    parts.forEach(({ type, value }) => {
+      partMap[type] = value;
+    });
+    return {
+      year: parseInt(partMap.year),
+      month: parseInt(partMap.month) - 1,
+      day: parseInt(partMap.day),
+      hour: parseInt(partMap.hour),
+      minute: parseInt(partMap.minute),
+      date: new Date(parseInt(partMap.year), parseInt(partMap.month) - 1, parseInt(partMap.day))
+    };
+  }
+
   let currentDate = new Date();
   let selectedDate = null;
   let selectedTime = null;
@@ -608,6 +635,46 @@
     'Tue': null,
     'Wed': null
   };
+
+  // Check if a time slot is in the past (Eastern Time)
+  function isTimeslotPast(date, timeString) {
+    const et = getCurrentTimeET();
+
+    // Compare dates
+    const slotDate = date.toDateString();
+    const todayET = et.date.toDateString();
+
+    if (slotDate === todayET) {
+      // Same day - check if time is past
+      const [timeWithAmPm] = timeString.split(' ');
+      let [hourStr, minStr] = timeWithAmPm.split(':');
+      let hour = parseInt(hourStr);
+      const minute = parseInt(minStr || '0');
+
+      // Parse AM/PM
+      const isPM = timeString.includes('PM');
+      if (isPM && hour !== 12) {
+        hour += 12;
+      } else if (!isPM && hour === 12) {
+        hour = 0;
+      }
+
+      // Check if this slot time is past current time ET
+      if (hour < et.hour || (hour === et.hour && minute <= et.minute)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Update current date to ET
+  function initializeCurrentDate() {
+    const et = getCurrentTimeET();
+    currentDate = new Date(et.year, et.month, et.day);
+  }
+
+  initializeCurrentDate();
 
   // Fetch booked time slots on page load
   async function loadBookedTimeSlots() {
@@ -698,7 +765,9 @@
     }
 
     // Days of the month
-    const today = new Date();
+    const et = getCurrentTimeET();
+    const todayET = et.date;
+
     for (let day = 1; day <= daysInMonth; day++) {
       const dayCell = document.createElement('button');
       dayCell.className = 'calendar-day';
@@ -708,8 +777,8 @@
       const cellDate = new Date(year, month, day);
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
 
-      // Disable past dates and closed days
-      if (cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate()) || !businessHours[dayOfWeek]) {
+      // Disable past dates (using ET) and closed days
+      if (cellDate < todayET || !businessHours[dayOfWeek]) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
       } else {
@@ -717,8 +786,8 @@
         dayCell.addEventListener('click', () => selectDate(cellDate));
       }
 
-      // Highlight today
-      if (cellDate.toDateString() === today.toDateString()) {
+      // Highlight today (ET)
+      if (cellDate.toDateString() === todayET.toDateString()) {
         dayCell.classList.add('today');
       }
 
@@ -794,19 +863,30 @@
       const bookingKey = `${dateStr} ${slot}`;
       const isBooked = bookedTimeSlots[bookingKey];
 
-      if (isBooked) {
+      // Check if this time slot is in the past (ET)
+      const isPast = isTimeslotPast(date, slot);
+
+      // Disable if booked or in the past
+      if (isBooked || isPast) {
         slotBtn.classList.add('disabled');
         slotBtn.disabled = true;
+
+        // Show reason for disabling
+        if (isPast) {
+          slotBtn.title = 'This time has already passed';
+        } else if (isBooked) {
+          slotBtn.title = 'This slot is already booked';
+        }
       } else {
         slotBtn.classList.add('available'); // Mark available times in light green
       }
 
-      if (selectedTime === slot && !isBooked) {
+      if (selectedTime === slot && !isBooked && !isPast) {
         slotBtn.classList.add('selected');
       }
 
       slotBtn.addEventListener('click', () => {
-        if (!isBooked) {
+        if (!isBooked && !isPast) {
           selectedTime = slot;
           document.getElementById('summaryTime').textContent = slot;
           renderTimeSlots(dayOfWeek, date);
@@ -833,6 +913,19 @@
     // Validation checks
     if (!selectedDate || !selectedTime) {
       showMessage('Please select a date and time', 'error');
+      return;
+    }
+
+    // Verify selected time is not in the past or booked
+    if (isTimeslotPast(selectedDate, selectedTime)) {
+      showMessage('The selected time has already passed. Please choose another time.', 'error');
+      return;
+    }
+
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const bookingKey = `${dateStr} ${selectedTime}`;
+    if (bookedTimeSlots[bookingKey]) {
+      showMessage('The selected time slot has been booked. Please choose another time.', 'error');
       return;
     }
 
@@ -1070,6 +1163,15 @@
   } else {
     loadCartOnPageLoad();
   }
+
+  // Auto-refresh time slots to update past times in real-time
+  setInterval(() => {
+    // Re-render calendar and time slots if a date is selected
+    if (selectedDate) {
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+      renderTimeSlots(dayOfWeek, selectedDate);
+    }
+  }, 60000); // Update every minute
 
   // Initial render
   renderCalendar();
