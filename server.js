@@ -497,11 +497,13 @@ async function initializeDatabase() {
 
 // Start server after database initialization
 async function startServer() {
-  console.log('[Startup] Starting Geruso Detailing server...');
+  console.log('[Startup] ════════════════════════════════════════');
+  console.log('[Startup] Starting Geruso Detailing server... [PHASE-1-BUILD-2025]');
   console.log('[Startup] NODE_ENV:', process.env.NODE_ENV);
   console.log('[Startup] Database URL:', process.env.DATABASE_URL ? 'CONFIGURED' : '⚠️ NOT SET');
   console.log('[Startup] Email config: RESEND_API_KEY =', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
   console.log('[Startup] Owner email:', process.env.OWNER_EMAIL || 'NOT SET');
+  console.log('[Startup] ════════════════════════════════════════');
 
   // Initialize database
   const dbReady = await initializeDatabase();
