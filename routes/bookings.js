@@ -56,7 +56,7 @@ router.post('/checkout', async (req, res) => {
 
     // Try to find and replace an existing placeholder at this date/time
     const placeholderQuery = await pool.query(
-      `SELECT id FROM bookings WHERE booking_date::text = $1 AND booking_time = $2 AND customer_email = $3 AND customer_name = $4 LIMIT 1`,
+      `SELECT id FROM bookings WHERE booking_date::date = $1::date AND booking_time = $2 AND customer_email = $3 AND customer_name = $4 LIMIT 1`,
       [bookingDate, bookingTime, 'booking.test@gmail.com', 'Available Slot']
     );
 
