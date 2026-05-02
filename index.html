@@ -1071,52 +1071,65 @@
         return;
       }
 
-      // Get current time in Eastern Time
+      // STEP 1: Create numeric timestamp for current Eastern time
       const nowET = getCurrentTimeET();
       const todayET = getTodayET();
+      const [currYear, currMonth, currDay] = todayET.split('-').map(Number);
+      const currentTimestamp = currYear * 100000000 + currMonth * 1000000 + currDay * 10000 + nowET.hour * 100 + nowET.minute;
 
-      // Filter: Remove placeholder slots that are in the past, keep real bookings
-      const filteredBookings = data.bookings.filter(booking => {
-        const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+      console.log(`[Bookings] Current time: ${todayET} ${nowET.hour}:${String(nowET.minute).padStart(2, '0')} = timestamp ${currentTimestamp}`);
 
-        // Keep all real customer bookings
-        if (!isPlaceholder) {
-          return true;
-        }
+      // STEP 2: Prepare bookings with timestamps
+      const bookingsWithTimestamp = data.bookings.map(booking => {
+        const dateStr = booking.booking_date.split('T')[0]; // YYYY-MM-DD
+        const [year, month, day] = dateStr.split('-').map(Number);
 
-        // For placeholder slots, remove if in the past
-        const bookingDateStr = booking.booking_date.split('T')[0]; // YYYY-MM-DD format
-        const isSameDay = bookingDateStr === todayET;
-
-        if (!isSameDay) {
-          // Future date, keep it
-          return true;
-        }
-
-        // Same day - check time
+        // Parse time from "H:MM AM/PM" or "HH:MM AM/PM"
         const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
         const timeMatch = booking.booking_time.match(timeRegex);
 
-        if (!timeMatch) {
-          return false;
+        let hour = 0, minute = 0;
+        if (timeMatch) {
+          hour = parseInt(timeMatch[1]);
+          minute = parseInt(timeMatch[2]);
+          const ampm = timeMatch[3].toUpperCase();
+
+          // Convert to 24-hour format
+          if (ampm === 'PM' && hour !== 12) hour += 12;
+          else if (ampm === 'AM' && hour === 12) hour = 0;
         }
 
-        let hour = parseInt(timeMatch[1]);
-        const minute = parseInt(timeMatch[2]);
-        const ampm = timeMatch[3].toUpperCase();
+        // Create numeric timestamp: YYYYMMDDHHMM
+        const timestamp = year * 100000000 + month * 1000000 + day * 10000 + hour * 100 + minute;
 
-        // Convert to 24-hour
-        if (ampm === 'PM' && hour !== 12) hour += 12;
-        else if (ampm === 'AM' && hour === 12) hour = 0;
-
-        // Compare: Keep if slot time > current time
-        const slotMinutes = hour * 60 + minute;
-        const currentMinutes = nowET.hour * 60 + nowET.minute;
-
-        return slotMinutes > currentMinutes;
+        return {
+          ...booking,
+          timestamp,
+          isPlaceholder: booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot'
+        };
       });
 
-      // Render filtered bookings
+      // STEP 3: Filter - remove past placeholder slots only
+      const filteredBookings = bookingsWithTimestamp.filter(booking => {
+        // Keep all real customer bookings
+        if (!booking.isPlaceholder) {
+          return true;
+        }
+
+        // For placeholder slots, remove if timestamp <= current timestamp
+        const keep = booking.timestamp > currentTimestamp;
+        if (!keep) {
+          console.log(`[Bookings] Filtered out past slot: ${booking.booking_date} ${booking.booking_time} (timestamp ${booking.timestamp} <= ${currentTimestamp})`);
+        }
+        return keep;
+      });
+
+      // STEP 4: Sort by numeric timestamp (ascending)
+      filteredBookings.sort((a, b) => a.timestamp - b.timestamp);
+
+      console.log(`[Bookings] After filter: ${filteredBookings.length} bookings, first: ${filteredBookings[0]?.booking_date} ${filteredBookings[0]?.booking_time}`);
+
+      // STEP 5: Render rows in order
       filteredBookings.forEach(booking => {
         const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
                           booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
@@ -1147,7 +1160,7 @@
         `;
       });
 
-      // Show "No bookings found" only if AFTER filtering there are no rows
+      // Show "No bookings found" only if nothing remains after filtering
       if (filteredBookings.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
       }
