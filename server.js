@@ -119,16 +119,16 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
       const session = webhookResult.data;
       console.log('[Stripe Webhook] Session:', session.id);
 
-      // Update booking payment status
+      // Update booking payment status and auto-confirm
       try {
         const result = await pool.query(
-          'UPDATE bookings SET payment_status = $1, stripe_payment_intent_id = $2 WHERE stripe_session_id = $3 RETURNING *',
-          ['paid', session.payment_intent, session.id]
+          'UPDATE bookings SET payment_status = $1, status = $2, stripe_payment_intent_id = $3 WHERE stripe_session_id = $4 RETURNING *',
+          ['paid', 'confirmed', session.payment_intent, session.id]
         );
 
         if (result.rows.length > 0) {
           const booking = result.rows[0];
-          console.log('[Stripe Webhook] Booking marked as paid:', booking.id);
+          console.log('[Stripe Webhook] Booking paid and auto-confirmed:', booking.id);
 
           // Send confirmation email now that payment is confirmed
           const { sendBookingConfirmation } = require('./email');
