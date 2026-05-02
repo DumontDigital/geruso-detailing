@@ -301,43 +301,20 @@ function getCurrentTimeInEastern() {
   };
 }
 
-// Get all bookings for owner (filters out past available slots, keeps real bookings)
+// Get all bookings for owner (shows ONLY real customer bookings, not placeholder slots)
 app.get('/api/owner/bookings', async (req, res) => {
   try {
-    // Select all bookings and format dates in JavaScript
     const result = await pool.query(
       "SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC"
     );
 
-    const currentET = getCurrentTimeInEastern();
-    const currentDateStr = currentET.date; // YYYY-MM-DD
-    const currentTimeStr = currentET.time; // HH:MM in 24-hour format
-
-    // Build current datetime in comparable format: YYYY-MM-DD HH:MM (24-hour)
-    const currentDateTimeStr = `${currentDateStr} ${currentTimeStr}`;
-
-    console.log(`[Owner Bookings] Endpoint called. DB returned ${result.rows.length} total rows`);
-    console.log(`[Owner Bookings] First row: ${JSON.stringify(result.rows[0], null, 2)}`);
-
-    // Filter: Show ONLY real customer bookings - NO fake "Available Slot" rows
+    // Filter: Show ONLY real customer bookings - remove all fake "Available Slot" placeholder rows
     const filteredBookings = result.rows.filter(booking => {
-      // REMOVE all placeholder "Available Slot" rows from owner dashboard
       const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-      console.log(`[Owner Bookings] Row: ${booking.customer_name} (${booking.customer_email}) - isPlaceholder: ${isPlaceholder}`);
       return !isPlaceholder; // Only keep real customer bookings
     });
 
-    console.log(`[Owner Bookings] FILTERED RESULT: ${filteredBookings.length} rows after filter`);
-
-    res.json({
-      bookings: filteredBookings,
-      meta: {
-        total_from_db: result.rows.length,
-        after_filter: filteredBookings.length,
-        filter_applied: true,
-        TEST_MARKER_9527: "If you see this value, the new code is deployed"
-      }
-    });
+    res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
