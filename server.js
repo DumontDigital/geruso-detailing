@@ -236,14 +236,76 @@ app.post('/api/owner/login', (req, res) => {
   }
 });
 
-// Get all bookings for owner
+// Get current date and time in Eastern Time
+function getCurrentTimeInEastern() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(now);
+  const year = parts.find(p => p.type === 'year').value;
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+  const hour = parts.find(p => p.type === 'hour').value;
+  const minute = parts.find(p => p.type === 'minute').value;
+
+  return {
+    date: `${year}-${month}-${day}`,
+    time: `${hour}:${minute}`,
+    timeInMinutes: parseInt(hour) * 60 + parseInt(minute)
+  };
+}
+
+// Get all bookings for owner (filters out past available slots, keeps real bookings)
 app.get('/api/owner/bookings', async (req, res) => {
   try {
     // Return ALL bookings sorted by date (oldest first for chronological display)
     const result = await pool.query(
       'SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC'
     );
-    res.json({ bookings: result.rows });
+
+    const currentET = getCurrentTimeInEastern();
+    const currentDate = currentET.date;
+    const currentTimeMinutes = currentET.timeInMinutes;
+
+    // Filter out past available slots, but keep all real customer bookings
+    const filteredBookings = result.rows.filter(booking => {
+      const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
+
+      // Keep all real customer bookings regardless of date/time
+      if (!isPlaceholder) {
+        return true;
+      }
+
+      // For placeholder available slots, filter out past ones
+      const bookingDateOnly = booking.booking_date.toString().split('T')[0];
+
+      // Hide slots on past dates
+      if (bookingDateOnly < currentDate) {
+        return false;
+      }
+
+      // For slots on today, hide slots that have already passed
+      if (bookingDateOnly === currentDate) {
+        const [hour, minute] = booking.booking_time.split(':').map(Number);
+        const slotTimeInMinutes = hour * 60 + minute;
+        if (slotTimeInMinutes <= currentTimeMinutes) {
+          return false; // Hide this slot (already passed)
+        }
+      }
+
+      return true; // Keep this slot
+    });
+
+    res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });

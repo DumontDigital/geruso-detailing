@@ -1013,24 +1013,8 @@
         return;
       }
 
-      // Get current time in Eastern Time
-      const currentTimeET = getCurrentTimeET();
-      const todayET = getTodayET();
-
-      // Filter and process bookings
-      const filteredBookings = data.bookings.filter(booking => {
-        // For today's date, skip times that have already passed
-        const bookingDateOnly = booking.booking_date.split('T')[0];
-        if (bookingDateOnly === todayET) {
-          const [hour, minute] = booking.booking_time.split(':').map(Number);
-          const bookingTimeInMinutes = hour * 60 + minute;
-          if (bookingTimeInMinutes <= currentTimeET.time) {
-            return false; // Skip this time (already passed)
-          }
-        }
-
-        return true; // Keep this booking (real bookings + available slots)
-      });
+      // Backend already filters out past available slots, so just use bookings as-is
+      const filteredBookings = data.bookings;
 
       // Render filtered bookings
       if (filteredBookings.length > 0) {
