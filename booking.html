@@ -234,7 +234,7 @@
 </head>
 <body>
 <nav>
-  <a href="/" class="nav-brand" id="navBrand">
+  <a href="#" class="nav-brand" id="navBrand" onclick="showSection('home'); return false;">
     <div class="nav-logo"></div>
     <div class="nav-brand-text">
       <span class="nav-brand-name">Geruso Detailing</span>
@@ -250,7 +250,7 @@
   <ul class="nav-links">
     <li><a href="services.html">Services</a></li>
     <li><a href="work.html">Our Work</a></li>
-    <li><a href="booking.html" class="active">Schedule</a></li>
+    <li><a href="#" onclick="showSection('booking'); return false;" class="active">Schedule</a></li>
     <li><a href="reviews.html">Reviews</a></li>
   </ul>
   <div class="nav-actions">
@@ -261,14 +261,14 @@
 </nav>
 
 <!-- Home Section (Default Landing Page) -->
-<section style="padding: 80px 48px; background: var(--light-bg); min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
+<section id="homeSection" style="padding: 80px 48px; background: var(--light-bg); min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
   <div class="section-inner" style="max-width: 900px; margin: 0 auto; text-align: center;">
     <div class="section-label">PROFESSIONAL DETAILING</div>
     <h1 class="section-heading" style="font-size: clamp(40px, 6vw, 64px); margin: 20px 0;">Welcome to Geruso Detailing</h1>
     <p class="section-sub" style="font-size: 18px; margin-bottom: 40px;">Expert car detailing services throughout Rhode Island. Mobile service to your location or visit our Mapleville facility for premium treatments.</p>
 
     <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 60px; flex-wrap: wrap;">
-      <a href="booking.html" style="padding: 16px 40px; font-size: 16px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: inline-block;">Book Now</a>
+      <button onclick="showSection('booking')" style="padding: 16px 40px; font-size: 16px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">Book Now</button>
       <a href="services.html" style="padding: 16px 40px; font-size: 16px; border: 2px solid var(--primary); color: var(--primary); background: transparent; font-weight: 700; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-block;">View Services</a>
     </div>
 
@@ -291,6 +291,38 @@
     </div>
   </div>
 </section>
+
+<!-- Footer (shown with home section) -->
+<footer id="homeFooter">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">Geruso Detailing</div>
+      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
+      <p class="footer-owner">Owner — Cameron Geruso</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Services</div>
+      <ul class="footer-links">
+        <li><a href="services.html">Car Wash</a></li>
+        <li><a href="services.html">Interior Detailing</a></li>
+        <li><a href="services.html">Premium Package</a></li>
+        <li><a href="services.html">View All Services</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Contact</div>
+      <ul class="footer-links">
+        <li><a href="tel:4014901236">401-490-1236</a></li>
+        <li><a href="#" onclick="showSection('booking'); return false;">Book Now</a></li>
+        <li><a href="booking.html">Service Area</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
+  </div>
+</footer>
 
 <section id="booking" style="display: none;">
   <div class="section-inner">
@@ -427,37 +459,6 @@
     </div>
   </div>
 </section>
-
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
-    </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Car Wash</a></li>
-        <li><a href="services.html">Interior Detailing</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">View All Services</a></li>
-      </ul>
-    </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="booking.html">Book Now</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
 
 <script>
   document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
@@ -1212,28 +1213,39 @@
   renderCalendar();
 
   // ========================================
-  // HANDLE BOOKING SECTION VISIBILITY
+  // SECTION VISIBILITY MANAGEMENT
   // ========================================
-  // Check if booking section should be shown (from Schedule link click)
-  const urlParams = new URLSearchParams(window.location.search);
-  const showBooking = urlParams.get('booking') === '1';
+  window.showSection = function(sectionId) {
+    // Hide all sections
+    const homeSection = document.getElementById('homeSection');
+    const bookingSection = document.getElementById('booking');
+    const homeFooter = document.getElementById('homeFooter');
 
-  if (showBooking) {
-    document.getElementById('booking').style.display = 'block';
-    document.querySelector('section:not(#booking)').style.display = 'none';
+    if (sectionId === 'home') {
+      if (homeSection) homeSection.style.display = 'block';
+      if (bookingSection) bookingSection.style.display = 'none';
+      if (homeFooter) homeFooter.style.display = 'block';
+    } else if (sectionId === 'booking') {
+      if (homeSection) homeSection.style.display = 'none';
+      if (bookingSection) bookingSection.style.display = 'block';
+      if (homeFooter) homeFooter.style.display = 'none';
+      // Re-render calendar when booking section is shown
+      setTimeout(() => {
+        if (document.getElementById('calendarGrid').innerHTML === '') {
+          renderCalendar();
+        }
+      }, 0);
+    }
+  };
+
+  // Show home section by default on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('home');
+    });
+  } else {
+    showSection('home');
   }
-
-  // Update Schedule link to include booking parameter
-  const scheduleLink = document.querySelector('.nav-links a[href="booking.html"]');
-  if (scheduleLink) {
-    scheduleLink.href = 'booking.html?booking=1';
-  }
-
-  // Make logo go home (remove ?booking parameter)
-  document.getElementById('navBrand').addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = window.location.pathname;
-  });
 </script>
 
 <!-- Cart Modal (Outside tab sections) -->
