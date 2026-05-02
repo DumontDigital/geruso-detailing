@@ -39,7 +39,37 @@ app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Customer view - booking page
+app.get('/booking', (req, res) => {
+  const fs = require('fs');
+  let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
+  bookingHtml = bookingHtml.replace('YOUR_API_KEY', apiKey);
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(bookingHtml);
+});
+
+// Owner dashboard
+app.get('/owner-dashboard.html', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Dev dashboard (same as owner for now, can be customized)
+app.get('/dev-dashboard.html', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
 });
 app.get('/services', (req, res) => {
   const fs = require('fs');
@@ -260,10 +290,125 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/availability', availabilityRoutes);
 
-// ========== OWNER PANEL API - PHASE 1 ==========
-// Owner authentication
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
+// ========== UNIFIED AUTHENTICATION - LOGIN PORTAL ==========
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
+// Unified login endpoint - works for customer, dev, and owner
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    // Find user by email
+    const result = await pool.query(
+      'SELECT id, email, password_hash, first_name, last_name, role, is_active FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Account is inactive' });
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    console.log(`[Auth] User logged in: ${email} (role: ${user.role})`);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('[Auth] Login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Register endpoint - customers can self-register
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, first_name, last_name } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Create user with customer role
+    const result = await pool.query(
+      `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
+       VALUES ($1, $2, $3, $4, 'customer', true)
+       RETURNING id, email, first_name, last_name, role`,
+      [email, passwordHash, first_name || '', last_name || '']
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(500).json({ error: 'Failed to create account' });
+    }
+
+    const user = result.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    console.log(`[Auth] New user registered: ${email}`);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    if (error.code === '23505') { // Unique constraint error
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+    console.error('[Auth] Register error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Legacy owner login for backward compatibility
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
 
 app.post('/api/owner/login', (req, res) => {
   const { password } = req.body;

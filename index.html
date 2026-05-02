@@ -1011,70 +1011,35 @@
   </div>
 </div>
 
+<script src="/js/auth-helper.js"></script>
 <script>
-// Owner Panel - Phase 1 Implementation
+// Owner Dashboard - Unified Authentication
 (function() {
+  const auth = new AuthHelper();
   const ownerPanel = document.getElementById('ownerPanel');
   const loginScreen = document.getElementById('ownerLoginScreen');
   const dashboard = document.getElementById('ownerDashboard');
-  const loginForm = document.getElementById('ownerLoginForm');
   const logoutBtn = document.getElementById('ownerLogoutBtn');
-  
-  // Check for ?owner=true parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('owner') === 'true') {
+
+  // Check authentication on page load
+  window.addEventListener('load', () => {
+    // This is the owner dashboard - require owner role
+    if (!auth.requireAuth(['owner'])) {
+      // requireAuth will redirect to login if not authenticated
+      return;
+    }
+
+    // User is authenticated and has owner role
     ownerPanel.style.display = 'block';
     document.body.style.overflow = 'hidden';
-
-    // Show owner access link in corner
-    const ownerAccessContainer = document.getElementById('ownerAccessContainer');
-    if (ownerAccessContainer) {
-      ownerAccessContainer.style.display = 'block';
-    }
-
-    // Check if already logged in (localStorage)
-    if (localStorage.getItem('ownerLoggedIn') === 'true') {
-      showDashboard();
-    } else {
-      loginScreen.style.display = 'flex';
-    }
-  }
-  
-  // Login handler
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const password = document.getElementById('ownerPassword').value;
-    const errorDiv = document.getElementById('ownerLoginError');
-
-    try {
-      const response = await fetch('/api/owner/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success && data.token) {
-        localStorage.setItem('ownerLoggedIn', 'true');
-        localStorage.setItem('ownerToken', data.token);
-        showDashboard();
-      } else {
-        errorDiv.textContent = '✗ Invalid password';
-        errorDiv.style.display = 'block';
-      }
-    } catch (error) {
-      errorDiv.textContent = '✗ Connection error: ' + error.message;
-      errorDiv.style.display = 'block';
-    }
+    showDashboard();
   });
 
   // Logout handler
   logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('ownerLoggedIn');
-    localStorage.removeItem('ownerToken');
-    ownerPanel.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    window.location.href = '/';
+    if (confirm('Are you sure you want to logout?')) {
+      auth.logout();
+    }
   });
   
   // Format and display current Eastern Time in debug info

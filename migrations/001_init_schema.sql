@@ -1,4 +1,19 @@
--- Create admins table
+-- Create users table (unified authentication)
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255),
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  role VARCHAR(50) DEFAULT 'customer',
+  google_id VARCHAR(255) UNIQUE,
+  oauth_provider VARCHAR(50),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create admins table (legacy - for backward compatibility)
 CREATE TABLE IF NOT EXISTS admins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -165,6 +180,13 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Seed default users
+INSERT INTO users (email, password_hash, first_name, last_name, role, is_active) VALUES
+  ('owner@geruso-detailing.com', '$2a$10$KIX3K.g7P6R5B7K8M9N0Q.H3I2J1K0L9M8N7O6P5Q4R3S2T1U0V', 'Cameron', 'Geruso', 'owner', true),
+  ('dev@geruso-detailing.com', '$2a$10$KIX3K.g7P6R5B7K8M9N0Q.H3I2J1K0L9M8N7O6P5Q4R3S2T1U0V', 'Dev', 'Admin', 'dev', true),
+  ('customer@example.com', '$2a$10$KIX3K.g7P6R5B7K8M9N0Q.H3I2J1K0L9M8N7O6P5Q4R3S2T1U0V', 'John', 'Doe', 'customer', true)
+ON CONFLICT DO NOTHING;
+
 -- Seed default services (if table is empty)
 INSERT INTO services (name, description, price, category, is_active, display_order) VALUES
   ('Full Motorcycle Service', 'Complete motorcycle detailing service', 7000, 'Mobile', true, 1),
@@ -210,6 +232,9 @@ INSERT INTO settings (owner_email, notification_email, business_phone, business_
 ON CONFLICT DO NOTHING;
 
 -- Create indexes
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(customer_email);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
