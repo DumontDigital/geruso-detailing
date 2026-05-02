@@ -461,6 +461,11 @@ app.post('/api/debug/fix-passwords', async (req, res) => {
   }
 });
 
+// Test endpoint to verify deployment
+app.get('/api/test-deployment', (req, res) => {
+  res.json({ message: 'Deployment test - this should be visible if new code is deployed', timestamp: new Date().toISOString() });
+});
+
 // Legacy owner login for backward compatibility
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
 
