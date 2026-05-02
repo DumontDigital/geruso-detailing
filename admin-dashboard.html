@@ -460,7 +460,7 @@
   // Load bookings
   async function loadBookings() {
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await fetch('/api/admin/bookings', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
