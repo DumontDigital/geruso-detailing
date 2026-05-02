@@ -8,14 +8,16 @@ const { createCheckoutSession } = require('../stripe');
 const router = express.Router();
 
 // Get booked time slots (public endpoint - no auth required)
-// Only count active bookings: pending, confirmed, paid
-// Exclude: cancelled, deleted, failed, expired
+// Only count REAL customer bookings: pending, confirmed, paid
+// EXCLUDE: placeholder rows, cancelled, deleted, failed, expired
 router.get('/public/booked-slots', async (req, res) => {
   try {
     console.log('[Bookings API] GET /public/booked-slots called');
 
     const result = await pool.query(
-      "SELECT booking_date, booking_time FROM bookings WHERE status IN ('pending', 'confirmed', 'paid')",
+      `SELECT booking_date, booking_time FROM bookings
+       WHERE status IN ('pending', 'confirmed', 'paid')
+       AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
       []
     );
 
@@ -26,10 +28,11 @@ router.get('/public/booked-slots', async (req, res) => {
       const dateStr = new Date(booking.booking_date).toISOString().split('T')[0];
       const key = `${dateStr} ${booking.booking_time}`;
       bookedSlots[key] = true;
-      console.log('[Bookings API] Active booked slot:', key);
+      console.log('[Bookings API] Real customer booked slot:', key);
     });
 
-    console.log('[Bookings API] Returning', result.rows.length, 'active booked slots');
+    console.log('[Bookings API] Returning', result.rows.length, 'real customer booked slots (excluding',
+      result.rowCount > 0 ? 'any placeholders' : 'placeholders', ')');
     res.json({ bookedSlots });
   } catch (error) {
     console.error('[Bookings API] Error fetching booked slots:', error.message);
