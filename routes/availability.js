@@ -14,8 +14,17 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Year and month required' });
     }
 
-    const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString().split('T')[0];
-    const lastDay = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+    // Don't use Date objects - construct date strings directly
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    const firstDay = `${yearNum}-${String(monthNum).padStart(2, '0')}-01`;
+
+    // Last day of month - handle month bounds correctly
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if ((yearNum % 4 === 0 && yearNum % 100 !== 0) || (yearNum % 400 === 0)) {
+      daysInMonth[1] = 29; // Leap year February
+    }
+    const lastDay = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(daysInMonth[monthNum - 1]).padStart(2, '0')}`;
 
     const result = await pool.query(
       `SELECT DISTINCT date, day_of_week, is_available FROM availability
@@ -100,6 +109,9 @@ router.post('/generate-schedule', verifyToken, async (req, res) => {
   try {
     const { getUpcomingAvailability, BUSINESS_HOURS } = require('../utils/availability');
 
+    // Import the day-of-week function that uses Eastern Time
+    const availabilityModule = require('../utils/availability');
+
     console.log('[Availability] Generating availability schedule...');
 
     // Clear existing availability data
@@ -111,14 +123,14 @@ router.post('/generate-schedule', verifyToken, async (req, res) => {
     // Group slots by date and get day info
     const dateMap = new Map();
     slots.forEach(slot => {
-      if (!dateMap.has(slot.date)) {
-        const dateObj = new Date(slot.date + 'T00:00:00Z');
-        const dayOfWeek = dateObj.getDay();
+      if (!dateMap.has(slot.dateKey)) {
+        // Use getDayOfWeekForEasternDate from the availability module
+        const dayNum = availabilityModule.getDayOfWeekForEasternDate(slot.dateKey);
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        dateMap.set(slot.date, {
-          date: slot.date,
-          dayOfWeek: dayNames[dayOfWeek],
-          dayNum: dayOfWeek
+        dateMap.set(slot.dateKey, {
+          date: slot.dateKey,
+          dayOfWeek: dayNames[dayNum],
+          dayNum: dayNum
         });
       }
     });

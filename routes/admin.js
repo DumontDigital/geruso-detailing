@@ -9,12 +9,11 @@ const router = express.Router();
 router.get('/dashboard', verifyToken, async (req, res) => {
   try {
     // Use Eastern Time for dashboard stats
+    const { getTodayInEasternTime, addDaysToEasternDate } = require('../utils/availability');
     const today = getTodayInEasternTime();
 
-    // Calculate week ago in Eastern Time
-    const [year, month, day] = today.split('-').map(Number);
-    const weekAgoDate = new Date(year, month - 1, day - 7);
-    const weekAgo = `${weekAgoDate.getFullYear()}-${String(weekAgoDate.getMonth() + 1).padStart(2, '0')}-${String(weekAgoDate.getDate()).padStart(2, '0')}`;
+    // Calculate week ago in Eastern Time using string arithmetic
+    const weekAgo = addDaysToEasternDate(today, -7);
 
     // Today's bookings
     const todayResult = await pool.query(
@@ -43,8 +42,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     );
 
     // Upcoming bookings next 7 days (in Eastern Time)
-    const sevenDaysLater = new Date(year, month - 1, day + 7);
-    const sevenDaysLaterStr = `${sevenDaysLater.getFullYear()}-${String(sevenDaysLater.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysLater.getDate()).padStart(2, '0')}`;
+    const sevenDaysLaterStr = addDaysToEasternDate(today, 7);
 
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings

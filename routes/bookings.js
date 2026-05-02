@@ -24,8 +24,8 @@ router.get('/public/booked-slots', async (req, res) => {
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
     result.rows.forEach(booking => {
-      // Format date as ISO string (YYYY-MM-DD) to match frontend format
-      const dateStr = new Date(booking.booking_date).toISOString().split('T')[0];
+      // booking_date is already in YYYY-MM-DD format from database, don't convert
+      const dateStr = booking.booking_date.toString().split('T')[0]; // Handle both string and date types from DB
       const key = `${dateStr} ${booking.booking_time}`;
       bookedSlots[key] = true;
       console.log('[Bookings API] Real customer booked slot:', key);

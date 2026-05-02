@@ -85,28 +85,67 @@ function getTimeSlotsForDate(date) {
 
 /**
  * Add N days to an Eastern Time date string (YYYY-MM-DD)
+ * Works entirely with numbers, no Date objects
  */
 function addDaysToEasternDate(dateStr, days) {
   const [year, month, day] = dateStr.split('-').map(Number);
 
-  // Create a UTC date to do arithmetic (we'll convert back after)
-  const date = new Date(Date.UTC(year, month - 1, day));
-  date.setUTCDate(date.getUTCDate() + days);
+  // Simple number arithmetic for date
+  let newDay = day + days;
+  let newMonth = month;
+  let newYear = year;
 
-  const newYear = date.getUTCFullYear();
-  const newMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const newDay = String(date.getUTCDate()).padStart(2, '0');
+  // Days per month (non-leap year for simplicity - leap years handled by overflow)
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-  return `${newYear}-${newMonth}-${newDay}`;
+  // Handle leap year for February
+  if ((newYear % 4 === 0 && newYear % 100 !== 0) || (newYear % 400 === 0)) {
+    daysInMonth[1] = 29;
+  }
+
+  // Normalize day/month/year
+  while (newDay > daysInMonth[newMonth - 1]) {
+    newDay -= daysInMonth[newMonth - 1];
+    newMonth++;
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear++;
+      // Recalculate leap year for new year
+      if ((newYear % 4 === 0 && newYear % 100 !== 0) || (newYear % 400 === 0)) {
+        daysInMonth[1] = 29;
+      } else {
+        daysInMonth[1] = 28;
+      }
+    }
+  }
+
+  return `${newYear}-${String(newMonth).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
 }
 
 /**
  * Get day of week for an Eastern Time date string (0=Sunday, 1=Monday, etc)
+ * Uses Zeller's algorithm to avoid Date objects
  */
 function getDayOfWeekForEasternDate(dateStr) {
   const [year, month, day] = dateStr.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCDay();
+
+  // Zeller's congruence algorithm (works for any date)
+  // Adjust month and year for January/February
+  let m = month;
+  let y = year;
+  if (m <= 2) {
+    m += 12;
+    y -= 1;
+  }
+
+  // Zeller's formula
+  const K = y % 100; // Year of century
+  const J = Math.floor(y / 100); // Zero-based century
+
+  const h = (day + Math.floor((13 * (m + 1)) / 5) + K + Math.floor(K / 4) + Math.floor(J / 4) - 2 * J) % 7;
+
+  // Convert to 0=Sunday, 1=Monday... (h is 0=Saturday in Zeller's)
+  return (h + 6) % 7;
 }
 
 /**
@@ -121,8 +160,8 @@ function getUpcomingAvailability(daysAhead = 60) {
 
   // Start from today in Eastern Time, not tomorrow
   for (let i = 0; i < daysAhead; i++) {
-    const dateStr = addDaysToEasternDate(todayEastern, i);
-    const dayOfWeek = getDayOfWeekForEasternDate(dateStr);
+    const dateKey = addDaysToEasternDate(todayEastern, i); // YYYY-MM-DD
+    const dayOfWeek = getDayOfWeekForEasternDate(dateKey);
 
     // Get business hours for this date
     let hours = null;
@@ -141,9 +180,9 @@ function getUpcomingAvailability(daysAhead = 60) {
     for (let hour = hours.startHour; hour < hours.endHour; hour++) {
       const time = `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
       availability.push({
-        date: dateStr,
-        time: time,
-        dateObj: new Date(dateStr) // Keep for backward compatibility
+        dateKey: dateKey,           // YYYY-MM-DD for database and comparison
+        time: time,                 // HH:MM AM/PM for display
+        sortKey: `${dateKey} ${String(hour).padStart(2, '0')}:00` // For sorting
       });
     }
   }
@@ -186,5 +225,7 @@ module.exports = {
   getTimeSlotsForDate,
   getUpcomingAvailability,
   createPlaceholderBooking,
-  getTodayInEasternTime
+  getTodayInEasternTime,
+  getDayOfWeekForEasternDate,
+  addDaysToEasternDate
 };

@@ -41,7 +41,7 @@ async function generateAvailabilitySlots() {
     let insertedCount = 0;
     for (const slot of slots) {
       try {
-        const placeholder = createPlaceholderBooking(slot.date, slot.time);
+        const placeholder = createPlaceholderBooking(slot.dateKey, slot.time);
 
         await pool.query(
           `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status, stripe_session_id, stripe_payment_intent_id, deposit_amount, created_at, updated_at)
