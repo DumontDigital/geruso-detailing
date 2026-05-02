@@ -811,3 +811,418 @@
   });
 })();
 </script></body></html>
+
+<!-- OWNER CONTROL PANEL - Phase 1: Booking & Schedule Management -->
+<div id="ownerPanel" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--light-bg); z-index: 1000; overflow-y: auto;">
+  
+  <!-- Owner Login Screen -->
+  <div id="ownerLoginScreen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+    <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 40px; max-width: 420px; width: 100%;">
+      <h2 style="color: var(--primary); margin-bottom: 24px;">Owner Access</h2>
+      <form id="ownerLoginForm">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 700;">Password</label>
+          <input type="password" id="ownerPassword" placeholder="Enter owner password" required style="width: 100%; padding: 12px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+        </div>
+        <div id="ownerLoginError" style="margin-bottom: 16px; padding: 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; border-radius: 6px; display: none;"></div>
+        <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Access Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Owner Dashboard -->
+  <div id="ownerDashboard" style="display: none;">
+    <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
+      <div style="font-weight: 700; color: var(--primary);">Owner Dashboard - Phase 1</div>
+      <button id="ownerLogoutBtn" style="background: var(--accent); color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Logout</button>
+    </nav>
+
+    <div style="display: flex;">
+      <!-- Sidebar Navigation -->
+      <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
+        <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
+      </div>
+
+      <!-- Main Content -->
+      <div style="flex: 1; padding: 24px; max-width: 1200px;">
+        
+        <!-- Bookings Tab -->
+        <div id="bookingsTab" class="owner-tab" style="display: block;">
+          <h2 style="margin-bottom: 24px;">Manage Bookings</h2>
+          
+          <div style="margin-bottom: 24px; display: flex; gap: 12px;">
+            <input type="text" id="bookingSearch" placeholder="Search by customer name or email..." style="flex: 1; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+            <select id="bookingStatusFilter" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead style="background: var(--light-bg);">
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Customer</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Date/Time</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Status</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsList"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div id="scheduleTab" class="owner-tab" style="display: none;">
+          <h2 style="margin-bottom: 24px;">Manage Schedule</h2>
+          
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+            <h3 style="margin-bottom: 16px;">Business Hours</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;" id="scheduleHoursList"></div>
+          </div>
+
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px;">
+            <h3 style="margin-bottom: 16px;">Block Dates</h3>
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Date to Block</label>
+              <input type="date" id="blockDate" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Reason (optional)</label>
+              <input type="text" id="blockReason" placeholder="e.g., Holiday, Maintenance" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+            </div>
+            <button id="blockDateBtn" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Block Date</button>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <h3 style="margin-bottom: 16px;">Blocked Dates</h3>
+            <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--light-bg);">
+                  <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="padding: 12px; text-align: left; font-weight: 700;">Date</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 700;">Reason</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 700;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="blockedDatesList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Owner Panel - Phase 1 Implementation
+(function() {
+  const ownerPanel = document.getElementById('ownerPanel');
+  const loginScreen = document.getElementById('ownerLoginScreen');
+  const dashboard = document.getElementById('ownerDashboard');
+  const loginForm = document.getElementById('ownerLoginForm');
+  const logoutBtn = document.getElementById('ownerLogoutBtn');
+  
+  // Check for ?owner=true parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('owner') === 'true') {
+    ownerPanel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Check if already logged in (localStorage)
+    if (localStorage.getItem('ownerLoggedIn') === 'true') {
+      showDashboard();
+    } else {
+      loginScreen.style.display = 'flex';
+    }
+  }
+  
+  // Login handler
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('ownerPassword').value;
+    const errorDiv = document.getElementById('ownerLoginError');
+    
+    try {
+      const response = await fetch('/api/owner/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        localStorage.setItem('ownerLoggedIn', 'true');
+        showDashboard();
+      } else {
+        errorDiv.textContent = '✗ Invalid password';
+        errorDiv.style.display = 'block';
+      }
+    } catch (error) {
+      errorDiv.textContent = '✗ Connection error: ' + error.message;
+      errorDiv.style.display = 'block';
+    }
+  });
+  
+  // Logout handler
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('ownerLoggedIn');
+    ownerPanel.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    window.location.href = '/';
+  });
+  
+  function showDashboard() {
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    loadBookings();
+    loadSchedule();
+    setupTabNavigation();
+  }
+  
+  function setupTabNavigation() {
+    document.querySelectorAll('.owner-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        
+        document.querySelectorAll('.owner-tab').forEach(t => t.style.display = 'none');
+        document.getElementById(tab + 'Tab').style.display = 'block';
+        
+        document.querySelectorAll('.owner-nav-btn').forEach(b => {
+          b.style.background = 'transparent';
+          b.style.color = 'var(--text)';
+        });
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#000';
+        
+        if (tab === 'schedule') loadSchedule();
+        if (tab === 'bookings') loadBookings();
+      });
+    });
+  }
+  
+  async function loadBookings() {
+    try {
+      const response = await fetch('/api/owner/bookings');
+      const data = await response.json();
+      
+      const tbody = document.getElementById('bookingsList');
+      tbody.innerHTML = '';
+      
+      if (data.bookings && data.bookings.length) {
+        data.bookings.forEach(booking => {
+          const statusColor = booking.status === 'confirmed' ? 'var(--success)' : 
+                            booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
+          
+          tbody.innerHTML += `
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px;">
+                <div style="font-weight: 700;">${booking.customer_name}</div>
+                <small style="color: var(--text-muted);">${booking.customer_email}</small>
+              </td>
+              <td style="padding: 12px;">${booking.booking_date} ${booking.booking_time}</td>
+              <td style="padding: 12px;">${booking.service_type}</td>
+              <td style="padding: 12px;">
+                <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${booking.status}</span>
+              </td>
+              <td style="padding: 12px;">
+                <div style="display: flex; gap: 8px;">
+                  ${booking.status !== 'completed' && booking.status !== 'cancelled' ? 
+                    `<button onclick="ownerConfirmBooking('${booking.id}')" style="padding: 4px 8px; background: var(--success); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Confirm</button>` : ''}
+                  ${booking.status !== 'completed' ? 
+                    `<button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Complete</button>` : ''}
+                  ${booking.status !== 'cancelled' ? 
+                    `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Cancel</button>` : ''}
+                  <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+      }
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+    }
+  }
+  
+  async function loadSchedule() {
+    try {
+      const response = await fetch('/api/owner/schedule');
+      const data = await response.json();
+      
+      const scheduleList = document.getElementById('scheduleHoursList');
+      scheduleList.innerHTML = '';
+      
+      if (data.schedule) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        days.forEach((day, index) => {
+          const dayData = data.schedule[day] || {};
+          scheduleList.innerHTML += `
+            <div style="background: var(--light-bg); padding: 16px; border-radius: 6px; border: 1px solid var(--border);">
+              <h4 style="margin-bottom: 12px;">${day}</h4>
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">Status</label>
+                <select class="day-status" data-day="${day}" style="width: 100%; padding: 8px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 4px; color: var(--text);">
+                  <option value="open" ${dayData.status === 'open' ? 'selected' : ''}>Open</option>
+                  <option value="closed" ${dayData.status === 'closed' ? 'selected' : ''}>Closed</option>
+                </select>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">Start Time</label>
+                <input type="time" class="day-start" data-day="${day}" value="${dayData.start_time || '10:00'}" style="width: 100%; padding: 8px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 4px; color: var(--text);">
+              </div>
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted);">End Time</label>
+                <input type="time" class="day-end" data-day="${day}" value="${dayData.end_time || '18:00'}" style="width: 100%; padding: 8px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 4px; color: var(--text);">
+              </div>
+              <button onclick="ownerSaveScheduleDay('${day}')" style="width: 100%; padding: 8px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Save</button>
+            </div>
+          `;
+        });
+      }
+      
+      // Load blocked dates
+      const blockedResponse = await fetch('/api/owner/blocked-dates');
+      const blockedData = await blockedResponse.json();
+      
+      const blockedList = document.getElementById('blockedDatesList');
+      blockedList.innerHTML = '';
+      
+      if (blockedData.blockedDates && blockedData.blockedDates.length) {
+        blockedData.blockedDates.forEach(item => {
+          blockedList.innerHTML += `
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px;">${item.blocked_date}</td>
+              <td style="padding: 12px;">${item.reason || '-'}</td>
+              <td style="padding: 12px;">
+                <button onclick="ownerUnblockDate('${item.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Unblock</button>
+              </td>
+            </tr>
+          `;
+        });
+      } else {
+        blockedList.innerHTML = '<tr><td colspan="3" style="padding: 24px; text-align: center; color: var(--text-muted);">No blocked dates</td></tr>';
+      }
+      
+    } catch (error) {
+      console.error('Error loading schedule:', error);
+    }
+  }
+  
+  // Global functions for booking actions
+  window.ownerConfirmBooking = async (bookingId) => {
+    if (!confirm('Confirm this booking?')) return;
+    try {
+      const response = await fetch(`/api/owner/booking/${bookingId}/confirm`, { method: 'POST' });
+      if (response.ok) {
+        loadBookings();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  window.ownerMarkCompleted = async (bookingId) => {
+    if (!confirm('Mark as completed?')) return;
+    try {
+      const response = await fetch(`/api/owner/booking/${bookingId}/complete`, { method: 'POST' });
+      if (response.ok) {
+        loadBookings();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  window.ownerCancelBooking = async (bookingId) => {
+    if (!confirm('Cancel this booking?')) return;
+    try {
+      const response = await fetch(`/api/owner/booking/${bookingId}/cancel`, { method: 'POST' });
+      if (response.ok) {
+        loadBookings();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  window.ownerDeleteBooking = async (bookingId) => {
+    if (!confirm('Delete this booking permanently? This cannot be undone.')) return;
+    try {
+      const response = await fetch(`/api/owner/booking/${bookingId}`, { method: 'DELETE' });
+      if (response.ok) {
+        loadBookings();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  window.ownerSaveScheduleDay = async (day) => {
+    const status = document.querySelector(`.day-status[data-day="${day}"]`).value;
+    const startTime = document.querySelector(`.day-start[data-day="${day}"]`).value;
+    const endTime = document.querySelector(`.day-end[data-day="${day}"]`).value;
+    
+    try {
+      const response = await fetch('/api/owner/schedule-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ day, status, startTime, endTime })
+      });
+      if (response.ok) {
+        alert('Schedule updated');
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  document.getElementById('blockDateBtn').addEventListener('click', async () => {
+    const date = document.getElementById('blockDate').value;
+    const reason = document.getElementById('blockReason').value;
+    
+    if (!date) {
+      alert('Please select a date');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/owner/block-date', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blockedDate: date, reason })
+      });
+      
+      if (response.ok) {
+        document.getElementById('blockDate').value = '';
+        document.getElementById('blockReason').value = '';
+        loadSchedule();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  });
+  
+  window.ownerUnblockDate = async (blockedDateId) => {
+    if (!confirm('Unblock this date?')) return;
+    try {
+      const response = await fetch(`/api/owner/blocked-date/${blockedDateId}`, { method: 'DELETE' });
+      if (response.ok) {
+        loadSchedule();
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+})();
+</script>

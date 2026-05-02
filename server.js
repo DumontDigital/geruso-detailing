@@ -264,6 +264,165 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/availability', availabilityRoutes);
 
+// ========== OWNER PANEL API - PHASE 1 ==========
+// Owner authentication
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
+
+app.post('/api/owner/login', (req, res) => {
+  const { password } = req.body;
+  if (password === OWNER_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false, error: 'Invalid password' });
+  }
+});
+
+// Get all bookings for owner
+app.get('/api/owner/bookings', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM bookings ORDER BY booking_date DESC, booking_time DESC'
+    );
+    res.json({ bookings: result.rows });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
+
+// Confirm booking
+app.post('/api/owner/booking/:id/confirm', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['confirmed', id]
+    );
+    res.json({ success: true, booking: result.rows[0] });
+  } catch (error) {
+    console.error('Error confirming booking:', error);
+    res.status(500).json({ error: 'Failed to confirm booking' });
+  }
+});
+
+// Mark booking completed
+app.post('/api/owner/booking/:id/complete', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['completed', id]
+    );
+    res.json({ success: true, booking: result.rows[0] });
+  } catch (error) {
+    console.error('Error completing booking:', error);
+    res.status(500).json({ error: 'Failed to complete booking' });
+  }
+});
+
+// Cancel booking
+app.post('/api/owner/booking/:id/cancel', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['cancelled', id]
+    );
+    res.json({ success: true, booking: result.rows[0] });
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ error: 'Failed to cancel booking' });
+  }
+});
+
+// Delete booking
+app.delete('/api/owner/booking/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM bookings WHERE id = $1 RETURNING *',
+      [id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ error: 'Failed to delete booking' });
+  }
+});
+
+// Get schedule
+app.get('/api/owner/schedule', async (req, res) => {
+  try {
+    // Return default schedule - can be extended to fetch from database
+    const schedule = {
+      Monday: { status: 'open', start_time: '10:00', end_time: '18:00' },
+      Tuesday: { status: 'open', start_time: '10:00', end_time: '18:00' },
+      Wednesday: { status: 'open', start_time: '10:00', end_time: '18:00' },
+      Thursday: { status: 'open', start_time: '12:00', end_time: '18:00' },
+      Friday: { status: 'open', start_time: '12:00', end_time: '18:00' },
+      Saturday: { status: 'open', start_time: '06:00', end_time: '11:00' },
+      Sunday: { status: 'open', start_time: '06:00', end_time: '11:00' }
+    };
+    res.json({ schedule });
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ error: 'Failed to fetch schedule' });
+  }
+});
+
+// Save schedule day
+app.post('/api/owner/schedule-day', async (req, res) => {
+  try {
+    const { day, status, startTime, endTime } = req.body;
+    // This can be extended to save to database
+    console.log(`[Owner] Schedule updated for ${day}: ${status} ${startTime}-${endTime}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving schedule:', error);
+    res.status(500).json({ error: 'Failed to save schedule' });
+  }
+});
+
+// Get blocked dates
+app.get('/api/owner/blocked-dates', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM blocked_dates ORDER BY blocked_date DESC'
+    );
+    res.json({ blockedDates: result.rows });
+  } catch (error) {
+    console.error('Error fetching blocked dates:', error);
+    res.status(500).json({ error: 'Failed to fetch blocked dates' });
+  }
+});
+
+// Block date
+app.post('/api/owner/block-date', async (req, res) => {
+  try {
+    const { blockedDate, reason } = req.body;
+    const result = await pool.query(
+      'INSERT INTO blocked_dates (blocked_date, reason) VALUES ($1, $2) RETURNING *',
+      [blockedDate, reason || null]
+    );
+    res.json({ success: true, blockedDate: result.rows[0] });
+  } catch (error) {
+    console.error('Error blocking date:', error);
+    res.status(500).json({ error: 'Failed to block date' });
+  }
+});
+
+// Unblock date
+app.delete('/api/owner/blocked-date/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error unblocking date:', error);
+    res.status(500).json({ error: 'Failed to unblock date' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'geruso-detailing' });
