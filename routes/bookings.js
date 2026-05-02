@@ -296,11 +296,17 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all bookings (admin only)
+// Get all bookings (admin only) - DEPRECATED, use /api/admin/bookings instead
+// Kept for backward compatibility but returns FILTERED data (no May 1)
 router.get('/', verifyToken, async (req, res) => {
   try {
+    const { getTodayInEasternTime } = require('../utils/availability');
+    const today = getTodayInEasternTime();
+
+    // CRITICAL: Filter out past dates and May 1 - NEVER return old data
     const result = await pool.query(
-      'SELECT * FROM bookings ORDER BY booking_date DESC, booking_time DESC'
+      'SELECT * FROM bookings WHERE booking_date::date >= $1::date ORDER BY booking_date ASC, booking_time ASC',
+      [today]
     );
     res.json({ bookings: result.rows });
   } catch (error) {
