@@ -1,14 +1,20 @@
 const express = require('express');
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
+const { getTodayInEasternTime } = require('../utils/availability');
 
 const router = express.Router();
 
 // Get dashboard stats (admin only)
 router.get('/dashboard', verifyToken, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Use Eastern Time for dashboard stats
+    const today = getTodayInEasternTime();
+
+    // Calculate week ago in Eastern Time
+    const [year, month, day] = today.split('-').map(Number);
+    const weekAgoDate = new Date(year, month - 1, day - 7);
+    const weekAgo = `${weekAgoDate.getFullYear()}-${String(weekAgoDate.getMonth() + 1).padStart(2, '0')}-${String(weekAgoDate.getDate()).padStart(2, '0')}`;
 
     // Today's bookings
     const todayResult = await pool.query(
@@ -36,13 +42,16 @@ router.get('/dashboard', verifyToken, async (req, res) => {
       ['confirmed', weekAgo]
     );
 
-    // Upcoming bookings next 7 days
+    // Upcoming bookings next 7 days (in Eastern Time)
+    const sevenDaysLater = new Date(year, month - 1, day + 7);
+    const sevenDaysLaterStr = `${sevenDaysLater.getFullYear()}-${String(sevenDaysLater.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysLater.getDate()).padStart(2, '0')}`;
+
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings
        WHERE booking_date BETWEEN $1 AND $2
        ORDER BY booking_date ASC, booking_time ASC
        LIMIT 10`,
-      [today, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]]
+      [today, sevenDaysLaterStr]
     );
 
     res.json({
