@@ -90,7 +90,22 @@ router.get('/bookings', verifyToken, async (req, res) => {
       params.push(search);
     }
 
-    query += ' ORDER BY booking_date ASC, booking_time ASC';
+    // Sort by date ascending, then by time using numeric conversion
+    // Convert "6:00 AM" format to minutes since midnight for proper numeric sort
+    query += ` ORDER BY booking_date ASC,
+      CASE
+        WHEN booking_time ~ '(\\d+):(\\d+) (AM|PM)' THEN
+          CAST(
+            (CASE
+              WHEN booking_time ~ 'PM' AND NOT booking_time ~ '12:\\d+ PM' THEN
+                CAST(split_part(booking_time, ':', 1) AS INTEGER) + 12
+              WHEN booking_time ~ 'AM' AND booking_time ~ '12:\\d+ AM' THEN 0
+              ELSE CAST(split_part(booking_time, ':', 1) AS INTEGER)
+            END) * 60 +
+            CAST(split_part(split_part(booking_time, ':', 2), ' ', 1) AS INTEGER)
+          AS INTEGER)
+        ELSE 0
+      END ASC`;
 
     const result = await pool.query(query, params);
 
