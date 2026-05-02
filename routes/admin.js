@@ -102,4 +102,36 @@ router.get('/bookings', verifyToken, async (req, res) => {
   }
 });
 
+// Cleanup old placeholder bookings before today (admin only)
+router.post('/cleanup-old-placeholders', verifyToken, async (req, res) => {
+  try {
+    console.log('[Cleanup] Starting cleanup of old placeholder bookings...');
+
+    // Get today's date in Eastern Time
+    const today = getTodayInEasternTime();
+
+    // Delete placeholder bookings before today
+    const result = await pool.query(
+      `DELETE FROM bookings
+       WHERE customer_email = $1
+       AND customer_name = $2
+       AND booking_date::date < $3::date
+       RETURNING id`,
+      ['booking.test@gmail.com', 'Available Slot', today]
+    );
+
+    console.log(`[Cleanup] Deleted ${result.rowCount} old placeholder bookings before ${today}`);
+
+    res.json({
+      success: true,
+      message: `Cleaned up ${result.rowCount} old placeholder bookings`,
+      deletedCount: result.rowCount,
+      beforeDate: today
+    });
+  } catch (error) {
+    console.error('[Cleanup] Error:', error.message);
+    res.status(500).json({ error: 'Failed to cleanup placeholders' });
+  }
+});
+
 module.exports = router;
