@@ -18,22 +18,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Cache-busting middleware for static files and HTML
+// Cache-busting middleware for HTML files
 app.use((req, res, next) => {
-  // Disable caching for HTML files
+  // Disable ALL caching for HTML files
   if (req.path.endsWith('.html') || req.path === '/' || req.path.match(/^\/\?/)) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Cache-Control', 'no-store, must-revalidate, max-age=0, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
   }
   next();
 });
-
-// Static file serving
-app.use(express.static(path.join(__dirname), {
-  maxAge: '1h',
-  etag: true
-}));
 
 // UNIFIED WEBSITE - Single entry point
 // App shell - handles authentication and routing to different views
@@ -724,6 +718,12 @@ app.post('/api/admin/reset-availability', async (req, res) => {
     });
   }
 });
+
+// Static file serving - AFTER all routes so routes take priority
+// No caching (maxAge removed) - cache headers are set by middleware above
+app.use(express.static(path.join(__dirname), {
+  etag: false  // Disable etag to force revalidation
+}));
 
 // Explicit catch-all: serve index for non-API routes
 // Note: All /admin routes are handled by explicit handlers above
