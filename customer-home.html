@@ -27,7 +27,7 @@
     /* NAVBAR */
     nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
     .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; cursor: pointer; }
-    .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+    .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%2300FF41" opacity="0.1"/><circle cx="50" cy="50" r="40" fill="none" stroke="%2300FF41" stroke-width="2"/><text x="50" y="55" font-size="32" font-weight="bold" fill="%2300FF41" text-anchor="middle">G</text></svg>'); }
     .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
     .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
     .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
@@ -396,7 +396,7 @@
 
             <div class="form-group">
               <label class="form-label">Service Type</label>
-              <select class="form-select" name="serviceType" required>
+              <select class="form-select" name="serviceType" id="scheduleServiceSelect" required>
                 <option value="">Select a service...</option>
                 <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
                 <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
@@ -409,6 +409,7 @@
                 <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
                 <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
               </select>
+              <div id="serviceTypeMessage" style="font-size: 13px; color: var(--primary); margin-top: 8px; font-weight: 600; display: none;"></div>
             </div>
 
             <!-- ADDRESS FIELD (shows for Thu/Fri mobile service) -->
@@ -484,6 +485,7 @@
     let bookedTimeSlots = {};
     let cart = [];
     let cartServiceType = null; // 'mobile', 'location', or null
+    let scheduleServiceType = null; // 'mobile', 'location', or null (from Schedule section service dropdown)
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -695,6 +697,72 @@
       }
     };
 
+    // ===== SERVICE TYPE DETECTION =====
+    function getServiceTypeFromName(serviceName) {
+      const mobileServices = [
+        'Full Motorcycle Service',
+        'Interior Detailing',
+        'Car Wash',
+        'Premium Package',
+        'Ultra Premium',
+        'Engine Bay Cleaning'
+      ];
+
+      const locationServices = [
+        'Ceramic Coating',
+        'Full Vehicle Polish'
+      ];
+
+      const addOnServices = [
+        'Pet Hair / Odor Elimination',
+        'Headlight Restoration'
+      ];
+
+      if (mobileServices.includes(serviceName)) return 'mobile';
+      if (locationServices.includes(serviceName)) return 'location';
+      if (addOnServices.includes(serviceName)) return 'addon';
+      return null;
+    }
+
+    function isValidDayForService(dayOfWeek, serviceType) {
+      if (!serviceType || serviceType === 'addon') return true;
+
+      if (serviceType === 'mobile') {
+        return dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
+      } else if (serviceType === 'location') {
+        return dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
+      }
+      return false;
+    }
+
+    function updateAddressFieldVisibility(serviceName) {
+      const serviceType = getServiceTypeFromName(serviceName);
+      const addressFieldGroup = document.getElementById('addressFieldGroup');
+      const locationNoteGroup = document.getElementById('locationNoteGroup');
+      const serviceTypeMessage = document.getElementById('serviceTypeMessage');
+
+      if (!serviceName || serviceType === 'addon') {
+        addressFieldGroup.style.display = 'none';
+        locationNoteGroup.style.display = 'none';
+        serviceTypeMessage.style.display = 'none';
+        return;
+      }
+
+      if (serviceType === 'mobile') {
+        addressFieldGroup.style.display = 'block';
+        locationNoteGroup.style.display = 'none';
+        document.getElementById('serviceAddressInput').required = true;
+        serviceTypeMessage.textContent = '📍 Mobile service available Thursday & Friday only.';
+        serviceTypeMessage.style.display = 'block';
+      } else if (serviceType === 'location') {
+        addressFieldGroup.style.display = 'none';
+        locationNoteGroup.style.display = 'block';
+        document.getElementById('serviceAddressInput').required = false;
+        serviceTypeMessage.textContent = '📍 Location services available Saturday & Sunday only at Mapleville.';
+        serviceTypeMessage.style.display = 'block';
+      }
+    }
+
     // ===== SCHEDULE INITIALIZATION =====
     async function initializeSchedule() {
       const et = getCurrentTimeET();
@@ -718,6 +786,35 @@
       });
 
       document.getElementById('bookingForm').addEventListener('submit', handleFormSubmit);
+
+      // Service type change handler
+      document.getElementById('scheduleServiceSelect').addEventListener('change', (e) => {
+        const serviceName = e.target.value;
+        const newServiceType = getServiceTypeFromName(serviceName);
+
+        if (newServiceType && newServiceType !== 'addon') {
+          scheduleServiceType = newServiceType;
+        }
+
+        // Update address field visibility
+        updateAddressFieldVisibility(serviceName);
+
+        // Clear selected date if it's now invalid
+        if (selectedDate) {
+          const dayOfWeek = dayLetters[selectedDate.getDay()];
+          const isValidDay = isValidDayForService(dayOfWeek, newServiceType);
+          if (!isValidDay) {
+            selectedDate = null;
+            selectedTime = null;
+            document.getElementById('bookingSummary').style.display = 'none';
+            document.getElementById('timeSlotsGrid').innerHTML = '';
+            document.getElementById('timeMessage').textContent = 'Select a date to view available times';
+          }
+        }
+
+        // Re-render calendar
+        renderCalendar();
+      });
     }
 
     // ===== BOOKED SLOTS =====
@@ -774,11 +871,12 @@
         const cellDate = new Date(year, month, day);
         const dayOfWeek = dayLetters[cellDate.getDay()];
 
-        // Check if date is available (not past, and business is open)
+        // Check if date is available (not past, business is open, and valid for service type)
         const isPast = cellDate < todayET;
         const isClosed = !businessHours[dayOfWeek];
+        const isInvalidForService = scheduleServiceType && !isValidDayForService(dayOfWeek, scheduleServiceType);
 
-        if (isPast || isClosed) {
+        if (isPast || isClosed || isInvalidForService) {
           dayCell.classList.add('disabled');
           dayCell.disabled = true;
         } else {
@@ -813,19 +911,9 @@
       document.getElementById('summaryTime').textContent = '—';
       document.getElementById('bookingSummary').style.display = 'block';
 
-      // Show/hide address field based on day
-      const addressFieldGroup = document.getElementById('addressFieldGroup');
-      const locationNoteGroup = document.getElementById('locationNoteGroup');
-
-      if (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') {
-        addressFieldGroup.style.display = 'block';
-        locationNoteGroup.style.display = 'none';
-        document.getElementById('serviceAddressInput').required = true;
-      } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
-        addressFieldGroup.style.display = 'none';
-        locationNoteGroup.style.display = 'block';
-        document.getElementById('serviceAddressInput').required = false;
-      }
+      // Show/hide address field based on service type (already set by dropdown, but refresh)
+      const serviceName = document.getElementById('scheduleServiceSelect').value;
+      updateAddressFieldVisibility(serviceName);
 
       // Render time slots
       renderTimeSlots(date);
