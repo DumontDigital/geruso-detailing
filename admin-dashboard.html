@@ -177,6 +177,9 @@
       </div>
 
       <div class="table-section">
+        <div style="padding: 12px; background: rgba(0,255,65,0.08); border: 1px solid rgba(0,255,65,0.2); border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: var(--text-light);">
+          ✓ Data: <strong>/api/admin/bookings</strong> | First Date: <strong id="debugFirstDate">—</strong>
+        </div>
         <div class="table-header">
           <h3 class="table-title">All Bookings</h3>
           <div style="flex: 1;"></div>
@@ -404,6 +407,26 @@
     });
   });
 
+  // AUTO-LOAD: Call loadBookings() on page initialization if Bookings tab is active
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 [ADMIN-DASHBOARD] Page initialized, checking active tab');
+    const activeBookingsTab = document.querySelector('.sidebar-item.active[data-page="bookings"]');
+    if (activeBookingsTab) {
+      console.log('📖 [ADMIN-DASHBOARD] Bookings tab is active, loading bookings...');
+      loadBookings();
+    }
+  });
+
+  // Also load if Bookings page is visible
+  if (document.getElementById('bookingsPage')?.classList.contains('active')) {
+    console.log('📖 [ADMIN-DASHBOARD] Bookings page visible on load, triggering loadBookings');
+    setTimeout(() => {
+      if (!allBookings.length) {
+        loadBookings();
+      }
+    }, 100);
+  }
+
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('adminToken');
@@ -457,28 +480,42 @@
     return hours * 60 + minutes; // Return minutes since midnight
   }
 
-  // Load bookings
+  // Load bookings - CRITICAL: Only use /api/admin/bookings endpoint
   async function loadBookings() {
     try {
-      const response = await fetch('/api/admin/bookings', {
+      console.log('🔄 [ADMIN-DASHBOARD] Starting loadBookings()');
+
+      const apiUrl = '/api/admin/bookings'; // MUST use admin endpoint only
+      console.log(`📡 [ADMIN-DASHBOARD] Fetching from: ${apiUrl}`);
+
+      const response = await fetch(apiUrl, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log(`✓ [ADMIN-DASHBOARD] API response received: ${data.bookings?.length || 0} bookings`);
 
       if (!data.bookings || data.bookings.length === 0) {
+        console.log('⚠️  [ADMIN-DASHBOARD] No bookings in response');
         allBookings = [];
         renderBookingsTable([]);
         return;
       }
+
+      // Log first booking for verification
+      console.log(`📅 [ADMIN-DASHBOARD] First booking date: ${data.bookings[0].booking_date?.split('T')[0]}`);
 
       // Sort by date ascending, then by time ascending (rotating schedule from today forward)
       allBookings = data.bookings.sort((a, b) => {
         const dateA = new Date(a.booking_date).toISOString().split('T')[0];
         const dateB = new Date(b.booking_date).toISOString().split('T')[0];
         if (dateA !== dateB) {
-          return dateA.localeCompare(dateB); // Sort by date ascending (YYYY-MM-DD format sorts correctly)
+          return dateA.localeCompare(dateB);
         }
-        // Same date, sort by time ascending (convert to numeric minutes for proper sorting)
         const timeAMinutes = parseTimeToMinutes(a.booking_time);
         const timeBMinutes = parseTimeToMinutes(b.booking_time);
         return timeAMinutes - timeBMinutes;
@@ -486,41 +523,75 @@
 
       // Filter to show only today and future dates for rolling schedule (using Eastern Time)
       const today = getTodayInEasternTime();
+      console.log(`📍 [ADMIN-DASHBOARD] Today (Eastern): ${today}`);
+
       const rollingBookings = allBookings.filter(booking => {
         const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
         return bookingDate >= today;
       });
 
+      console.log(`✓ [ADMIN-DASHBOARD] After filtering: ${rollingBookings.length} bookings to display`);
+      if (rollingBookings.length > 0) {
+        console.log(`✓ [ADMIN-DASHBOARD] First visible date: ${rollingBookings[0].booking_date?.split('T')[0]}`);
+      }
+
       renderBookingsTable(rollingBookings);
       setupFilterListeners();
     } catch (error) {
-      console.error('Error loading bookings:', error);
+      console.error('❌ [ADMIN-DASHBOARD] Error loading bookings:', error);
+      alert('Error loading bookings: ' + error.message);
     }
   }
 
   // Render bookings table with current filters
   function renderBookingsTable(bookings) {
     const tbody = document.getElementById('bookingsTableBody');
+
+    // Update debug display
+    const debugElement = document.getElementById('debugFirstDate');
+    if (debugElement && bookings && bookings.length > 0) {
+      const firstDate = new Date(bookings[0].booking_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      debugElement.textContent = firstDate;
+      console.log(`✓ [RENDER] Debug display updated: First date = ${firstDate}`);
+    }
+
     if (!bookings || bookings.length === 0) {
       tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
+      if (debugElement) {
+        debugElement.textContent = 'No data';
+      }
       return;
     }
 
-    // Extra defensive filter: Remove any May 1, 2026 entries (these should never appear)
+    // CRITICAL DEFENSIVE FILTERS - Apply MULTIPLE layers
+
+    // Layer 1: Exclude any May 1, 2026 entries (should never exist but double-check)
     const filtered = bookings.filter(booking => {
       const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-      return bookingDate !== '2026-05-01';
+      const hasMay1 = bookingDate === '2026-05-01';
+      if (hasMay1) {
+        console.warn(`⚠️  [RENDER] WARNING: May 1 row detected and filtered out: ${booking.customer_name}`);
+      }
+      return !hasMay1;
     });
 
-    // Also ensure we only show today and forward (rolling window)
+    // Layer 2: Rolling window - only today and forward (Eastern Time)
     const today = getTodayInEasternTime();
     const rollingFiltered = filtered.filter(booking => {
       const bookingDate = new Date(booking.booking_date).toISOString().split('T')[0];
-      return bookingDate >= today;
+      const isValid = bookingDate >= today;
+      if (!isValid) {
+        console.warn(`⚠️  [RENDER] WARNING: Pre-today row filtered out: ${bookingDate} (today=${today})`);
+      }
+      return isValid;
     });
 
+    console.log(`✓ [RENDER] After all filters: ${rollingFiltered.length} rows to display`);
+
     if (rollingFiltered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
+      const noDataMsg = '<tr><td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px;">No bookings found</td></tr>';
+      tbody.innerHTML = noDataMsg;
+      console.log('📭 [RENDER] No bookings to display');
       return;
     }
 
