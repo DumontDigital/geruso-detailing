@@ -678,3 +678,4 @@ startServer().catch((error) => {
   console.error('[Startup] Unexpected error:', error);
   process.exit(1);
 });
+// Trigger redeploy 1777734948
