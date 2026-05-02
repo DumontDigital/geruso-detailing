@@ -273,8 +273,13 @@ app.get('/api/owner/bookings', async (req, res) => {
     );
 
     const currentET = getCurrentTimeInEastern();
-    const currentDate = currentET.date;
-    const currentTimeMinutes = currentET.timeInMinutes;
+    const currentDateStr = currentET.date; // YYYY-MM-DD
+    const currentTimeStr = currentET.time; // HH:MM in 24-hour format
+
+    // Build current datetime in comparable format: YYYY-MM-DD HH:MM (24-hour)
+    const currentDateTimeStr = `${currentDateStr} ${currentTimeStr}`;
+
+    console.log(`[API] Current Eastern Time: ${currentDateTimeStr}`);
 
     // Filter out past available slots, but keep all real customer bookings
     const filteredBookings = result.rows
@@ -304,44 +309,45 @@ app.get('/api/owner/bookings', async (req, res) => {
           return true;
         }
 
-        // For placeholder available slots, filter out past ones
-        const bookingDateOnly = booking.booking_date; // Now a YYYY-MM-DD string
+        // For placeholder available slots, filter out any slot that is NOT in the future
+        const bookingDateStr = booking.booking_date; // YYYY-MM-DD
 
-        // Hide slots on past dates
-        if (bookingDateOnly < currentDate) {
-          console.log(`[API] Filtering out past slot: ${bookingDateOnly} < ${currentDate}`);
-          return false;
+        // Parse slot time in HH:MM AM/PM format to 24-hour HH:MM
+        const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+        const timeMatch = booking.booking_time.match(timeRegex);
+
+        if (!timeMatch) {
+          // If we can't parse the time, keep the slot
+          return true;
         }
 
-        // For slots on today, hide slots that have already passed
-        if (bookingDateOnly === currentDate) {
-          // Parse time in HH:MM AM/PM format
-          const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
-          const match = booking.booking_time.match(timeRegex);
-          if (match) {
-            let hour = parseInt(match[1]);
-            const minute = parseInt(match[2]);
-            const ampm = match[3].toUpperCase();
+        let hour = parseInt(timeMatch[1]);
+        const minute = parseInt(timeMatch[2]);
+        const ampm = timeMatch[3].toUpperCase();
 
-            // Convert to 24-hour format
-            if (ampm === 'PM' && hour !== 12) {
-              hour += 12;
-            } else if (ampm === 'AM' && hour === 12) {
-              hour = 0;
-            }
-
-            const slotTimeInMinutes = hour * 60 + minute;
-            if (slotTimeInMinutes <= currentTimeMinutes) {
-              console.log(`[API] Filtering out past time slot: ${booking.booking_time} (${slotTimeInMinutes}) <= ${currentTimeMinutes}`);
-              return false; // Hide this slot (already passed)
-            }
-          }
+        // Convert to 24-hour format
+        if (ampm === 'PM' && hour !== 12) {
+          hour += 12;
+        } else if (ampm === 'AM' && hour === 12) {
+          hour = 0;
         }
 
-        return true; // Keep this slot
+        const slotTimeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
+        // Build full slot datetime in comparable format: YYYY-MM-DD HH:MM
+        const slotDateTimeStr = `${bookingDateStr} ${slotTimeStr}`;
+
+        // Compare: slot must be GREATER than current datetime
+        const isInFuture = slotDateTimeStr > currentDateTimeStr;
+
+        if (!isInFuture) {
+          console.log(`[API] Filtering out past/present slot: ${slotDateTimeStr} <= ${currentDateTimeStr}`);
+        }
+
+        return isInFuture;
       });
 
-    console.log(`[API] Returned ${filteredBookings.length} bookings (current ET: ${currentDate} ${currentET.time})`);
+    console.log(`[API] Returned ${filteredBookings.length} bookings`);
     res.json({ bookings: filteredBookings });
   } catch (error) {
     console.error('Error fetching bookings:', error);
