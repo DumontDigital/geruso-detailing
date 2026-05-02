@@ -297,8 +297,8 @@ app.post('/api/admin/reset-availability', async (req, res) => {
 
 // Explicit catch-all: serve index for non-admin routes
 app.use((req, res) => {
-  // Skip catch-all for API routes and admin routes
-  if (req.path.startsWith('/api') || req.path.startsWith('/admin')) {
+  // Skip catch-all for API routes only (admin routes have explicit handlers above)
+  if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Not Found' });
   }
   res.sendFile(path.join(__dirname, 'index.html'));
