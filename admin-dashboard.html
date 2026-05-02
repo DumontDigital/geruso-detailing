@@ -186,19 +186,33 @@
         </div>
 
         <!-- Search and Filter Controls -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
-          <input type="text" id="searchInput" class="table-filter" placeholder="Search by name, phone, or email..." style="grid-column: span 1;">
-          <input type="date" id="dateFilter" class="table-filter" style="grid-column: span 1;">
-          <select class="table-filter" id="statusFilter" style="grid-column: span 1;">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="paid">Paid</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
-          </select>
-          <button class="table-filter" id="clearFiltersBtn" style="background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); cursor: pointer; font-weight: 600;">Clear Filters</button>
-        </div>
+        <fieldset style="border: none; padding: 0; margin: 0 0 20px 0;">
+          <legend style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px;">Filters</legend>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div style="display: flex; flex-direction: column;">
+              <label for="searchInput" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Search by name, phone, or email</label>
+              <input type="text" id="searchInput" class="table-filter" placeholder="Search..." style="grid-column: span 1;">
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <label for="dateFilter" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Filter by date</label>
+              <input type="date" id="dateFilter" class="table-filter" style="grid-column: span 1;">
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <label for="statusFilter" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Filter by status</label>
+              <select class="table-filter" id="statusFilter" style="grid-column: span 1;">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="paid">Paid</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="table-filter" id="clearFiltersBtn" style="background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); cursor: pointer; font-weight: 600; width: 100%;" aria-label="Clear all filters">Clear Filters</button>
+            </div>
+          </div>
+        </fieldset>
 
         <div id="bookingsTableContainer" style="overflow-x: auto;">
           <table>
@@ -407,6 +421,26 @@
     });
   });
 
+  // MIDNIGHT EASTERN TIME ROTATION
+  function setupMidnightRotation() {
+    const checkMidnight = () => {
+      const now = new Date();
+      const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+
+      // Check if hour is 0 (midnight) and we haven't rotated yet today
+      if (eastern.getHours() === 0 && eastern.getMinutes() < 1) {
+        console.log('🌙 [ADMIN-DASHBOARD] Midnight Eastern Time detected - rotating schedule');
+        if (document.getElementById('bookingsPage')?.classList.contains('active')) {
+          loadBookings();
+          loadAvailability();
+        }
+      }
+    };
+
+    // Check every 30 seconds for midnight
+    setInterval(checkMidnight, 30000);
+  }
+
   // AUTO-LOAD: Call loadBookings() on page initialization if Bookings tab is active
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 [ADMIN-DASHBOARD] Page initialized, checking active tab');
@@ -415,6 +449,7 @@
       console.log('📖 [ADMIN-DASHBOARD] Bookings tab is active, loading bookings...');
       loadBookings();
     }
+    setupMidnightRotation();
   });
 
   // Also load if Bookings page is visible
@@ -696,6 +731,34 @@
     });
   }
 
+  // Toggle availability for a day
+  async function toggleAvailability(dateStr, currentlyAvailable) {
+    try {
+      const newStatus = !currentlyAvailable;
+      const response = await fetch('/api/availability', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          date: dateStr.split('T')[0],
+          isAvailable: newStatus,
+          dayOfWeek: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' })
+        })
+      });
+
+      if (response.ok) {
+        loadAvailability();
+      } else {
+        alert('Failed to update availability');
+      }
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      alert('Error: ' + error.message);
+    }
+  }
+
   // Load availability
   async function loadAvailability() {
     try {
@@ -728,19 +791,28 @@
         return;
       }
 
-      tbody.innerHTML = data.availability.map(av => `
+      tbody.innerHTML = data.availability.map(av => {
+        const dateStr = new Date(av.date).toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const displayDate = `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
+
+        return `
         <tr>
-          <td>${new Date(av.date).toLocaleDateString()}</td>
+          <td><strong>${displayDate}</strong></td>
           <td>${av.day_of_week}</td>
           <td>${av.start_time || '—'} - ${av.end_time || '—'}</td>
           <td><span class="status-badge status-${av.is_available ? 'confirmed' : 'pending'}">${av.is_available ? 'Available' : 'Closed'}</span></td>
           <td>
-            <div class="action-buttons">
-              <button class="action-btn" title="Edit availability for this day">Edit</button>
+            <div class="action-buttons" style="gap: 6px;">
+              <button class="action-btn" title="Toggle availability for ${displayDate}" aria-label="Toggle availability for ${displayDate}" onclick="toggleAvailability('${av.date}', ${av.is_available})">
+                ${av.is_available ? 'Close' : 'Reopen'}
+              </button>
             </div>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     } catch (error) {
       console.error('Error loading availability:', error);
     }
