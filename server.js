@@ -559,6 +559,49 @@ async function initializeDatabase() {
 }
 
 // Start server after database initialization
+// Regenerate availability slots using correct Eastern Time logic
+async function regenerateAvailabilitySlots() {
+  try {
+    console.log('[Startup] Regenerating availability slots with Eastern Time...');
+
+    const { getUpcomingAvailability, createPlaceholderBooking } = require('./utils/availability');
+
+    // Clear old slots
+    await pool.query('DELETE FROM bookings WHERE customer_email = $1 AND customer_name = $2',
+      ['booking.test@gmail.com', 'Available Slot']);
+
+    // Generate fresh slots
+    const slots = getUpcomingAvailability(60);
+    let insertedCount = 0;
+
+    for (const slot of slots) {
+      try {
+        const placeholder = createPlaceholderBooking(slot.dateKey, slot.time);
+        await pool.query(
+          `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status, stripe_session_id, stripe_payment_intent_id, deposit_amount, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+          [
+            placeholder.id, placeholder.customer_name, placeholder.customer_email, placeholder.customer_phone,
+            placeholder.service_address, placeholder.service_type, placeholder.booking_date, placeholder.booking_time,
+            placeholder.vehicle_type, placeholder.notes, placeholder.vehicle_photo, placeholder.status,
+            placeholder.payment_status, placeholder.stripe_session_id, placeholder.stripe_payment_intent_id,
+            placeholder.deposit_amount, placeholder.created_at, placeholder.updated_at
+          ]
+        );
+        insertedCount++;
+      } catch (error) {
+        if (error.code !== '23505') { // Skip duplicate key errors
+          console.error('[Startup] Error inserting slot:', error.message);
+        }
+      }
+    }
+
+    console.log(`[Startup] ✓ Regenerated ${insertedCount} availability slots using Eastern Time`);
+  } catch (error) {
+    console.error('[Startup] Warning: Failed to regenerate slots:', error.message);
+  }
+}
+
 async function startServer() {
   console.log('[Startup] ════════════════════════════════════════');
   console.log('[Startup] Starting Geruso Detailing server... [PHASE-1-BUILD-2025]');
@@ -575,6 +618,9 @@ async function startServer() {
     console.error('[Startup] ✗ Server startup failed: Database initialization failed');
     process.exit(1);
   }
+
+  // Regenerate availability slots with correct Eastern Time logic
+  await regenerateAvailabilitySlots();
 
   // Start listening for connections
   app.listen(PORT, '0.0.0.0', () => {
