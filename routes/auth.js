@@ -87,4 +87,40 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Forgot password endpoint
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if admin exists
+    const result = await pool.query(
+      'SELECT id, email FROM admins WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      // Don't reveal if email exists, for security
+      return res.json({
+        success: true,
+        message: 'If an admin account exists with this email, instructions will be sent shortly.'
+      });
+    }
+
+    // For now, return a message that password reset is not fully connected
+    res.json({
+      success: true,
+      message: 'Password reset is not connected yet. Please contact the site owner at 401-490-1236 to reset your password.',
+      contactPhone: '401-490-1236'
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

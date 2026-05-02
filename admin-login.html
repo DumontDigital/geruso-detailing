@@ -80,7 +80,9 @@
     </form>
 
     <div class="login-footer">
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Forgot your password?</p>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+        <a href="#" id="forgotPasswordLink" style="color: var(--primary); cursor: pointer; text-decoration: none;">Forgot your password?</a>
+      </p>
       <a href="/">Back to Website</a>
     </div>
   </div>
@@ -126,6 +128,36 @@
     messageBox.className = `message-box ${type}`;
     messageBox.textContent = text;
   }
+
+  // Forgot password handler
+  document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    const email = document.querySelector('input[name="email"]').value;
+    if (!email) {
+      showMessage('Please enter your email address first.', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showMessage(data.message || 'Password reset request submitted.', 'info');
+      } else {
+        showMessage(data.error || 'Error processing request.', 'error');
+      }
+    } catch (error) {
+      showMessage('Connection error. Please try again.', 'error');
+      console.error('Forgot password error:', error);
+    }
+  });
 
   // Check if already logged in
   if (localStorage.getItem('adminToken')) {

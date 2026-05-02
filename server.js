@@ -232,6 +232,46 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Create default admin account if none exists
+async function createDefaultAdminIfNeeded() {
+  try {
+    const pool = require('./db');
+    const bcrypt = require('bcryptjs');
+    const { v4: uuidv4 } = require('uuid');
+
+    // Check if any admin exists
+    const adminCheck = await pool.query('SELECT COUNT(*) as count FROM admins');
+    const adminCount = parseInt(adminCheck.rows[0].count);
+
+    if (adminCount === 0) {
+      console.log('[Admin] No admin account found, creating default admin...');
+
+      const defaultEmail = 'admin@gerusodetailing.com';
+      const defaultPassword = 'SecurePassword123!';
+
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(defaultPassword, salt);
+
+      // Create the admin account
+      const result = await pool.query(
+        'INSERT INTO admins (id, email, password_hash, is_active) VALUES ($1, $2, $3, $4) RETURNING id, email',
+        [uuidv4(), defaultEmail, passwordHash, true]
+      );
+
+      console.log('[Admin] ✓ Default admin account created successfully');
+      console.log('[Admin] Email:', defaultEmail);
+      console.log('[Admin] Password:', defaultPassword);
+      console.log('[Admin] Login at: /admin/login');
+    } else {
+      console.log('[Admin] ✓ Admin account(s) already exist');
+    }
+  } catch (error) {
+    console.error('[Admin] Error creating default admin:', error.message);
+    // Don't fail the startup if admin creation fails, the account might already exist
+  }
+}
+
 // Initialize database on startup
 async function initializeDatabase() {
   try {
@@ -251,6 +291,9 @@ async function initializeDatabase() {
     // Execute the migration
     await pool.query(migrationSQL);
     console.log('[Database] ✓ Database schema initialized successfully');
+
+    // Create default admin if needed
+    await createDefaultAdminIfNeeded();
 
     return true;
   } catch (error) {
