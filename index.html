@@ -894,6 +894,7 @@
     loadBookings();
     loadSchedule();
     setupTabNavigation();
+    setupAutoRotation();
   }
   
   function setupTabNavigation() {
@@ -914,6 +915,23 @@
         if (tab === 'schedule') loadSchedule();
         if (tab === 'bookings') loadBookings();
       });
+    });
+  }
+
+  // Setup auto-rotation: refresh bookings every 60 seconds to maintain live rotating schedule
+  function setupAutoRotation() {
+    // Refresh bookings every 60 seconds when dashboard is active
+    const rotationInterval = setInterval(() => {
+      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block') {
+        loadBookings();
+      }
+    }, 60000); // 60 seconds
+
+    // Also refresh when the page regains focus
+    window.addEventListener('focus', () => {
+      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block') {
+        loadBookings();
+      }
     });
   }
 
@@ -951,6 +969,37 @@
     }
   }
 
+  // Get current time in Eastern Time (returns time in minutes since midnight)
+  function getCurrentTimeET() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(now);
+    const hour = parseInt(parts.find(p => p.type === 'hour').value);
+    const minute = parseInt(parts.find(p => p.type === 'minute').value);
+    return { hour, minute, time: hour * 60 + minute };
+  }
+
+  // Get today's date in Eastern Time (YYYY-MM-DD format)
+  function getTodayET() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = formatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    return `${year}-${month}-${day}`;
+  }
+
   async function loadBookings() {
     try {
       const response = await fetch('/api/owner/bookings');
@@ -960,9 +1009,34 @@
       tbody.innerHTML = '';
       
       if (data.bookings && data.bookings.length) {
-        data.bookings.forEach(booking => {
-          const statusColor = booking.status === 'confirmed' ? 'var(--success)' : 
-                            booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
+        // Get current time and today's date in Eastern Time
+        const currentTimeET = getCurrentTimeET();
+        const todayET = getTodayET();
+
+        // Filter out: placeholder rows AND past times for today
+        const filteredBookings = data.bookings.filter(booking => {
+          // Skip placeholder "Available Slot" rows
+          if (booking.customer_email === 'booking.test@gmail.com') {
+            return false;
+          }
+
+          // For today's date, skip times that have already passed
+          if (booking.booking_date && booking.booking_date.split('T')[0] === todayET) {
+            const [hour, minute] = booking.booking_time.split(':').map(Number);
+            const bookingTimeInMinutes = hour * 60 + minute;
+            if (bookingTimeInMinutes <= currentTimeET.time) {
+              return false; // Skip this time (already passed)
+            }
+          }
+
+          return true; // Keep this booking
+        });
+
+        // Render filtered bookings
+        if (filteredBookings.length > 0) {
+          filteredBookings.forEach(booking => {
+            const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
+                              booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
           
           tbody.innerHTML += `
             <tr style="border-bottom: 1px solid var(--border);">
@@ -988,9 +1062,12 @@
               </td>
             </tr>
           `;
-        });
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No upcoming bookings</td></tr>';
+        }
       } else {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No upcoming bookings</td></tr>';
       }
     } catch (error) {
       console.error('Error loading bookings:', error);

@@ -239,8 +239,26 @@ app.post('/api/owner/login', (req, res) => {
 // Get all bookings for owner
 app.get('/api/owner/bookings', async (req, res) => {
   try {
+    // Get today's date in Eastern Time for filtering
+    const now = new Date();
+    const easternFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = easternFormatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const todayET = `${year}-${month}-${day}`;
+
+    // Query only future bookings, sorted ascending (oldest first) for rotating schedule
     const result = await pool.query(
-      'SELECT * FROM bookings ORDER BY booking_date DESC, booking_time DESC'
+      `SELECT * FROM bookings
+       WHERE booking_date::date >= $1::date
+       ORDER BY booking_date ASC, booking_time ASC`,
+      [todayET]
     );
     res.json({ bookings: result.rows });
   } catch (error) {
