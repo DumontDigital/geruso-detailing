@@ -44,11 +44,16 @@ app.get('/booking', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(bookingHtml);
 });
-// Admin routes - must be before catch-all
+// ========== ADMIN ROUTES ==========
+// Single admin entry point: /admin
+// Client-side handles auth checking and redirects
+
+// Admin login page
 app.get('/admin/login', (req, res) => {
   try {
     const filePath = path.join(__dirname, 'admin-login.html');
-    console.log('[Admin Login] Serving from:', filePath);
+    console.log('[Admin Login] Serving login page');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.sendFile(filePath);
   } catch (error) {
     console.error('[Admin Login] Error:', error.message);
@@ -56,59 +61,36 @@ app.get('/admin/login', (req, res) => {
   }
 });
 
+// Main admin entry point: /admin
+// Serves dashboard - client-side checks auth and redirects to /admin/login if needed
 app.get('/admin', (req, res) => {
   try {
     const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin Dashboard] Serving from:', filePath);
+    console.log('[Admin] Main entry point - serving admin dashboard');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.sendFile(filePath);
   } catch (error) {
-    console.error('[Admin Dashboard] Error:', error.message);
-    res.status(500).send('Error loading dashboard');
+    console.error('[Admin] Error:', error.message);
+    res.status(500).send('Error loading admin panel');
   }
 });
 
+// Route aliases that redirect to /admin (for backwards compatibility)
 app.get('/admin/dashboard', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin Dashboard] Serving from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('[Admin Dashboard] Error:', error.message);
-    res.status(500).send('Error loading dashboard');
-  }
+  console.log('[Admin] Redirecting /admin/dashboard to /admin');
+  res.redirect('/admin');
 });
-
 app.get('/admin/bookings', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin Bookings] Serving from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('[Admin Bookings] Error:', error.message);
-    res.status(500).send('Error loading bookings');
-  }
+  console.log('[Admin] Redirecting /admin/bookings to /admin');
+  res.redirect('/admin');
 });
-
 app.get('/admin/services', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin Services] Serving from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('[Admin Services] Error:', error.message);
-    res.status(500).send('Error loading services');
-  }
+  console.log('[Admin] Redirecting /admin/services to /admin');
+  res.redirect('/admin');
 });
-
 app.get('/admin/settings', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'admin-dashboard.html');
-    console.log('[Admin Settings] Serving from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('[Admin Settings] Error:', error.message);
-    res.status(500).send('Error loading settings');
-  }
+  console.log('[Admin] Redirecting /admin/settings to /admin');
+  res.redirect('/admin');
 });
 app.get('/success', (req, res) => res.sendFile(path.join(__dirname, 'success.html')));
 app.get('/cancel', (req, res) => res.sendFile(path.join(__dirname, 'cancel.html')));
