@@ -697,6 +697,20 @@
   </div>
 </footer>
 
+<!-- Hidden Owner Access Link - Only visible when ?owner=true -->
+<div id="ownerAccessContainer" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100;">
+  <a href="?owner=true" style="
+    display: inline-block;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: #000;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.4);
+  ">Owner Access</a>
+</div>
 
 <!-- OWNER CONTROL PANEL - Phase 1: Booking & Schedule Management -->
 <script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
@@ -824,7 +838,13 @@
   if (urlParams.get('owner') === 'true') {
     ownerPanel.style.display = 'block';
     document.body.style.overflow = 'hidden';
-    
+
+    // Show owner access link in corner
+    const ownerAccessContainer = document.getElementById('ownerAccessContainer');
+    if (ownerAccessContainer) {
+      ownerAccessContainer.style.display = 'block';
+    }
+
     // Check if already logged in (localStorage)
     if (localStorage.getItem('ownerLoggedIn') === 'true') {
       showDashboard();
@@ -896,7 +916,41 @@
       });
     });
   }
-  
+
+  // Format booking date/time for owner dashboard display
+  function formatBookingDateTime(dateStr, timeStr) {
+    try {
+      // Parse the booking_date from database (ISO format or direct date)
+      const date = new Date(dateStr);
+
+      // Format date using Eastern Time
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      const formattedDate = formatter.format(date);
+
+      // timeStr is already in format like "12:00 PM" or "14:00"
+      // If 24-hour format, convert to 12-hour
+      let displayTime = timeStr;
+      if (timeStr && !timeStr.includes('AM') && !timeStr.includes('PM')) {
+        const [hour, minute] = timeStr.split(':');
+        const hourNum = parseInt(hour);
+        const ampm = hourNum >= 12 ? 'PM' : 'AM';
+        const displayHour = hourNum > 12 ? hourNum - 12 : (hourNum === 0 ? 12 : hourNum);
+        displayTime = `${displayHour}:${minute} ${ampm}`;
+      }
+
+      return `${formattedDate} ${displayTime}`;
+    } catch (error) {
+      console.error('Error formatting booking date:', error);
+      return `${dateStr} ${timeStr}`; // Fallback to raw values
+    }
+  }
+
   async function loadBookings() {
     try {
       const response = await fetch('/api/owner/bookings');
@@ -916,7 +970,7 @@
                 <div style="font-weight: 700;">${booking.customer_name}</div>
                 <small style="color: var(--text-muted);">${booking.customer_email}</small>
               </td>
-              <td style="padding: 12px;">${booking.booking_date} ${booking.booking_time}</td>
+              <td style="padding: 12px;">${formatBookingDateTime(booking.booking_date, booking.booking_time)}</td>
               <td style="padding: 12px;">${booking.service_type}</td>
               <td style="padding: 12px;">
                 <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${booking.status}</span>

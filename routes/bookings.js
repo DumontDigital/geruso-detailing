@@ -16,7 +16,7 @@ router.get('/public/booked-slots', async (req, res) => {
 
     const result = await pool.query(
       `SELECT booking_date, booking_time FROM bookings
-       WHERE status IN ('pending', 'confirmed', 'paid')
+       WHERE status IN ('pending', 'confirmed', 'paid', 'completed')
        AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
       []
     );
