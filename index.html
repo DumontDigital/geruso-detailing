@@ -1019,11 +1019,6 @@
 
       // Filter and process bookings
       const filteredBookings = data.bookings.filter(booking => {
-        // Skip placeholder rows
-        if (booking.customer_email === 'booking.test@gmail.com') {
-          return false;
-        }
-
         // For today's date, skip times that have already passed
         const bookingDateOnly = booking.booking_date.split('T')[0];
         if (bookingDateOnly === todayET) {
@@ -1034,7 +1029,7 @@
           }
         }
 
-        return true; // Keep this booking
+        return true; // Keep this booking (real bookings + available slots)
       });
 
       // Render filtered bookings
