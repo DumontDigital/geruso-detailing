@@ -225,4 +225,60 @@ const sendOwnerNotification = async (bookingData) => {
   }
 };
 
-module.exports = { sendQuoteEmail, sendBookingConfirmation, sendOwnerNotification };
+const sendOwnerEmail = async (requestData) => {
+  const { requestType, requestDetails, submittedAt } = requestData;
+
+  console.log('[Owner Email] Sending owner update request');
+
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[Owner Email] FAILED - Missing RESEND_API_KEY');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  if (!process.env.OWNER_EMAIL) {
+    console.error('[Owner Email] FAILED - OWNER_EMAIL not configured');
+    return { success: false, error: 'Owner email not configured' };
+  }
+
+  const requestTypeLabels = {
+    price: 'Price Change Request',
+    schedule: 'Schedule Change Request',
+    service: 'Service Edit/New Service',
+    photo: 'Gallery Photo Update',
+    other: 'Other Request'
+  };
+
+  const htmlContent = `
+    <h2>${requestTypeLabels[requestType] || requestType}</h2>
+    <p><strong>Request Type:</strong> ${requestTypeLabels[requestType] || requestType}</p>
+    <p><strong>Submitted:</strong> ${new Date(submittedAt).toLocaleString()}</p>
+    <hr>
+    <p><strong>Details:</strong></p>
+    <p>${requestDetails.replace(/\n/g, '<br>')}</p>
+    <hr>
+    <p><small>This request was submitted via the Geruso Detailing website owner panel.</small></p>
+  `;
+
+  try {
+    console.log('[Owner Email] Calling Resend API...');
+    const result = await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+      to: process.env.OWNER_EMAIL,
+      subject: `Owner Update Request - ${requestTypeLabels[requestType] || requestType}`,
+      html: htmlContent,
+    });
+
+    if (result.error) {
+      console.error('[Owner Email] FAILED - Resend error:', result.error);
+      return { success: false, error: result.error.message };
+    }
+
+    console.log('[Owner Email] SUCCESS - Email ID:', result.data.id);
+    return { success: true };
+  } catch (error) {
+    console.error('[Owner Email] FAILED - Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+module.exports = { sendQuoteEmail, sendBookingConfirmation, sendOwnerNotification, sendOwnerEmail };

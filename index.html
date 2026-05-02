@@ -697,318 +697,116 @@
   </div>
 </footer>
 
-<!-- ADMIN PANEL - Hidden unless ?admin=true in URL -->
-<div id="adminPanel" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--light-bg); z-index: 1000; overflow-y: auto;">
-  <div id="adminLoginSection" style="display:none;">
-    <div style="max-width: 420px; margin: 60px auto; padding: 40px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px;">
-      <h2 style="margin-bottom: 24px; color: var(--primary);">Admin Login</h2>
-      <form id="adminLoginForm">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">Email</label>
-          <input type="email" id="adminEmail" placeholder="admin@gerusodetailing.com" required style="width: 100%; padding: 12px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
-        </div>
-        <div style="margin-bottom: 24px;">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">Password</label>
-          <input type="password" id="adminPassword" placeholder="Enter password" required style="width: 100%; padding: 12px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
-        </div>
-        <div id="adminLoginError" style="margin-bottom: 16px; padding: 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; border-radius: 6px; display: none;"></div>
-        <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Sign In</button>
-      </form>
-    </div>
-  </div>
 
-  <div id="adminDashboardSection" style="display:none;">
-    <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
-      <div style="font-weight: 700; color: var(--primary);">Admin Dashboard</div>
-      <button id="adminLogoutBtn" style="background: var(--primary); color: #000; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Logout</button>
-    </nav>
-
-    <div style="display: flex; height: calc(100vh - 60px);">
-      <div style="width: 250px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0;">
-        <button class="admin-nav-btn" data-section="dashboard" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📊 Dashboard</button>
-        <button class="admin-nav-btn" data-section="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; border-left: 3px solid transparent;">📅 Bookings</button>
-        <button class="admin-nav-btn" data-section="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; border-left: 3px solid transparent;">🔧 Services</button>
-        <button class="admin-nav-btn" data-section="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; border-left: 3px solid transparent;">📝 Content</button>
+<!-- OWNER REQUEST FORM -->
+<div id="ownerPanel" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--light-bg); z-index: 1000; overflow-y: auto; padding: 40px 24px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <button id="closeOwnerPanel" style="background: var(--primary); color: #000; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; margin-bottom: 24px;">← Back</button>
+    
+    <h2 style="margin-bottom: 24px; color: var(--primary);">Business Owner - Update Requests</h2>
+    
+    <form id="ownerRequestForm" style="background: var(--light-bg2); padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 700;">Request Type</label>
+        <select id="requestType" required style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+          <option value="">-- Select Type --</option>
+          <option value="price">Price Change Request</option>
+          <option value="schedule">Schedule Change Request</option>
+          <option value="service">Service Edit/New Service</option>
+          <option value="photo">Gallery Photo Update</option>
+          <option value="other">Other Request</option>
+        </select>
       </div>
-
-      <div style="flex: 1; padding: 24px; overflow-y: auto;">
-        <div id="admin-dashboard" class="admin-section" style="display: block;">
-          <h2 style="margin-bottom: 24px;">Dashboard Overview</h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
-            <div style="background: var(--light-bg2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Today's Bookings</div>
-              <div id="todayCount" style="font-size: 24px; font-weight: 700; color: var(--primary);">-</div>
-            </div>
-            <div style="background: var(--light-bg2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">This Week</div>
-              <div id="weekCount" style="font-size: 24px; font-weight: 700; color: var(--primary);">-</div>
-            </div>
-            <div style="background: var(--light-bg2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Pending</div>
-              <div id="pendingCount" style="font-size: 24px; font-weight: 700; color: var(--accent);">-</div>
-            </div>
-            <div style="background: var(--light-bg2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Week Revenue</div>
-              <div id="weekRevenue" style="font-size: 24px; font-weight: 700; color: var(--success);">$-</div>
-            </div>
-          </div>
-          <div>
-            <h3 style="margin-bottom: 16px;">Upcoming Bookings</h3>
-            <div id="upcomingBookings" style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: var(--light-bg);">
-                  <tr style="border-bottom: 1px solid var(--border);">
-                    <th style="padding: 12px; text-align: left; font-weight: 700;">Customer</th>
-                    <th style="padding: 12px; text-align: left; font-weight: 700;">Date/Time</th>
-                    <th style="padding: 12px; text-align: left; font-weight: 700;">Service</th>
-                    <th style="padding: 12px; text-align: left; font-weight: 700;">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="upcomingBookingsTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div id="admin-bookings" class="admin-section" style="display: none;">
-          <h2 style="margin-bottom: 24px;">Manage Bookings</h2>
-          <div id="bookingsList" style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead style="background: var(--light-bg);">
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Customer</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Date/Time</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Service</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Status</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="bookingsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="admin-services" class="admin-section" style="display: none;">
-          <h2 style="margin-bottom: 24px;">Services</h2>
-          <div id="servicesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
-        </div>
-
-        <div id="admin-content" class="admin-section" style="display: none;">
-          <h2 style="margin-bottom: 24px;">Website Content</h2>
-          <form id="contentForm" style="background: var(--light-bg2); padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="margin-bottom: 16px;">
-              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Phone</label>
-              <input type="tel" id="businessPhone" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
-            </div>
-            <div style="margin-bottom: 16px;">
-              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Email</label>
-              <input type="email" id="businessEmail" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
-            </div>
-            <div style="margin-bottom: 16px;">
-              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Business Address</label>
-              <input type="text" id="businessAddress" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
-            </div>
-            <div style="margin-bottom: 16px;">
-              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Hero Text</label>
-              <textarea id="heroText" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); resize: vertical; min-height: 80px;"></textarea>
-            </div>
-            <button type="submit" style="background: var(--primary); color: #000; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Save Changes</button>
-          </form>
-        </div>
+      
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 700;">Details</label>
+        <textarea id="requestDetails" required placeholder="Describe your request in detail..." style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); min-height: 120px; resize: vertical;"></textarea>
       </div>
-    </div>
+      
+      <div id="photoUploadSection" style="display: none; margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 700;">Upload Photo (if applicable)</label>
+        <input type="file" id="requestPhoto" accept="image/*" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); width: 100%;">
+        <small style="color: var(--text-muted);">JPG, PNG up to 5MB</small>
+      </div>
+      
+      <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Send Request to Owner</button>
+      <div id="ownerRequestStatus" style="margin-top: 12px; padding: 12px; background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); color: var(--primary); border-radius: 6px; display: none; text-align: center;"></div>
+    </form>
   </div>
 </div>
 
 <script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
 <script src="cart.js"></script>
 <script>
-// Admin Panel Integration
+// Owner Panel Access
 (function() {
-  const adminPanel = document.getElementById('adminPanel');
-  const adminLoginSection = document.getElementById('adminLoginSection');
-  const adminDashboardSection = document.getElementById('adminDashboardSection');
-  const adminLoginForm = document.getElementById('adminLoginForm');
-  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
-
-  // Check if ?admin=true in URL
+  const ownerPanel = document.getElementById('ownerPanel');
+  const closeBtn = document.getElementById('closeOwnerPanel');
+  const ownerForm = document.getElementById('ownerRequestForm');
+  const photoSection = document.getElementById('photoUploadSection');
+  const requestTypeSelect = document.getElementById('requestType');
+  
+  // Check for ?owner parameter in URL
   const urlParams = new URLSearchParams(window.location.search);
-  const isAdminMode = urlParams.get('admin') === 'true';
-
-  if (isAdminMode) {
-    adminPanel.style.display = 'block';
-    const adminToken = localStorage.getItem('adminToken');
-
-    if (adminToken) {
-      showAdminDashboard();
-      loadDashboardData();
-    } else {
-      adminLoginSection.style.display = 'block';
-    }
+  if (urlParams.get('owner') === 'true') {
+    ownerPanel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
   }
-
-  function showAdminDashboard() {
-    adminLoginSection.style.display = 'none';
-    adminDashboardSection.style.display = 'block';
-    setupAdminNavigation();
-  }
-
-  function setupAdminNavigation() {
-    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const section = btn.dataset.section;
-        document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-        document.getElementById('admin-' + section).style.display = 'block';
-
-        document.querySelectorAll('.admin-nav-btn').forEach(b => {
-          b.style.background = 'transparent';
-          b.style.color = 'var(--text)';
-        });
-        btn.style.background = 'var(--primary)';
-        btn.style.color = '#000';
-
-        if (section === 'bookings') loadBookings();
-        if (section === 'services') loadServices();
-        if (section === 'content') loadContent();
-      });
-    });
-  }
-
-  async function loadDashboardData() {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/dashboard', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const data = await response.json();
-
-      document.getElementById('todayCount').textContent = data.todayCount || 0;
-      document.getElementById('weekCount').textContent = data.weekCount || 0;
-      document.getElementById('pendingCount').textContent = data.pendingCount || 0;
-      document.getElementById('weekRevenue').textContent = '$' + (data.revenue || 0);
-
-      const tbody = document.getElementById('upcomingBookingsTable');
-      tbody.innerHTML = '';
-      if (data.upcomingBookings && data.upcomingBookings.length) {
-        data.upcomingBookings.forEach(b => {
-          tbody.innerHTML += `<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 12px;">${b.customer_name}</td><td style="padding: 12px;">${b.booking_date} ${b.booking_time}</td><td style="padding: 12px;">${b.service_type}</td><td style="padding: 12px;"><span style="background: ${b.status === 'confirmed' ? 'var(--success)' : 'var(--accent)'}; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${b.status}</span></td></tr>`;
-        });
-      }
-    } catch (err) {
-      console.error('Error loading dashboard:', err);
-    }
-  }
-
-  async function loadBookings() {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/bookings', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const data = await response.json();
-
-      const tbody = document.getElementById('bookingsTableBody');
-      tbody.innerHTML = '';
-      if (data.bookings) {
-        data.bookings.forEach(b => {
-          tbody.innerHTML += `<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 12px;">${b.customer_name}</td><td style="padding: 12px;">${b.booking_date} ${b.booking_time}</td><td style="padding: 12px;">${b.service_type}</td><td style="padding: 12px;"><span style="background: ${b.status === 'confirmed' ? 'var(--success)' : 'var(--accent)'}; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${b.status}</span></td><td style="padding: 12px;"><button style="background: var(--primary); color: #000; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" onclick="alert('Edit feature coming soon')">Edit</button></td></tr>`;
-        });
-      }
-    } catch (err) {
-      console.error('Error loading bookings:', err);
-    }
-  }
-
-  async function loadServices() {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/services', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const services = await response.json();
-
-      const list = document.getElementById('servicesList');
-      list.innerHTML = '';
-      services.forEach(s => {
-        list.innerHTML += `<div style="background: var(--light-bg2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);"><div style="font-weight: 700; margin-bottom: 8px;">${s.name}</div><div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">${s.description}</div><div style="color: var(--primary); font-weight: 700;">$${s.price}</div></div>`;
-      });
-    } catch (err) {
-      console.error('Error loading services:', err);
-    }
-  }
-
-  async function loadContent() {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/content', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const content = await response.json();
-
-      document.getElementById('businessPhone').value = content.businessPhone || '';
-      document.getElementById('businessEmail').value = content.businessEmail || '';
-      document.getElementById('businessAddress').value = content.businessAddress || '';
-      document.getElementById('heroText').value = content.heroText || '';
-    } catch (err) {
-      console.error('Error loading content:', err);
-    }
-  }
-
-  // Login Form
-  adminLoginForm.addEventListener('submit', async (e) => {
+  
+  closeBtn.addEventListener('click', () => {
+    ownerPanel.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    window.history.pushState({}, document.title, window.location.pathname);
+  });
+  
+  // Show photo upload for photo request type
+  requestTypeSelect.addEventListener('change', (e) => {
+    photoSection.style.display = e.target.value === 'photo' ? 'block' : 'none';
+  });
+  
+  // Form submission
+  ownerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('adminEmail').value;
-    const password = document.getElementById('adminPassword').value;
-
+    
+    const requestType = document.getElementById('requestType').value;
+    const requestDetails = document.getElementById('requestDetails').value;
+    const statusDiv = document.getElementById('ownerRequestStatus');
+    
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/owner-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.token) {
-        localStorage.setItem('adminToken', data.token);
-        showAdminDashboard();
-        loadDashboardData();
-      } else {
-        document.getElementById('adminLoginError').textContent = data.error || 'Login failed';
-        document.getElementById('adminLoginError').style.display = 'block';
-      }
-    } catch (err) {
-      document.getElementById('adminLoginError').textContent = 'Connection error';
-      document.getElementById('adminLoginError').style.display = 'block';
-    }
-  });
-
-  // Logout
-  adminLogoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/?admin=true';
-  });
-
-  // Content Form
-  document.getElementById('contentForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('adminToken');
-      await fetch('/api/admin/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
         body: JSON.stringify({
-          businessPhone: document.getElementById('businessPhone').value,
-          businessEmail: document.getElementById('businessEmail').value,
-          businessAddress: document.getElementById('businessAddress').value,
-          heroText: document.getElementById('heroText').value
+          requestType,
+          requestDetails,
+          submittedAt: new Date().toISOString()
         })
       });
-      alert('Content saved!');
-    } catch (err) {
-      alert('Error saving content: ' + err.message);
+      
+      const data = await response.json();
+      if (response.ok) {
+        statusDiv.textContent = '✓ Request sent successfully! You will receive email confirmation.';
+        statusDiv.style.display = 'block';
+        ownerForm.reset();
+        photoSection.style.display = 'none';
+        
+        setTimeout(() => {
+          ownerPanel.style.display = 'none';
+          document.body.style.overflow = 'auto';
+        }, 2000);
+      } else {
+        statusDiv.textContent = '✗ Error: ' + (data.error || 'Failed to send request');
+        statusDiv.style.background = 'rgba(239,68,68,0.15)';
+        statusDiv.style.borderColor = 'rgba(239,68,68,0.4)';
+        statusDiv.style.color = '#ef4444';
+        statusDiv.style.display = 'block';
+      }
+    } catch (error) {
+      statusDiv.textContent = '✗ Connection error: ' + error.message;
+      statusDiv.style.background = 'rgba(239,68,68,0.15)';
+      statusDiv.style.borderColor = 'rgba(239,68,68,0.4)';
+      statusDiv.style.color = '#ef4444';
+      statusDiv.style.display = 'block';
     }
   });
 })();
