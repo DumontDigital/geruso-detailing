@@ -72,16 +72,21 @@ router.get('/bookings', verifyToken, async (req, res) => {
   try {
     const { status, search } = req.query;
 
-    let query = 'SELECT * FROM bookings WHERE 1=1';
-    const params = [];
+    // Get today's date in Eastern Time to filter out past dates
+    const today = getTodayInEasternTime();
+
+    let query = 'SELECT * FROM bookings WHERE booking_date::date >= $1::date';
+    const params = [today];
+    let paramIndex = 2;
 
     if (status) {
-      query += ' AND status = $1';
+      query += ` AND status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
 
     if (search) {
-      query += ` AND (customer_name ILIKE '%' || $${params.length + 1} || '%' OR customer_email ILIKE '%' || $${params.length + 1} || '%')`;
+      query += ` AND (customer_name ILIKE '%' || $${paramIndex} || '%' OR customer_email ILIKE '%' || $${paramIndex} || '%')`;
       params.push(search);
     }
 
