@@ -40,6 +40,29 @@
     .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); }
 
+    /* CART STYLES */
+    .cart-icon { font-weight: 700; font-size: 13px; cursor: pointer; }
+    .cart-count { background: var(--accent); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .cart-modal { position: fixed; top: 70px; right: 48px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; width: 420px; max-height: 75vh; overflow-y: auto; z-index: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: none; }
+    .cart-modal.open { display: flex; flex-direction: column; }
+    .cart-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--light-bg); }
+    .cart-header h3 { font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; }
+    .cart-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; }
+    .cart-items { flex: 1; padding: 16px; overflow-y: auto; }
+    .cart-item { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .cart-item-name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .cart-item-price { color: var(--primary); font-weight: 600; margin-bottom: 8px; }
+    .cart-item-remove { background: var(--accent); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .cart-empty { text-align: center; padding: 32px 16px; color: var(--text-muted); }
+    .cart-footer { padding: 16px; border-top: 1px solid var(--border); background: var(--light-bg); }
+    .cart-total { font-size: 14px; margin-bottom: 12px; color: var(--text-muted); }
+    .cart-total-value { font-size: 18px; color: var(--primary); font-weight: 700; }
+    .cart-warning { background: rgba(255,107,107,0.15); border: 1px solid rgba(255,107,107,0.4); color: #ff6b6b; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+    .cart-btn { width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .cart-btn:hover { background: var(--primary-light); }
+    .cart-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (max-width: 960px) { .cart-modal { width: 100%; right: 0; left: 0; max-width: none; border-radius: 12px 12px 0 0; } }
+
     /* SECTIONS */
     .section { display: none; }
     .section.active { display: block; }
@@ -138,8 +161,29 @@
     <div class="nav-actions">
       <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
       <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
+      <button id="cartToggle" class="cart-icon" style="background: none; border: none; cursor: pointer; color: var(--text); display: flex; align-items: center; gap: 6px;">
+        🛒 Cart <span id="cartCountBadge" class="cart-count" style="display: none;">0</span>
+      </button>
     </div>
   </nav>
+
+  <!-- CART MODAL -->
+  <div id="cartModal" class="cart-modal">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button class="cart-close" id="cartClose">×</button>
+    </div>
+    <div class="cart-items" id="cartItemsList">
+      <div class="cart-empty">Your cart is empty</div>
+    </div>
+    <div id="cartWarning" class="cart-warning" style="display: none; margin: 0; border-radius: 0;"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        Subtotal: <span class="cart-total-value" id="cartTotalPrice">$0.00</span>
+      </div>
+      <button class="cart-btn" id="cartCheckoutBtn" onclick="checkoutCart()">Proceed to Booking</button>
+    </div>
+  </div>
 
   <!-- HOME SECTION -->
   <section id="home-section" class="section active">
@@ -205,32 +249,28 @@
     </footer>
   </section>
 
-  <!-- SERVICES SECTION (Placeholder) -->
+  <!-- SERVICES SECTION -->
   <section id="services-section" class="section" style="padding: 80px 48px;">
     <div class="section-inner">
       <div class="section-label">OUR SERVICES</div>
       <h1 class="section-heading">Professional Detailing Services</h1>
       <p class="section-sub">From basic washes to premium ceramic coatings, we have the right service for your vehicle.</p>
-      <div class="cards-grid">
-        <div class="card">
-          <h3>Car Wash</h3>
-          <p>Professional exterior wash with premium products. Starting from $85.</p>
-        </div>
-        <div class="card">
-          <h3>Interior Detailing</h3>
-          <p>Deep clean of interior including vacuuming and stain removal. Starting from $100.</p>
-        </div>
-        <div class="card">
-          <h3>Ceramic Coating</h3>
-          <p>Long-lasting paint protection. $400 for full vehicle coating.</p>
-        </div>
-        <div class="card">
-          <h3>Premium Package</h3>
-          <p>Complete exterior and interior detailing. Starting from $170.</p>
-        </div>
-      </div>
-      <div style="text-align: center; margin-top: 40px;">
-        <button class="btn-primary" onclick="showSection('schedule')">Book a Service</button>
+
+      <!-- MAIN SERVICES -->
+      <h2 style="font-size: 24px; font-weight: 700; color: var(--text); margin: 48px 0 32px 0;">Main Services</h2>
+      <div class="cards-grid" id="mainServicesGrid"></div>
+
+      <!-- ADD-ON SERVICES -->
+      <h2 style="font-size: 24px; font-weight: 700; color: var(--text); margin: 48px 0 32px 0;">Add-On Services</h2>
+      <div class="cards-grid" id="addOnServicesGrid"></div>
+
+      <!-- DISCLAIMERS -->
+      <div style="background: rgba(0,255,65,0.08); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-top: 48px;">
+        <h3 style="color: var(--primary); margin-bottom: 16px; font-size: 18px;">⚠️ Important Information</h3>
+        <ul style="list-style: none; color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+          <li style="margin-bottom: 12px;"><strong style="color: var(--text);">Mapleville Location Services:</strong> Polishing, waxing, ceramic coating, and paint correction must be done at our Mapleville location because they require 6+ hours and must be performed out of direct sunlight.</li>
+          <li><strong style="color: var(--text);">Biohazard Cleanup:</strong> Services involving biohazards (throw up, pet poop, pee/urine, bodily fluids, or similar) require signed consent form before service can be scheduled.</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -405,11 +445,45 @@
   </section>
 
   <script>
+    // ===== SERVICE DATA =====
+    const SERVICES = {
+      // Main services
+      'Full Motorcycle Service': { price: 70, time: '2 hr', type: 'mobile', isAddOn: false },
+      'Interior Detailing': { price: 100, time: '2 hr 15 min', type: 'mobile', isAddOn: false },
+      'Car Wash': { price: 85, time: '1 hr 35 min', type: 'mobile', isAddOn: false },
+      'Ceramic Coating': { price: 400, time: '6 hr', type: 'location', isAddOn: false },
+      'Premium Package': { price: 170, time: '4 hr', type: 'mobile', isAddOn: false },
+      'Ultra Premium': { price: 335, time: '4 hr 45 min', type: 'mobile', isAddOn: false },
+      'Engine Bay Cleaning': { price: 75, time: '1 hr 20 min', type: 'mobile', isAddOn: false },
+      'Full Vehicle Polish': { price: 250, time: '3 hr 15 min', type: 'location', isAddOn: false },
+      // Add-on services
+      'Pet Hair / Odor Elimination': { price: 50, time: '2 hr', type: 'addon', isAddOn: true },
+      'Headlight Restoration': { price: 50, time: '30 min', type: 'addon', isAddOn: true }
+    };
+
+    const MAIN_SERVICES = [
+      'Full Motorcycle Service',
+      'Car Wash',
+      'Interior Detailing',
+      'Premium Package',
+      'Ultra Premium',
+      'Engine Bay Cleaning',
+      'Ceramic Coating',
+      'Full Vehicle Polish'
+    ];
+
+    const ADDON_SERVICES = [
+      'Pet Hair / Odor Elimination',
+      'Headlight Restoration'
+    ];
+
     // ===== GLOBAL STATE =====
     let currentDate = new Date();
     let selectedDate = null;
     let selectedTime = null;
     let bookedTimeSlots = {};
+    let cart = [];
+    let cartServiceType = null; // 'mobile', 'location', or null
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -447,6 +521,153 @@
       };
     }
 
+    // ===== CART FUNCTIONS =====
+    window.addToCart = function(serviceName) {
+      const service = SERVICES[serviceName];
+      if (!service) return;
+
+      // Check cart limit (max 5 items)
+      if (cart.length >= 5) {
+        alert('Cart is full. Maximum 5 services allowed.');
+        return;
+      }
+
+      const serviceType = service.isAddOn ? 'addon' : service.type;
+
+      // Validate mixing rules
+      if (!service.isAddOn) {
+        if (cartServiceType && cartServiceType !== serviceType) {
+          alert(`Cannot mix Mobile and Mapleville services. Your cart has a ${cartServiceType === 'mobile' ? 'Mobile' : 'Mapleville'} service.`);
+          return;
+        }
+        cartServiceType = serviceType;
+      }
+
+      // Add to cart
+      cart.push(serviceName);
+      updateCart();
+    };
+
+    window.removeFromCart = function(index) {
+      cart.splice(index, 1);
+
+      // Reset service type if cart is empty
+      if (cart.length === 0) {
+        cartServiceType = null;
+      } else {
+        // Recalculate service type
+        const nonAddOns = cart.filter(s => !SERVICES[s].isAddOn);
+        if (nonAddOns.length === 0) {
+          cartServiceType = null;
+        } else {
+          cartServiceType = SERVICES[nonAddOns[0]].type;
+        }
+      }
+
+      updateCart();
+    };
+
+    function updateCart() {
+      // Update cart count
+      const badge = document.getElementById('cartCountBadge');
+      if (cart.length > 0) {
+        badge.textContent = cart.length;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+
+      // Render cart items
+      const itemsList = document.getElementById('cartItemsList');
+      if (cart.length === 0) {
+        itemsList.innerHTML = '<div class="cart-empty">Your cart is empty</div>';
+      } else {
+        itemsList.innerHTML = cart.map((service, idx) => {
+          const data = SERVICES[service];
+          return `
+            <div class="cart-item">
+              <div class="cart-item-name">${service}</div>
+              <div class="cart-item-price">$${data.price} • ${data.time}</div>
+              <button class="cart-item-remove" onclick="removeFromCart(${idx})">Remove</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Update total
+      const total = cart.reduce((sum, service) => sum + SERVICES[service].price, 0);
+      document.getElementById('cartTotalPrice').textContent = `$${total.toFixed(2)}`;
+
+      // Show warning if applicable
+      const warning = document.getElementById('cartWarning');
+      const nonAddOns = cart.filter(s => !SERVICES[s].isAddOn);
+      if (nonAddOns.length > 0) {
+        const serviceType = SERVICES[nonAddOns[0]].type;
+        if (serviceType === 'location') {
+          warning.innerHTML = '⚠️ <strong>Mapleville Location Services:</strong> These must be done at our Mapleville location out of direct sunlight.';
+          warning.style.display = 'block';
+        } else {
+          warning.innerHTML = '📍 <strong>Mobile Service:</strong> We will come to your location. Please provide an address in the Schedule section.';
+          warning.style.display = 'block';
+        }
+      } else {
+        warning.style.display = 'none';
+      }
+    }
+
+    window.checkoutCart = function() {
+      if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+      }
+
+      // Store cart in session and go to schedule
+      sessionStorage.setItem('cart', JSON.stringify(cart));
+      showSection('schedule');
+
+      // Close cart modal
+      document.getElementById('cartModal').classList.remove('open');
+    };
+
+    function renderServices() {
+      // Render main services
+      const mainGrid = document.getElementById('mainServicesGrid');
+      mainGrid.innerHTML = MAIN_SERVICES.map(serviceName => {
+        const data = SERVICES[serviceName];
+        const priceDisplay = data.price >= 250 ? `Starting from $${data.price}` : `$${data.price}`;
+        const typeLabel = data.type === 'mobile' ? '🚗 Mobile' : '📍 Mapleville';
+
+        return `
+          <div class="card">
+            <h3>${serviceName}</h3>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+              <div>⏱️ ${data.time}</div>
+              <div>${typeLabel}</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 16px;">${priceDisplay}</div>
+            <button class="btn-primary" onclick="addToCart('${serviceName}')" style="width: 100%; padding: 10px; font-size: 14px;">Add to Cart</button>
+          </div>
+        `;
+      }).join('');
+
+      // Render add-on services
+      const addOnGrid = document.getElementById('addOnServicesGrid');
+      addOnGrid.innerHTML = ADDON_SERVICES.map(serviceName => {
+        const data = SERVICES[serviceName];
+        return `
+          <div class="card">
+            <h3>${serviceName}</h3>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+              <div>⏱️ ${data.time}</div>
+              <div>➕ Extra fee (add with any main service)</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 16px;">$${data.price}</div>
+            <button class="btn-primary" onclick="addToCart('${serviceName}')" style="width: 100%; padding: 10px; font-size: 14px;">Add to Cart</button>
+          </div>
+        `;
+      }).join('');
+    }
+
     // ===== SECTION NAVIGATION =====
     window.showSection = function(sectionId) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -466,6 +687,10 @@
 
         if (sectionId === 'schedule' && document.getElementById('calendarGrid').innerHTML === '') {
           initializeSchedule();
+        }
+
+        if (sectionId === 'services') {
+          renderServices();
         }
       }
     };
@@ -779,6 +1004,24 @@
       }
     `;
     document.head.appendChild(style);
+
+    // ===== CART MODAL CONTROLS =====
+    document.getElementById('cartToggle').addEventListener('click', () => {
+      document.getElementById('cartModal').classList.toggle('open');
+    });
+
+    document.getElementById('cartClose').addEventListener('click', () => {
+      document.getElementById('cartModal').classList.remove('open');
+    });
+
+    // Close cart when clicking outside
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('cartModal');
+      const toggle = document.getElementById('cartToggle');
+      if (!modal.contains(e.target) && !toggle.contains(e.target)) {
+        modal.classList.remove('open');
+      }
+    });
 
     // ===== INITIALIZE ON LOAD =====
     showSection('home');
