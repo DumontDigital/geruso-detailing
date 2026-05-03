@@ -755,7 +755,7 @@
         <!-- Bookings Tab -->
         <div id="bookingsTab" class="owner-tab" style="display: block;">
           <h2 style="margin-bottom: 24px;">Manage Bookings</h2>
-          
+
           <div style="margin-bottom: 24px; display: flex; gap: 12px;">
             <input type="text" id="bookingSearch" placeholder="Search by customer name or email..." style="flex: 1; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
             <select id="bookingStatusFilter" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
@@ -767,23 +767,52 @@
             </select>
           </div>
 
-          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: auto;">
-            <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
-              <thead style="background: var(--light-bg);">
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Name</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Email</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Phone</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Address</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Service</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Date</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Time</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Status</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700;">Actions</th>
+          <!-- UPCOMING BOOKINGS SECTION -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 32px;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--light-bg);">
+              <h3 style="color: var(--primary); margin: 0;">Upcoming Bookings <span id="upcomingCount" style="color: var(--text-muted);">(0)</span></h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--light-bg);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Name</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Email</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Status</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Actions</th>
                 </tr>
               </thead>
-              <tbody id="bookingsList"></tbody>
+              <tbody id="upcomingBookingsList"></tbody>
             </table>
+            <div id="upcomingEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No upcoming bookings</div>
+          </div>
+
+          <!-- BOOKING HISTORY SECTION -->
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--light-bg);">
+              <h3 style="color: var(--primary); margin: 0;">Booking History <span id="historyCount" style="color: var(--text-muted);">(0)</span></h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--light-bg);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Name</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Email</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Status</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyBookingsList"></tbody>
+            </table>
+            <div id="historyEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No booking history</div>
           </div>
         </div>
 
@@ -1227,11 +1256,11 @@
       const response = await fetch('/api/owner/bookings');
       const data = await response.json();
 
-      const tbody = document.getElementById('bookingsList');
-      tbody.innerHTML = '';
-
       if (!data.bookings || data.bookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        document.getElementById('upcomingBookingsList').innerHTML = '';
+        document.getElementById('upcomingEmpty').style.display = 'block';
+        document.getElementById('historyBookingsList').innerHTML = '';
+        document.getElementById('historyEmpty').style.display = 'block';
         return;
       }
 
@@ -1242,44 +1271,96 @@
 
       // If no real bookings, show message
       if (realBookings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: var(--text-muted);">No bookings found</td></tr>';
+        document.getElementById('upcomingBookingsList').innerHTML = '';
+        document.getElementById('upcomingEmpty').style.display = 'block';
+        document.getElementById('historyBookingsList').innerHTML = '';
+        document.getElementById('historyEmpty').style.display = 'block';
         return;
       }
 
-      // Render real bookings only with all details
+      // Get current time in Eastern Time
+      const currentTimeET = getCurrentTimeET();
+      const todayET = getTodayET();
+
+      // Separate bookings into upcoming and history
+      const upcomingBookings = [];
+      const historyBookings = [];
+
       realBookings.forEach(booking => {
-        const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
-                          booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
+        const bookingDateOnly = booking.booking_date.split('T')[0];
+        const [hour, minute] = booking.booking_time.split(':').map(Number);
+        const bookingTimeInMinutes = hour * 60 + minute;
 
-        const formattedDate = formatDateOnly(booking.booking_date);
+        // Check if booking is in the past
+        const isToday = bookingDateOnly === todayET;
+        const isPastDate = bookingDateOnly < todayET;
+        const isPastTime = isToday && bookingTimeInMinutes <= currentTimeET.time;
 
-        tbody.innerHTML += `
-          <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 12px; font-weight: 700;">${booking.customer_name || '—'}</td>
-            <td style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
-            <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
-            <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
-            <td style="padding: 12px;">${booking.service_type || '—'}</td>
-            <td style="padding: 12px;">${formattedDate}</td>
-            <td style="padding: 12px;">${booking.booking_time || '—'}</td>
-            <td style="padding: 12px;">
-              <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${booking.status}</span>
-            </td>
-            <td style="padding: 12px;">
-              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                <button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
-                ${booking.status !== 'cancelled' ?
-                  `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>` : ''}
-                <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Delete</button>
-              </div>
-            </td>
-          </tr>
-        `;
+        // Categorize
+        if (isPastDate || isPastTime) {
+          historyBookings.push(booking);
+        } else {
+          upcomingBookings.push(booking);
+        }
       });
+
+      // Render upcoming bookings
+      renderBookingsSection('upcomingBookingsList', 'upcomingEmpty', upcomingBookings);
+
+      // Render history bookings
+      renderBookingsSection('historyBookingsList', 'historyEmpty', historyBookings);
+
+      // Update counts
+      document.getElementById('upcomingCount').textContent = `(${upcomingBookings.length})`;
+      document.getElementById('historyCount').textContent = `(${historyBookings.length})`;
 
     } catch (error) {
       console.error('Error loading bookings:', error);
     }
+  }
+
+  function renderBookingsSection(tableId, emptyId, bookings) {
+    const tbody = document.getElementById(tableId);
+    const emptyDiv = document.getElementById(emptyId);
+
+    if (!bookings || bookings.length === 0) {
+      tbody.innerHTML = '';
+      emptyDiv.style.display = 'block';
+      return;
+    }
+
+    emptyDiv.style.display = 'none';
+    tbody.innerHTML = '';
+
+    bookings.forEach(booking => {
+      const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
+                        booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
+
+      const formattedDate = formatDateOnly(booking.booking_date);
+
+      tbody.innerHTML += `
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 12px; font-weight: 700;">${booking.customer_name || '—'}</td>
+          <td style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
+          <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
+          <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
+          <td style="padding: 12px;">${booking.service_type || '—'}</td>
+          <td style="padding: 12px;">${formattedDate}</td>
+          <td style="padding: 12px;">${booking.booking_time || '—'}</td>
+          <td style="padding: 12px;">
+            <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${booking.status}</span>
+          </td>
+          <td style="padding: 12px;">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
+              ${booking.status !== 'cancelled' ?
+                `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>` : ''}
+              <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
   }
   
   async function loadSchedule() {
