@@ -404,6 +404,13 @@
         document.getElementById(tab + '-tab').classList.add('active');
         e.target.classList.add('active');
 
+        // Render the register-tab Google button the first time the tab
+        // becomes visible (rendering into a hidden element leaves a
+        // white artifact, so we render lazily once the tab is shown).
+        if (tab === 'register' && typeof window.renderRegisterGoogleButton === 'function') {
+          window.renderRegisterGoogleButton();
+        }
+
         // Clear errors
         document.getElementById('loginError').classList.remove('show');
         document.getElementById('registerError').classList.remove('show');
@@ -545,27 +552,38 @@
       }
     };
 
-    // Initialize Google Sign-In
-    window.addEventListener('load', function() {
-      if (window.google && window.google.accounts) {
-        google.accounts.id.initialize({
-          client_id: '538501956164-0je68bac6jsc97q1ravlv78rf6473fe7.apps.googleusercontent.com',
-          callback: window.handleGoogleSignIn
-        });
-
-        // Render sign-in button for login tab
-        google.accounts.id.renderButton(
-          document.getElementById('googleLoginBtn'),
-          { theme: 'filled_black', size: 'large', text: 'continue_with', shape: 'rectangular', width: 360 }
-        );
-
-        // Render sign-in button for register tab
-        google.accounts.id.renderButton(
-          document.getElementById('googleRegisterBtn'),
-          { theme: 'filled_black', size: 'large', text: 'continue_with', shape: 'rectangular', width: 360 }
-        );
-      }
-    });
+    // Initialize Google Sign-In. We render the register-tab button lazily
+    // (on first switch to Create Account) because rendering into a hidden
+    // element produces a stuck-at-default-size white artifact.
+    let googleInited = false;
+    let googleRegisterRendered = false;
+    function renderGoogleButton(mountId) {
+      const el = document.getElementById(mountId);
+      if (!el || !window.google || !window.google.accounts) return;
+      el.innerHTML = ''; // wipe any prior render before re-mounting
+      google.accounts.id.renderButton(el, {
+        theme: 'filled_black', size: 'large',
+        text: 'continue_with', shape: 'rectangular', width: 360
+      });
+    }
+    function initGoogle() {
+      if (googleInited || !(window.google && window.google.accounts)) return;
+      google.accounts.id.initialize({
+        client_id: '538501956164-0je68bac6jsc97q1ravlv78rf6473fe7.apps.googleusercontent.com',
+        callback: window.handleGoogleSignIn
+      });
+      googleInited = true;
+      // Login tab is visible by default — render now.
+      renderGoogleButton('googleLoginBtn');
+    }
+    window.addEventListener('load', initGoogle);
+    // Make this function reachable from the tab-switch handler above.
+    window.renderRegisterGoogleButton = function() {
+      initGoogle();
+      if (googleRegisterRendered) return;
+      renderGoogleButton('googleRegisterBtn');
+      googleRegisterRendered = true;
+    };
 
     // Note: previously auto-redirected logged-in users away from /login,
     // which made the page flash and close immediately. Now the login page

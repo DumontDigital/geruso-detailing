@@ -74,16 +74,24 @@ img { max-width: 100%; display: block; }
 }
 .nav-cta:hover { background: var(--primary-light); transform: translateY(-1px); }
 
-/* Sign In link in nav — gray-on-black like nav-links */
+/* Sign In link / Logout button in nav — gray-on-black, matches nav-links.
+   Button needs explicit transparent bg + font-family because browsers
+   give <button> a default white background and system font otherwise. */
 .nav-signin {
+  font-family: inherit;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-muted);
+  background: transparent;
   padding: 11px 20px;
   border: 1px solid var(--border);
   border-radius: 8px;
   transition: all 0.2s;
   letter-spacing: 0.3px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1;
 }
 .nav-signin:hover { color: var(--primary); border-color: var(--primary); background: rgba(0, 255, 65, 0.05); }
 
