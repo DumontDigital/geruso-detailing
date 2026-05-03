@@ -633,6 +633,10 @@
         bookedTimeSlots = data.bookedSlots;
         console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
       }
+      // Re-render so days that are now fully booked get grayed out.
+      if (typeof renderCalendar === 'function') {
+        try { renderCalendar(); } catch (e) { /* renderCalendar may not exist yet */ }
+      }
     } catch (error) {
       console.warn('[Calendar] Could not load booked slots:', error);
     }
@@ -705,6 +709,26 @@
     return slots;
   }
 
+  // Returns true if at least ONE time slot on the given date is still
+  // bookable (not past, not already booked). Used by renderCalendar to
+  // gray-out a calendar day when every slot is taken or has passed.
+  function dayHasAvailability(date, dayOfWeek) {
+    const slots = generateTimeSlots(dayOfWeek);
+    if (slots.length === 0) return false;
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+
+    for (const slot of slots) {
+      const isBooked = !!bookedTimeSlots[`${dateStr} ${slot}`];
+      const isPast = isTimeslotPast(date, slot);
+      if (!isBooked && !isPast) return true;
+    }
+    return false;
+  }
+
   function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -748,10 +772,15 @@
                            : serviceCat === 'location' ? isLocationDay
                            : true; // no service → don't filter
 
-      // Disable past dates (ET), closed days, or days that don't match the picked service
-      if (cellDate < todayET || !businessHours[dayOfWeek] || !matchesService) {
+      // Disable: past date / closed day / wrong service category /
+      // every slot already taken or past (e.g. Sat at 11 AM when last
+      // slot was 11 AM, or all 6 booking slots booked solid)
+      const isClosed = cellDate < todayET || !businessHours[dayOfWeek] || !matchesService;
+      const allSlotsUnavailable = !isClosed && !dayHasAvailability(cellDate, dayOfWeek);
+      if (isClosed || allSlotsUnavailable) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
+        if (allSlotsUnavailable) dayCell.title = 'All time slots are booked or past';
       } else {
         dayCell.classList.add('available'); // Mark available dates in light green
         dayCell.addEventListener('click', () => selectDate(cellDate));
