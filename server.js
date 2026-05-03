@@ -66,16 +66,11 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'app.html'));
 });
 
-// EMBEDDED VIEWS (for iframes within app.html)
-// Customer view - booking page (embedded)
+// /booking.html now redirects to /schedule.html (single source of truth for booking).
+// The old booking.html welcome page was confusing users — every "Book Now"/"Book a Service"
+// link in the codebase still works because of this redirect.
 app.get('/booking.html', (req, res) => {
-  const fs = require('fs');
-  let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
-  bookingHtml = bookingHtml.replace('YOUR_API_KEY', apiKey);
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(bookingHtml);
+  res.redirect(301, '/schedule.html');
 });
 
 // Owner dashboard view (embedded)
@@ -124,14 +119,7 @@ app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, 'contact.html'));
 });
 app.get('/booking', (req, res) => {
-  const fs = require('fs');
-  let bookingHtml = fs.readFileSync(path.join(__dirname, 'booking.html'), 'utf8');
-  // Inject Google Places API key if available
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
-  bookingHtml = bookingHtml.replace('YOUR_API_KEY', apiKey);
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(bookingHtml);
+  res.redirect(301, '/schedule.html');
 });
 // ========== ADMIN ROUTES ==========
 // Admin panel is now integrated into index.html

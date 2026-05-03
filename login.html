@@ -515,7 +515,7 @@
           successDiv.classList.add('show');
 
           setTimeout(() => {
-            window.location.href = '/booking.html';
+            window.location.href = '/schedule.html';
           }, 2000);
         } else {
           errorDiv.textContent = data.error || 'Registration failed';
@@ -581,22 +581,9 @@
       }
     });
 
-    // Check if already logged in
-    window.addEventListener('load', () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const user = JSON.parse(localStorage.getItem('user'));
-        const role = user.role;
-
-        if (role === 'owner') {
-          window.location.href = '/owner-dashboard.html';
-        } else if (role === 'dev') {
-          window.location.href = '/dev-dashboard.html';
-        } else {
-          window.location.href = '/booking.html';
-        }
-      }
-    });
+    // Note: previously auto-redirected logged-in users away from /login,
+    // which made the page flash and close immediately. Now the login page
+    // is always visible — user can sign in as someone else or sign out.
   </script>
 </body>
 </html>
