@@ -465,29 +465,42 @@ app.get('/api/test-deployment', (req, res) => {
   res.json({ message: 'Deployment test - this should be visible if new code is deployed', timestamp: new Date().toISOString() });
 });
 
-// SIMPLE FIX: Direct password update (temporary, for testing only)
+// SIMPLE FIX: Upsert demo accounts with known password (for testing).
+// Inserts the three demo users if missing, otherwise resets their password
+// to "Test1234!". Idempotent — safe to call repeatedly.
 app.post('/api/quick-fix-passwords', async (req, res) => {
   try {
     const testPassword = 'Test1234!';
 
-    // Generate hash using bcryptjs
     const bcrypt = require('bcryptjs');
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(testPassword, salt);
 
-    console.log(`[Quick Fix] Generated hash for "${testPassword}": ${passwordHash}`);
+    const demoUsers = [
+      { email: 'owner@geruso-detailing.com',  first: 'Cameron',  last: 'Geruso',  role: 'owner' },
+      { email: 'dev@geruso-detailing.com',    first: 'Dev',      last: 'Admin',   role: 'dev' },
+      { email: 'customer@example.com',        first: 'Test',     last: 'Customer', role: 'customer' },
+    ];
 
-    // Update users
-    const users = ['owner@geruso-detailing.com', 'dev@geruso-detailing.com', 'customer@example.com'];
-    for (const email of users) {
-      await pool.query(
-        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2',
-        [passwordHash, email]
+    const results = [];
+    for (const u of demoUsers) {
+      const r = await pool.query(
+        `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
+         VALUES ($1, $2, $3, $4, $5, true)
+         ON CONFLICT (email) DO UPDATE
+           SET password_hash = EXCLUDED.password_hash,
+               role = EXCLUDED.role,
+               is_active = true,
+               updated_at = CURRENT_TIMESTAMP
+         RETURNING email, role, (xmax = 0) AS inserted`,
+        [u.email, passwordHash, u.first, u.last, u.role]
       );
-      console.log(`[Quick Fix] Updated ${email}`);
+      const row = r.rows[0];
+      results.push({ email: row.email, role: row.role, action: row.inserted ? 'inserted' : 'updated' });
+      console.log(`[Quick Fix] ${row.inserted ? 'Inserted' : 'Updated'} ${row.email}`);
     }
 
-    res.json({ success: true, message: 'Passwords fixed', hash: passwordHash });
+    res.json({ success: true, message: 'Demo accounts ready', password: testPassword, users: results });
   } catch (error) {
     console.error('[Quick Fix] Error:', error);
     res.status(500).json({ error: error.message });
