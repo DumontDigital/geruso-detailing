@@ -752,7 +752,32 @@
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
     }
+
+    // Clear any previously selected date and time when the service changes,
+    // because mobile dates (Thu/Fri) and location dates (Sat/Sun) are mutually exclusive.
+    selectedDate = null;
+    selectedTime = null;
+    document.getElementById('summaryDate').textContent = 'Not selected';
+    document.getElementById('summaryTime').textContent = 'Not selected';
+    document.getElementById('timeSlotsGrid').innerHTML = '';
+    const timeMessage = document.getElementById('timeMessage');
+    timeMessage.style.display = 'block';
+    timeMessage.textContent = 'Select a date to view available times';
+
+    // Re-render the calendar so days that no longer match the new service get dimmed.
+    renderCalendar();
   });
+
+  // Returns 'mobile', 'location', or null based on the currently selected service.
+  // Per spec: "add on goes with mobile basically the same suit" → EXTRA FEE = mobile.
+  function getSelectedServiceCategory() {
+    const serviceValue = document.querySelector('select[name="serviceType"]').value;
+    if (!serviceValue) return null;
+    const tag = getServiceTagFromName(serviceValue);
+    if (tag === 'MOBILE' || tag === 'EXTRA FEE') return 'mobile';
+    if (tag === 'LOCATION ONLY') return 'location';
+    return null;
+  }
 
   function generateTimeSlots(dayOfWeek) {
     const hours = businessHours[dayOfWeek];
@@ -801,8 +826,17 @@
       const cellDate = new Date(year, month, day);
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
 
-      // Disable past dates (using ET) and closed days
-      if (cellDate < todayET || !businessHours[dayOfWeek]) {
+      // If a service is picked, only the matching day type stays highlighted.
+      // No service picked → all working days (Thu/Fri/Sat/Sun) stay highlighted.
+      const serviceCat   = getSelectedServiceCategory();
+      const isMobileDay  = dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
+      const isLocationDay= dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
+      const matchesService = serviceCat === 'mobile'   ? isMobileDay
+                           : serviceCat === 'location' ? isLocationDay
+                           : true; // no service → don't filter
+
+      // Disable past dates (ET), closed days, or days that don't match the picked service
+      if (cellDate < todayET || !businessHours[dayOfWeek] || !matchesService) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
       } else {
