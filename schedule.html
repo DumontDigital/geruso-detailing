@@ -1,154 +1,1266 @@
 <!DOCTYPE html>
+<!-- Stripe checkout flow deployed -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hours &amp; Service Area — Geruso Detailing</title>
-  <link rel="stylesheet" href="/css/customer.css">
+  <title>Book an Appointment — Geruso Detailing</title>
   <style>
-    .schedule-section { padding: 64px 32px; }
-    .schedule-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      max-width: 1100px;
-      margin: 0 auto;
+    :root {
+      --primary: #00FF41;
+      --primary-dark: #00DD33;
+      --primary-light: #33FF66;
+      --white: #ffffff;
+      --light-bg: #0a0a0a;
+      --light-bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --text-light: #888888;
+      --success: #10b981;
+      --error: #ef4444;
     }
-    @media (max-width: 768px) { .schedule-grid { grid-template-columns: 1fr; } }
-    .info-block {
-      background: var(--light-bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 36px 32px;
-    }
-    .info-block h2 { font-size: 22px; margin-bottom: 24px; color: var(--primary); }
-    .hours-list { list-style: none; }
-    .hours-list li {
-      display: flex;
-      justify-content: space-between;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 15px;
-    }
-    .hours-list li:last-child { border-bottom: none; }
-    .hours-list .day { color: var(--text); font-weight: 600; }
-    .hours-list .time { color: var(--text-muted); }
-    .hours-list li.closed .time { color: var(--accent); }
 
-    .area-list { list-style: none; }
-    .area-list li {
-      padding: 12px 0;
-      color: var(--text-muted);
-      font-size: 15px;
-      border-bottom: 1px solid var(--border);
-    }
-    .area-list li:before { content: '\2022  '; color: var(--primary); font-weight: 700; margin-right: 8px; }
-    .area-list li:last-child { border-bottom: none; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
 
-    .service-types {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 1100px;
-      margin: 48px auto 0;
-    }
-    @media (max-width: 768px) { .service-types { grid-template-columns: 1fr; } }
-    .type-card {
-      background: var(--light-bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-    }
-    .type-card .badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--primary);
-      padding: 4px 10px;
-      background: rgba(0,255,65,0.08);
-      border-radius: 999px;
-      margin-bottom: 14px;
-    }
-    .type-card h3 { font-size: 19px; margin-bottom: 10px; }
-    .type-card p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
+    .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+    .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+    .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
+    .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+    .nav-toggle { display: none; }
+    .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
+    .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
+    .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: none; }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
+    .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
+    .nav-phone:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
+    .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
+    .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+    .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
+    .nav-toggle:checked ~ .nav-phone { display: block; }
 
-    .cta-strip {
-      background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
-      border-top: 1px solid rgba(0,255,65,0.2);
-      padding: 80px 32px;
-      text-align: center;
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
+    .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 24px; }
+    .section-sub { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.8; margin-bottom: 32px; }
+    section { padding: 80px 48px; }
+    .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
+
+    footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
+    .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
+    .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
+    .footer-owner { font-size: 12px; color: var(--text-light); }
+    .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+    .footer-links a:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
+    .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
+
+    @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
+
+    /* Booking Specific Styles */
+    .booking-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+
+    .calendar-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .calendar-month { font-size: 20px; font-weight: 700; color: var(--text); }
+    .calendar-nav { display: flex; gap: 12px; }
+    .calendar-btn { background: rgba(0,255,65,0.1); color: var(--primary); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .calendar-btn:hover { background: rgba(0,255,65,0.2); border-color: var(--primary); }
+
+    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px; }
+    .weekday { text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding: 8px; }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 28px; }
+    .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; background: var(--light-bg); }
+    .calendar-day.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
+    .calendar-day:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
+    .calendar-day.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
+    .calendar-day.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: #333; border-color: #555; }
+    .calendar-day.today { border-color: var(--primary); }
+
+    .time-slots-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .time-slots-header { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+    .time-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .time-slot { padding: 14px 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; background: var(--light-bg); position: relative; }
+    .time-slot.available { background: rgba(0,255,65,0.15); border-color: var(--primary); }
+    .time-slot:hover:not(.disabled) { border-color: var(--primary); background: rgba(0,255,65,0.2); }
+    .time-slot.selected { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
+    .time-slot.disabled { color: var(--text-light); cursor: not-allowed; opacity: 0.5; background: #333; border-color: #555; }
+    .time-slot.disabled::after { content: 'Unavailable'; position: absolute; top: -8px; right: 4px; background: #666; color: white; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 700; letter-spacing: 0.5px; }
+
+    .booking-form { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .form-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    .form-input, .form-select, .form-textarea { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; width: 100%; transition: border 0.2s; }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-light); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+    .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    .booking-summary { background: rgba(0,255,65,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 14px; }
+    .summary-item { margin-bottom: 8px; }
+    .summary-item:last-child { margin-bottom: 0; }
+    .summary-label { color: var(--text-muted); }
+    .summary-value { color: var(--primary); font-weight: 700; }
+
+    .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .btn-submit:hover:not(:disabled) { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .message-box { padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
+    .message-box.success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: var(--success); }
+    .message-box.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: var(--error); }
+    .message-box.info { background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); color: var(--primary); }
+
+    .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,255,65,0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .address-suggestions { position: absolute; background: var(--light-bg2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; max-height: 240px; overflow-y: auto; width: calc(100% - 28px); z-index: 1000; display: none; }
+    .address-suggestions.show { display: block; }
+    .address-suggestion-item { padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all 0.2s; border-bottom: 1px solid var(--border); }
+    .address-suggestion-item:last-child { border-bottom: none; }
+    .address-suggestion-item:hover { background: rgba(0,255,65,0.1); color: var(--primary); }
+    .address-suggestion-item.selected { background: rgba(0,255,65,0.2); color: var(--primary); }
+    .form-group { position: relative; }
+
+    .file-input-wrapper { position: relative; }
+    .form-file-input { display: none; }
+    .file-input-label { display: flex; align-items: center; justify-content: center; background: var(--light-bg); border: 2px dashed var(--primary); border-radius: 8px; padding: 24px; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .file-input-label:hover { background: rgba(0,255,65,0.1); border-color: var(--primary-light); }
+    .file-input-text { font-size: 14px; color: var(--text-muted); }
+
+    @media(max-width:960px) {
+      .booking-container { grid-template-columns: 1fr; gap: 40px; }
+      .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
     }
-    .cta-strip h2 { margin-bottom: 14px; }
-    .cta-strip p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; }
-  </style>
+  
+  /* ── CART ── */
+  .cart-link {
+    background: var(--primary);
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .cart-link:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
+  }
+
+  .cart-modal {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: var(--light-bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 99;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cart-content {
+    padding: 20px;
+  }
+
+  .cart-content h2 {
+    font-size: 18px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    text-shadow: 0 0 4px rgba(0,255,65,0.2);
+  }
+
+  .cart-total {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .cart-modal button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  #cartItems {
+    margin-bottom: 16px;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 600px) {
+    .cart-modal {
+      width: calc(100% - 40px);
+      right: 20px;
+      left: 20px;
+      top: auto;
+      bottom: 20px;
+    }
+
+    .nav-actions {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+</style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&language=en" async defer></script>
 </head>
-<body data-page="schedule">
-  <div data-nav></div>
-
-  <section class="page-hero">
-    <div class="page-hero-inner">
-      <div class="page-hero-eyebrow">Hours &amp; Service Area</div>
-      <h1>When &amp; Where We Operate</h1>
-      <p>Open 7 days a week with mobile service throughout Rhode Island. Find the best time and location for your appointment.</p>
+<body>
+<!-- BUILD TEST: HOME-SCHEDULE-FIX-001 -->
+<!-- LIVE FILE CONFIRMED 002 - booking.html IFRAME is being served -->
+<nav>
+  <a href="/home.html" class="nav-brand">
+    <img src="/logo.png" style="width: 42px; height: 42px; border-radius: 6px; object-fit: cover;" alt="Logo">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">Geruso Detailing</span>
+      <span class="nav-brand-sub">PREMIUM AUTO CARE</span>
     </div>
-  </section>
+  </a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle">
+  <label for="nav-toggle" class="nav-toggle-label">
+    <span></span>
+    <span></span>
+    <span></span>
+  </label>
+  <ul class="nav-links">
+    <li><a href="/home.html">Home</a></li>
+    <li><a href="/services.html">Services</a></li>
+    <li><a href="/work.html">Our Work</a></li>
+    <li><a href="/schedule.html">Schedule</a></li>
+    <li><a href="/reviews.html">Reviews</a></li>
+    <li><a href="/contact.html">Contact</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="tel:4014901236" class="nav-phone">(401) 490-1236</a>
+    <a href="#" id="cartBtn" class="cart-link" style="font-size: 13px; color: var(--text-muted); padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;">Cart (0)</a>
+  </div>
+</nav>
 
-  <section class="schedule-section">
-    <div class="schedule-grid">
-      <div class="info-block">
-        <h2>Business Hours</h2>
-        <ul class="hours-list">
-          <li><span class="day">Monday</span><span class="time">6:00 AM – 6:00 PM</span></li>
-          <li><span class="day">Tuesday</span><span class="time">6:00 AM – 6:00 PM</span></li>
-          <li><span class="day">Wednesday</span><span class="time">6:00 AM – 6:00 PM</span></li>
-          <li><span class="day">Thursday</span><span class="time">6:00 AM – 6:00 PM</span></li>
-          <li><span class="day">Friday</span><span class="time">6:00 AM – 6:00 PM</span></li>
-          <li><span class="day">Saturday</span><span class="time">7:00 AM – 5:00 PM</span></li>
-          <li><span class="day">Sunday</span><span class="time">8:00 AM – 4:00 PM</span></li>
-        </ul>
+<!-- Home Section (Default Landing Page) -->
+<section id="homeSection" style="padding: 80px 48px; background: var(--light-bg); min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
+  <div class="section-inner" style="max-width: 900px; margin: 0 auto; text-align: center;">
+    <div class="section-label">PROFESSIONAL DETAILING</div>
+    <h1 class="section-heading" style="font-size: clamp(40px, 6vw, 64px); margin: 20px 0;">Welcome to Geruso Detailing</h1>
+    <p class="section-sub" style="font-size: 18px; margin-bottom: 40px;">Expert car detailing services throughout Rhode Island. Mobile service to your location or visit our Mapleville facility for premium treatments.</p>
+
+    <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 60px; flex-wrap: wrap;">
+      <button onclick="showSection('booking')" style="padding: 16px 40px; font-size: 16px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">Book Now</button>
+      <a href="services.html" style="padding: 16px 40px; font-size: 16px; border: 2px solid var(--primary); color: var(--primary); background: transparent; font-weight: 700; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-block;">View Services</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div style="background: var(--light-bg2); padding: 32px 24px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;">
+        <div style="font-size: 40px; margin-bottom: 16px;">🚗</div>
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--text);">Mobile Service</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">We come to you. Professional detailing at your home or workplace throughout Rhode Island.</p>
+      </div>
+      <div style="background: var(--light-bg2); padding: 32px 24px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;">
+        <div style="font-size: 40px; margin-bottom: 16px;">✨</div>
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--text);">Premium Quality</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">Expert techniques with premium products and equipment for the best results.</p>
+      </div>
+      <div style="background: var(--light-bg2); padding: 32px 24px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;">
+        <div style="font-size: 40px; margin-bottom: 16px;">⏱️</div>
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--text);">Easy Booking</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">Quick online booking with flexible scheduling. Pay after service or deposit upfront.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer (shown with home section) -->
+<footer id="homeFooter">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">Geruso Detailing</div>
+      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
+      <p class="footer-owner">Owner — Cameron Geruso</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Services</div>
+      <ul class="footer-links">
+        <li><a href="services.html">Car Wash</a></li>
+        <li><a href="services.html">Interior Detailing</a></li>
+        <li><a href="services.html">Premium Package</a></li>
+        <li><a href="services.html">View All Services</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Contact</div>
+      <ul class="footer-links">
+        <li><a href="tel:4014901236">401-490-1236</a></li>
+        <li><a href="#" onclick="showSection('booking'); return false;">Book Now</a></li>
+        <li><a href="booking.html">Service Area</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
+  </div>
+</footer>
+
+<section id="booking" style="display: none;">
+  <div class="section-inner">
+    <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
+    <h1 class="section-heading">Book Your Detailing Service</h1>
+    <p class="section-sub">Choose your preferred date and time below. Available slots are displayed based on our service schedule for Mapleville location and mobile services throughout Rhode Island.</p>
+
+    <div class="booking-container">
+      <!-- Calendar & Time Slots -->
+      <div>
+        <div class="calendar-section">
+          <div class="calendar-header">
+            <h3 class="calendar-month" id="calendarMonth">January 2026</h3>
+            <div class="calendar-nav">
+              <button class="calendar-btn" id="prevMonth">← Prev</button>
+              <button class="calendar-btn" id="nextMonth">Next →</button>
+            </div>
+          </div>
+
+          <div class="weekdays">
+            <div class="weekday">Sun</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+          </div>
+
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- Time Slots -->
+        <div class="time-slots-section">
+          <div class="time-slots-header">Available Times</div>
+          <div id="timeMessage" style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Select a date to view available times</div>
+          <div class="time-slots-grid" id="timeSlotsGrid"></div>
+        </div>
       </div>
 
-      <div class="info-block">
-        <h2>Service Area</h2>
-        <ul class="area-list">
-          <li>Providence</li>
-          <li>Warwick</li>
-          <li>Cranston</li>
-          <li>Pawtucket</li>
-          <li>East Providence</li>
-          <li>North Kingstown</li>
-          <li>Smithfield</li>
-          <li>And surrounding RI areas</li>
-        </ul>
+      <!-- Booking Form -->
+      <div class="booking-form">
+        <h2 class="form-title">Complete Your Booking</h2>
+
+        <div id="messageBox"></div>
+
+        <form id="bookingForm">
+          <div class="booking-summary" id="bookingSummary" style="display: none;">
+            <div class="summary-item"><span class="summary-label">Date:</span> <span class="summary-value" id="summaryDate">Not selected</span></div>
+            <div class="summary-item"><span class="summary-label">Time:</span> <span class="summary-value" id="summaryTime">Not selected</span></div>
+            <div class="summary-item"><span class="summary-label">Service:</span> <span class="summary-value" id="summaryService">Not selected</span></div>
+            <div class="summary-item"><span class="summary-label">Price:</span> <span class="summary-value" id="summaryPrice">Not selected</span></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" name="customerName" placeholder="John Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" name="customerEmail" placeholder="john@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" name="customerPhone" placeholder="(401) 555-0000" required>
+          </div>
+
+          <div class="form-group" id="addressFieldGroup" style="display: none;">
+            <label class="form-label">Service Address <span style="color: var(--error);">*</span></label>
+            <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" autocomplete="off">
+            <div id="addressSuggestions" class="address-suggestions"></div>
+            <input type="hidden" id="serviceAddressValue" name="serviceAddress" value="">
+          </div>
+
+          <div class="form-group" id="locationNoteGroup" style="display: none;">
+            <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
+              <strong style="color: var(--primary);">Location Service</strong><br>
+              Saturday and Sunday appointments are at our Mapleville location only. No address needed.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Service Type</label>
+            <select class="form-select" name="serviceType" required>
+              <option value="">Select a service...</option>
+              <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
+              <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
+              <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
+              <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
+              <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
+              <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
+              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
+              <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
+              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
+              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vehicle Type</label>
+            <select class="form-select" name="vehicleType" required>
+              <option value="">Select vehicle type...</option>
+              <option value="Car">Car</option>
+              <option value="Motorcycle">Motorcycle</option>
+              <option value="SUV">SUV</option>
+              <option value="Truck">Truck</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Special Requests (Optional)</label>
+            <textarea class="form-textarea" name="notes" placeholder="Any special instructions or requests..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Upload Photo (Optional)</label>
+            <div class="file-input-wrapper">
+              <input type="file" class="form-file-input" id="vehiclePhotoInput" name="vehiclePhoto" accept="image/jpeg,image/png,image/heic,.jpg,.jpeg,.png,.heic">
+              <label for="vehiclePhotoInput" class="file-input-label">
+                <span class="file-input-text">Choose a photo of your vehicle (JPG, PNG, HEIC)</span>
+              </label>
+              <div id="photoPreview" style="display: none; margin-top: 12px;">
+                <img id="photoPreviewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);">
+                <p id="photoFileName" style="font-size: 12px; color: var(--text-muted); margin-top: 8px;"></p>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">Book & Pay Deposit</button>
+        </form>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="service-types">
-      <div class="type-card">
-        <span class="badge">Mobile Service</span>
-        <h3>We Come To You</h3>
-        <p>Most services are mobile — we arrive at your home or office with all the equipment, water, and power needed. You don't have to leave the house.</p>
-      </div>
-      <div class="type-card">
-        <span class="badge">Location Only</span>
-        <h3>Specialty Services at Our Shop</h3>
-        <p>Ceramic coatings and full paint polishes are performed in our climate-controlled shop. We coordinate drop-off and pickup at your convenience.</p>
-      </div>
-    </div>
-  </section>
+<script>
+  document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
 
-  <section class="cta-strip">
-    <h2 class="section-title">Ready to Book?</h2>
-    <p>Pick your day and time on our booking page. We'll handle the rest.</p>
-    <div class="btn-row">
-      <a href="/booking.html" class="btn btn-primary">View Available Times</a>
-      <a href="/contact.html" class="btn btn-outline">Contact Us</a>
-    </div>
-  </section>
+  // Google Places Autocomplete for Service Address
+  let autocompleteService;
+  let sessionToken;
+  let selectedPlaceId = null;
+  let selectedAddress = '';
 
-  <div data-footer></div>
-  <script src="/js/customer-shell.js"></script>
-</body>
+  function initializeAddressAutocomplete() {
+    const apiKey = document.querySelector('script[src*="maps.googleapis.com"]')?.src.includes('YOUR_API_KEY') ? null : true;
+    if (!apiKey) {
+      console.warn('Google Places API key not configured. Address autocomplete disabled.');
+      return;
+    }
+
+    const addressInput = document.getElementById('serviceAddressInput');
+    const suggestionsContainer = document.getElementById('addressSuggestions');
+
+    if (!window.google || !window.google.maps) {
+      console.warn('Google Maps API not loaded yet');
+      return;
+    }
+
+    autocompleteService = new google.maps.places.AutocompleteService();
+    sessionToken = new google.maps.places.AutocompleteSessionToken();
+
+    addressInput.addEventListener('input', async (e) => {
+      const value = e.target.value;
+
+      if (value.length < 3) {
+        suggestionsContainer.classList.remove('show');
+        return;
+      }
+
+      try {
+        const request = {
+          input: value,
+          componentRestrictions: { country: 'us' },
+          sessionToken: sessionToken,
+        };
+
+        const predictions = await autocompleteService.getPlacePredictions(request);
+
+        if (predictions.predictions && predictions.predictions.length > 0) {
+          // Filter for Rhode Island
+          const riPredictions = predictions.predictions.filter(p =>
+            p.description.includes('RI') || p.description.includes('Rhode Island')
+          );
+
+          suggestionsContainer.innerHTML = '';
+
+          if (riPredictions.length > 0) {
+            riPredictions.slice(0, 5).forEach(prediction => {
+              const div = document.createElement('div');
+              div.className = 'address-suggestion-item';
+              div.textContent = prediction.description;
+              div.addEventListener('click', () => selectAddress(prediction));
+              suggestionsContainer.appendChild(div);
+            });
+            suggestionsContainer.classList.add('show');
+          } else {
+            suggestionsContainer.classList.remove('show');
+          }
+        } else {
+          suggestionsContainer.classList.remove('show');
+        }
+      } catch (error) {
+        console.error('Autocomplete error:', error);
+      }
+    });
+
+    addressInput.addEventListener('blur', () => {
+      setTimeout(() => suggestionsContainer.classList.remove('show'), 200);
+    });
+  }
+
+  function selectAddress(prediction) {
+    const addressInput = document.getElementById('serviceAddressInput');
+    const suggestionsContainer = document.getElementById('addressSuggestions');
+
+    addressInput.value = prediction.description;
+    selectedAddress = prediction.description;
+    selectedPlaceId = prediction.place_id;
+    suggestionsContainer.classList.remove('show');
+  }
+
+  // Initialize autocomplete when Google Maps is loaded
+  if (window.google && window.google.maps) {
+    initializeAddressAutocomplete();
+  } else {
+    window.addEventListener('load', initializeAddressAutocomplete);
+  }
+
+  // Handle vehicle photo upload and preview
+  let vehiclePhotoBase64 = null;
+
+  document.getElementById('vehiclePhotoInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      vehiclePhotoBase64 = null;
+      document.getElementById('photoPreview').style.display = 'none';
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      showMessage('Photo is too large. Please choose a file under 5MB.', 'error');
+      e.target.value = '';
+      vehiclePhotoBase64 = null;
+      document.getElementById('photoPreview').style.display = 'none';
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      vehiclePhotoBase64 = event.target.result;
+
+      // Show preview
+      const img = document.getElementById('photoPreviewImg');
+      const nameEl = document.getElementById('photoFileName');
+      img.src = vehiclePhotoBase64;
+      nameEl.textContent = file.name;
+      document.getElementById('photoPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Service pricing configuration
+  const servicePriceMap = {
+    'Full Motorcycle Service': { price: 70, display: '$70' },
+    'Interior Detailing': { price: 100, display: 'Starting from $100' },
+    'Car Wash': { price: 85, display: 'Starting from $85' },
+    'Ceramic Coating': { price: 400, display: '$400' },
+    'Premium Package': { price: 170, display: 'Starting from $170' },
+    'Ultra Premium': { price: 335, display: '$335' },
+    'Pet Hair / Odor Elimination': { price: 50, display: '$50 Extra Fee' },
+    'Headlight Restoration': { price: 50, display: '$50 per Headlight' },
+    'Engine Bay Cleaning': { price: 75, display: '$75' },
+    'Full Vehicle Polish': { price: 250, display: 'Starting from $250' }
+  };
+
+  // Extract price display from service type
+  function getServicePrice(serviceType) {
+    for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
+      if (serviceType.includes(serviceName)) {
+        return priceData.display;
+      }
+    }
+    return 'Contact for pricing';
+  }
+
+  // Get current time in Eastern Time
+  function getCurrentTimeET() {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(new Date());
+    const partMap = {};
+    parts.forEach(({ type, value }) => {
+      partMap[type] = value;
+    });
+    return {
+      year: parseInt(partMap.year),
+      month: parseInt(partMap.month) - 1,
+      day: parseInt(partMap.day),
+      hour: parseInt(partMap.hour),
+      minute: parseInt(partMap.minute),
+      date: new Date(parseInt(partMap.year), parseInt(partMap.month) - 1, parseInt(partMap.day))
+    };
+  }
+
+  let currentDate = new Date();
+  let selectedDate = null;
+  let selectedTime = null;
+  let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const businessHours = {
+    'Thu': { start: 12, end: 19, type: 'mobile' }, // 12 PM - 6 PM (Mobile, includes 6 PM slot)
+    'Fri': { start: 12, end: 19, type: 'mobile' },
+    'Sat': { start: 6, end: 12, type: 'location' }, // 6 AM - 11 AM (Location only, includes 11 AM slot)
+    'Sun': { start: 6, end: 12, type: 'location' },
+    'Mon': null,
+    'Tue': null,
+    'Wed': null
+  };
+
+  // Check if a time slot is in the past (Eastern Time)
+  function isTimeslotPast(date, timeString) {
+    const et = getCurrentTimeET();
+
+    // Compare dates
+    const slotDate = date.toDateString();
+    const todayET = et.date.toDateString();
+
+    if (slotDate === todayET) {
+      // Same day - check if time is past
+      const [timeWithAmPm] = timeString.split(' ');
+      let [hourStr, minStr] = timeWithAmPm.split(':');
+      let hour = parseInt(hourStr);
+      const minute = parseInt(minStr || '0');
+
+      // Parse AM/PM
+      const isPM = timeString.includes('PM');
+      if (isPM && hour !== 12) {
+        hour += 12;
+      } else if (!isPM && hour === 12) {
+        hour = 0;
+      }
+
+      // Check if this slot time is past current time ET
+      if (hour < et.hour || (hour === et.hour && minute <= et.minute)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Update current date to ET
+  function initializeCurrentDate() {
+    const et = getCurrentTimeET();
+    currentDate = new Date(et.year, et.month, et.day);
+  }
+
+  initializeCurrentDate();
+
+  // Fetch booked time slots on page load
+  async function loadBookedTimeSlots() {
+    try {
+      console.log('[Calendar] Loading booked time slots...');
+      const response = await fetch('/api/bookings/public/booked-slots');
+      if (!response.ok) {
+        console.warn('[Calendar] Failed to load booked slots, status:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+
+      // Clear previous booked slots
+      bookedTimeSlots = {};
+
+      // Build a map of booked times
+      if (data.bookedSlots) {
+        bookedTimeSlots = data.bookedSlots;
+        console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
+      }
+    } catch (error) {
+      console.warn('[Calendar] Could not load booked slots:', error);
+    }
+  }
+
+  // Load booked times when page loads
+  loadBookedTimeSlots();
+
+  // Update booking summary when service is selected
+  document.querySelector('select[name="serviceType"]').addEventListener('change', (e) => {
+    const serviceValue = e.target.value;
+    const summaryElement = document.getElementById('summaryService');
+    const priceElement = document.getElementById('summaryPrice');
+
+    if (serviceValue) {
+      summaryElement.textContent = serviceValue;
+      const priceDisplay = getServicePrice(serviceValue);
+      priceElement.textContent = priceDisplay;
+
+      // Get the service tag and update address field visibility
+      const serviceTag = getServiceTagFromName(serviceValue);
+      updateAddressFieldVisibility(serviceTag);
+    } else {
+      summaryElement.textContent = 'Not selected';
+      priceElement.textContent = 'Not selected';
+
+      // Hide address field if no service selected
+      const addressFieldGroup = document.getElementById('addressFieldGroup');
+      const locationNoteGroup = document.getElementById('locationNoteGroup');
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+    }
+  });
+
+  function generateTimeSlots(dayOfWeek) {
+    const hours = businessHours[dayOfWeek];
+    if (!hours) return [];
+
+    const slots = [];
+    for (let hour = hours.start; hour < hours.end; hour++) {
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+      slots.push(`${displayHour}:00 ${ampm}`);
+    }
+    return slots;
+  }
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+
+    // Empty cells for days before month starts
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'calendar-day disabled';
+      grid.appendChild(emptyCell);
+    }
+
+    // Days of the month
+    const et = getCurrentTimeET();
+    const todayET = et.date;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayCell = document.createElement('button');
+      dayCell.className = 'calendar-day';
+      dayCell.textContent = day;
+      dayCell.type = 'button';
+
+      const cellDate = new Date(year, month, day);
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
+
+      // Disable past dates (using ET) and closed days
+      if (cellDate < todayET || !businessHours[dayOfWeek]) {
+        dayCell.classList.add('disabled');
+        dayCell.disabled = true;
+      } else {
+        dayCell.classList.add('available'); // Mark available dates in light green
+        dayCell.addEventListener('click', () => selectDate(cellDate));
+      }
+
+      // Highlight today (ET)
+      if (cellDate.toDateString() === todayET.toDateString()) {
+        dayCell.classList.add('today');
+      }
+
+      // Highlight selected date
+      if (selectedDate && cellDate.toDateString() === selectedDate.toDateString()) {
+        dayCell.classList.add('selected');
+      }
+
+      grid.appendChild(dayCell);
+    }
+  }
+
+  function selectDate(date) {
+    selectedDate = date;
+    selectedTime = null;
+
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+    const dayName = monthNames[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+
+    document.getElementById('summaryDate').textContent = dayName;
+    document.getElementById('bookingSummary').style.display = 'block';
+
+    // Show/hide Service Address field based on day of week
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+
+    if (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') {
+      // Mobile service days - show address field
+      addressFieldGroup.style.display = 'block';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = true;
+    } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+      // Location-only days - hide address field and show note
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'block';
+      serviceAddressInput.required = false;
+      serviceAddressInput.value = ''; // Clear any previously entered address
+    } else {
+      // Closed days
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+    }
+
+    renderCalendar();
+    renderTimeSlots(dayOfWeek, date);
+  }
+
+  function renderTimeSlots(dayOfWeek, date) {
+    const slots = generateTimeSlots(dayOfWeek);
+    const timeSlotsGrid = document.getElementById('timeSlotsGrid');
+    const timeMessage = document.getElementById('timeMessage');
+
+    if (slots.length === 0) {
+      timeMessage.textContent = 'No availability on this day';
+      timeSlotsGrid.innerHTML = '';
+      return;
+    }
+
+    timeMessage.style.display = 'none';
+    timeSlotsGrid.innerHTML = '';
+
+    // Format date WITHOUT UTC conversion (use local date components)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
+
+    slots.forEach(slot => {
+      const slotBtn = document.createElement('button');
+      slotBtn.className = 'time-slot';
+      slotBtn.textContent = slot;
+      slotBtn.type = 'button';
+
+      // Check if this time slot is booked
+      const bookingKey = `${dateStr} ${slot}`;
+      const isBooked = bookedTimeSlots[bookingKey];
+
+      // Check if this time slot is in the past (ET)
+      const isPast = isTimeslotPast(date, slot);
+
+      // Disable if booked or in the past
+      if (isBooked || isPast) {
+        slotBtn.classList.add('disabled');
+        slotBtn.disabled = true;
+
+        // Show reason for disabling
+        if (isPast) {
+          slotBtn.title = 'This time has already passed';
+        } else if (isBooked) {
+          slotBtn.title = 'This slot is already booked';
+        }
+      } else {
+        slotBtn.classList.add('available'); // Mark available times in light green
+      }
+
+      if (selectedTime === slot && !isBooked && !isPast) {
+        slotBtn.classList.add('selected');
+      }
+
+      slotBtn.addEventListener('click', () => {
+        if (!isBooked && !isPast) {
+          selectedTime = slot;
+          document.getElementById('summaryTime').textContent = slot;
+          renderTimeSlots(dayOfWeek, date);
+        }
+      });
+
+      timeSlotsGrid.appendChild(slotBtn);
+    });
+  }
+
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validation checks
+    if (!selectedDate || !selectedTime) {
+      showMessage('Please select a date and time', 'error');
+      return;
+    }
+
+    // Verify selected time is not in the past or booked
+    if (isTimeslotPast(selectedDate, selectedTime)) {
+      showMessage('The selected time has already passed. Please choose another time.', 'error');
+      return;
+    }
+
+    // Format date WITHOUT UTC conversion (use local date components)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
+
+    const bookingKey = `${dateStr} ${selectedTime}`;
+    if (bookedTimeSlots[bookingKey]) {
+      showMessage('The selected time slot has been booked. Please choose another time.', 'error');
+      return;
+    }
+
+    const serviceType = document.querySelector('select[name="serviceType"]').value;
+    if (!serviceType) {
+      showMessage('Please select a service type', 'error');
+      return;
+    }
+
+    const customerName = document.querySelector('input[name="customerName"]').value.trim();
+    const customerEmail = document.querySelector('input[name="customerEmail"]').value.trim();
+    const customerPhone = document.querySelector('input[name="customerPhone"]').value.trim();
+
+    if (!customerName || !customerEmail || !customerPhone) {
+      showMessage('Please fill in all required fields (name, email, phone)', 'error');
+      return;
+    }
+
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+    const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
+
+    // Only require service address for mobile service days (Thu/Fri)
+    if ((dayOfWeek === 'Thu' || dayOfWeek === 'Fri') && !serviceAddress) {
+      showMessage('Please enter a service address', 'error');
+      return;
+    }
+
+    // For location-only days (Sat/Sun), don't send address
+    let finalAddress = serviceAddress;
+    if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+      finalAddress = 'Mapleville Location'; // Use location name for Sat/Sun
+    }
+
+    // Build booking data with all required fields
+    // CRITICAL: Format date as YYYY-MM-DD WITHOUT UTC conversion (use local timezone)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+
+    const bookingData = {
+      customerName,
+      customerEmail,
+      customerPhone,
+      serviceAddress: finalAddress,
+      serviceType,
+      bookingDate: localDateStr, // Plain string: YYYY-MM-DD (NO UTC conversion)
+      bookingTime: selectedTime,
+      vehicleType: document.querySelector('select[name="vehicleType"]').value,
+      notes: document.querySelector('textarea[name="notes"]').value,
+      vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
+    };
+
+    // Debug: Log the payload before submission
+    console.log('[Booking Submission] Payload:', bookingData);
+    console.log('[Booking Submission] selectedDate (local):', localDateStr);
+    console.log('[Booking Submission] selectedTime:', selectedTime);
+    console.log('[Booking Submission] vehiclePhoto included:', !!vehiclePhotoBase64);
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = '<span class="loading"></span> Processing...';
+
+    try {
+      // Create booking with Stripe checkout
+      const response = await fetch('/api/bookings/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      });
+
+      const data = await response.json();
+
+      console.log('[Booking Response] Status:', response.status, 'Data:', data);
+
+      if (response.ok && data.success) {
+        // Booking was successful
+        if (data.checkoutUrl) {
+          // Stripe is configured - redirect to payment
+          console.log('[Booking Success] Redirecting to Stripe Checkout...');
+          showMessage('Redirecting to payment...', 'success');
+
+          // Clear cart after successful booking
+          clearCart();
+          console.log('[Booking] Cart cleared');
+
+          // Redirect to Stripe Checkout
+          setTimeout(() => {
+            window.location.href = data.checkoutUrl;
+          }, 500);
+        } else {
+          // Stripe is not configured - booking saved but no payment processing
+          console.log('[Booking Success] Booking saved (Stripe not configured)');
+          showMessage(data.message || 'Booking request received. Payment is not connected yet.', 'success');
+
+          // Clear cart after successful booking
+          clearCart();
+          console.log('[Booking] Cart cleared');
+
+          // Reload calendar to show the new booked slot
+          await loadBookedTimeSlots();
+          renderCalendar();
+          if (selectedDate) {
+            const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+            renderTimeSlots(dayOfWeek, selectedDate);
+          }
+
+          // Reset form after 3 seconds
+          setTimeout(() => {
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingSummary').style.display = 'none';
+            selectedDate = null;
+            selectedTime = null;
+            renderCalendar();
+            document.getElementById('timeSlotsGrid').innerHTML = '';
+            document.getElementById('timeMessage').textContent = 'Select a date to view available times';
+          }, 3000);
+        }
+      } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
+        // Handle double booking - time slot was just taken
+        showMessage('This time was just booked. Please choose another slot.', 'error');
+        console.warn('[Booking Error] Time slot taken - reloading available slots');
+
+        // Reload booked time slots immediately to reflect the competing booking
+        await loadBookedTimeSlots();
+
+        // Re-render time slots to show the newly booked slot as unavailable
+        renderCalendar();
+        if (selectedDate) {
+          const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
+      } else {
+        // Show actual backend error message
+        const errorMessage = data.error || data.message || 'Booking failed. Please try again.';
+        showMessage(errorMessage, 'error');
+        console.error('[Booking Error] Backend error:', errorMessage);
+      }
+    } catch (error) {
+      // Show more specific error information
+      const errorMsg = `Error submitting booking: ${error.message}`;
+      showMessage(errorMsg, 'error');
+      console.error('[Booking Error] Network/Fetch error:', error);
+    } finally {
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').innerHTML = 'Book & Pay Deposit';
+    }
+  });
+
+  function showMessage(text, type) {
+    const messageBox = document.getElementById('messageBox');
+    messageBox.className = `message-box ${type}`;
+    messageBox.textContent = text;
+    messageBox.style.display = 'block';
+  }
+
+  // ========================================
+  // SERVICE TAG MAP FOR ADDRESS FIELD LOGIC
+  // ========================================
+  const serviceTagMap = {
+    'Full Motorcycle Service': 'MOBILE',
+    'Interior Detailing': 'MOBILE',
+    'Car Wash': 'MOBILE',
+    'Ceramic Coating': 'LOCATION ONLY',
+    'Premium Package': 'MOBILE',
+    'Ultra Premium': 'MOBILE',
+    'Pet Hair / Odor Elimination': 'EXTRA FEE',
+    'Headlight Restoration': 'EXTRA FEE',
+    'Engine Bay Cleaning': 'MOBILE',
+    'Full Vehicle Polish': 'LOCATION ONLY'
+  };
+
+  // ========================================
+  // GET SERVICE TAG FROM SERVICE NAME
+  // ========================================
+  function getServiceTagFromName(serviceName) {
+    return serviceTagMap[serviceName] || 'MOBILE';
+  }
+
+  // ========================================
+  // UPDATE ADDRESS FIELD VISIBILITY
+  // ========================================
+  function updateAddressFieldVisibility(serviceTag) {
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+
+    console.log('[Booking] Updating address field for service tag:', serviceTag);
+
+    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
+      // Show address field for mobile/extra fee services
+      addressFieldGroup.style.display = 'block';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = true;
+      console.log('[Booking] Address field shown (required)');
+    } else if (serviceTag === 'LOCATION ONLY') {
+      // Hide address field for location-only services
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'block';
+      serviceAddressInput.required = false;
+      serviceAddressInput.value = ''; // Clear previous address
+      console.log('[Booking] Address field hidden, location note shown');
+    } else {
+      // Default: hide address field
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+      console.log('[Booking] Address field hidden (default)');
+    }
+  }
+
+  // ========================================
+  // LOAD CART ITEMS ON PAGE LOAD
+  // ========================================
+  function loadCartOnPageLoad() {
+    const cart = getCart();
+    const serviceDropdown = document.querySelector('select[name="serviceType"]');
+    const addressFieldGroup = document.getElementById('addressFieldGroup');
+    const locationNoteGroup = document.getElementById('locationNoteGroup');
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      console.log('[Booking] No cart items found');
+      return;
+    }
+
+    const firstItem = cart.items[0];
+    console.log('[Booking] Loading cart item:', firstItem.serviceName);
+
+    // Pre-fill service type with first cart item
+    serviceDropdown.value = firstItem.serviceName;
+    serviceDropdown.disabled = true; // Disable dropdown since service is from cart
+
+    // Trigger change event to update summary and address field
+    const event = new Event('change');
+    serviceDropdown.dispatchEvent(event);
+  }
+
+
+  // Load cart when page initializes
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadCartOnPageLoad);
+  } else {
+    loadCartOnPageLoad();
+  }
+
+  // Auto-refresh time slots to update past times in real-time
+  setInterval(() => {
+    // Re-render calendar and time slots if a date is selected
+    if (selectedDate) {
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+      renderTimeSlots(dayOfWeek, selectedDate);
+    }
+  }, 60000); // Update every minute
+
+  // Initial render
+  renderCalendar();
+
+  // ========================================
+  // SECTION VISIBILITY MANAGEMENT
+  // ========================================
+  window.showSection = function(sectionId) {
+    // Hide all sections
+    const homeSection = document.getElementById('homeSection');
+    const bookingSection = document.getElementById('booking');
+    const homeFooter = document.getElementById('homeFooter');
+
+    if (sectionId === 'home') {
+      if (homeSection) homeSection.style.display = 'block';
+      if (bookingSection) bookingSection.style.display = 'none';
+      if (homeFooter) homeFooter.style.display = 'block';
+    } else if (sectionId === 'booking') {
+      if (homeSection) homeSection.style.display = 'none';
+      if (bookingSection) bookingSection.style.display = 'block';
+      if (homeFooter) homeFooter.style.display = 'none';
+      // Re-render calendar when booking section is shown
+      setTimeout(() => {
+        if (document.getElementById('calendarGrid').innerHTML === '') {
+          renderCalendar();
+        }
+      }, 0);
+    }
+  };
+
+  // Show booking section by default — this page IS the booking page
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('booking');
+    });
+  } else {
+    showSection('booking');
+  }
+</script>
+
+<!-- Cart Modal (Outside tab sections) -->
+<div id="cartModal" class="cart-modal" style="display: none;">
+  <div class="cart-content">
+    <h2>Your Cart</h2>
+    <div id="cartItems"></div>
+    <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
+    <button id="proceedCheckout" class="btn-primary">Proceed to Checkout</button>
+    <button id="closeCart" class="btn-secondary">Close</button>
+  </div>
+</div>
+
+<script src="cart.js"></script></body>
 </html>
