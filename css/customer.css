@@ -41,24 +41,30 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
-  height: 96px;
+  padding: 0 28px;
+  gap: 20px;
+  height: 76px;
+  flex-wrap: nowrap;
 }
-.nav-brand { display: flex; align-items: center; gap: 16px; cursor: pointer; }
-.nav-brand img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; }
-.nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-.nav-brand-name { font-weight: 700; font-size: 19px; color: var(--primary); letter-spacing: 0.3px; }
-.nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 1.4px; text-transform: uppercase; margin-top: 2px; }
-.nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
+.nav-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
+.nav-brand img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
+.nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; white-space: nowrap; }
+.nav-brand-name { font-weight: 700; font-size: 15px; color: var(--primary); letter-spacing: 0.3px; }
+.nav-brand-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 1.3px; text-transform: uppercase; margin-top: 2px; }
+.nav-links { display: flex; gap: 18px; list-style: none; align-items: center; flex-wrap: nowrap; }
+.nav-links li { white-space: nowrap; display: flex; align-items: center; }
 .nav-links a {
   color: var(--text-muted);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
   transition: color 0.2s;
-  padding: 10px 0;
+  padding: 6px 0;
   border-bottom: 2px solid transparent;
   letter-spacing: 0.2px;
+  white-space: nowrap;
 }
+/* Hide the "Premium Auto Care" subtitle on narrow widths so the nav links keep room */
+@media (max-width: 1200px) { .nav-brand-sub { display: none; } }
 .nav-links a:hover, .nav-links a.active {
   color: var(--primary);
   border-bottom-color: var(--primary);
@@ -74,24 +80,25 @@ img { max-width: 100%; display: block; }
 }
 .nav-cta:hover { background: var(--primary-light); transform: translateY(-1px); }
 
-/* Sign In link / Logout button in nav — gray-on-black, matches nav-links.
-   Button needs explicit transparent bg + font-family because browsers
-   give <button> a default white background and system font otherwise. */
+/* Sign In link / Logout button / Dashboard link in nav — gray-on-black,
+   matches nav-links. Button needs explicit transparent bg + font-family
+   because browsers give <button> a default white background otherwise. */
 .nav-signin {
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
-  padding: 11px 20px;
+  padding: 7px 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s;
   letter-spacing: 0.3px;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
   line-height: 1;
+  white-space: nowrap;
 }
 .nav-signin:hover { color: var(--primary); border-color: var(--primary); background: rgba(0, 255, 65, 0.05); }
 
@@ -99,29 +106,30 @@ img { max-width: 100%; display: block; }
 .nav-cart {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
   border: 1px solid var(--border);
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: 7px 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 .nav-cart:hover { color: var(--primary); border-color: var(--primary); background: rgba(0, 255, 65, 0.05); }
-.nav-cart svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.nav-cart svg { width: 15px; height: 15px; stroke: currentColor; flex-shrink: 0; }
 .nav-cart .cart-label { line-height: 1; }
 .nav-cart .cart-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
   background: var(--border);
   color: var(--text);
   border-radius: 999px;
@@ -143,7 +151,7 @@ img { max-width: 100%; display: block; }
   .nav-links {
     display: none;
     position: absolute;
-    top: 96px;
+    top: 76px;
     left: 0;
     right: 0;
     background: var(--light-bg2);

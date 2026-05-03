@@ -37,19 +37,22 @@
     } catch (e) { return ''; }
   }
 
-  function renderAuthControl() {
+  // Returns an array of <li>...</li> strings — one per auth-related
+  // control. The renderNav function joins them so flexbox handles
+  // spacing and prevents them from stacking inside a single <li>.
+  function renderAuthControlItems() {
     if (isLoggedIn()) {
       const label = getUserLabel();
       const role = getUserRole();
       const titleAttr = label ? ` title="Signed in as ${label}"` : '';
-      // Owner / dev get a Dashboard link back to their staff portal
-      // while still being able to browse customer pages.
-      const dashLink = (role === 'owner' || role === 'dev')
-        ? `<a href="/app" class="nav-signin" style="margin-right:10px;">Dashboard</a>`
-        : '';
-      return `${dashLink}<button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button>`;
+      const items = [];
+      if (role === 'owner' || role === 'dev') {
+        items.push(`<li><a href="/app" class="nav-signin">Dashboard</a></li>`);
+      }
+      items.push(`<li><button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button></li>`);
+      return items.join('');
     }
-    return `<a href="/login" class="nav-signin">Sign In</a>`;
+    return `<li><a href="/login" class="nav-signin">Sign In</a></li>`;
   }
 
   function renderNav(activePage) {
@@ -73,7 +76,7 @@
         </label>
         <ul class="nav-links">
           ${links}
-          <li>${renderAuthControl()}</li>
+          ${renderAuthControlItems()}
           <li>
             <button type="button" id="cartBtn" class="nav-cart is-empty" aria-label="View cart">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
