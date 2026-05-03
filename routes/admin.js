@@ -15,25 +15,28 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     // Calculate week ago in Eastern Time using string arithmetic
     const weekAgo = addDaysToEasternDate(today, -7);
 
-    // Today's bookings
+    // All counts/totals exclude cancelled bookings — once a booking is
+    // cancelled it should not show up in the tracker.
+
+    // Today's bookings (active only)
     const todayResult = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE booking_date = $1',
+      "SELECT COUNT(*) as count FROM bookings WHERE booking_date = $1 AND status <> 'cancelled'",
       [today]
     );
 
-    // This week's bookings
+    // This week's bookings (active only)
     const weekResult = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE booking_date BETWEEN $1 AND $2',
+      "SELECT COUNT(*) as count FROM bookings WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled'",
       [weekAgo, today]
     );
 
-    // Pending confirmations
+    // Pending confirmations (cancelled is its own status, so this naturally excludes them)
     const pendingResult = await pool.query(
       'SELECT COUNT(*) as count FROM bookings WHERE status = $1',
       ['pending']
     );
 
-    // Calculate revenue from confirmed bookings
+    // Revenue from confirmed bookings only (cancelled never count)
     const revenueResult = await pool.query(
       `SELECT SUM(CAST(SUBSTRING(service_type FROM '\\$(\\d+)') AS INTEGER)) as total
        FROM bookings
@@ -41,12 +44,12 @@ router.get('/dashboard', verifyToken, async (req, res) => {
       ['confirmed', weekAgo]
     );
 
-    // Upcoming bookings next 7 days (in Eastern Time)
+    // Upcoming bookings next 7 days, excluding cancelled
     const sevenDaysLaterStr = addDaysToEasternDate(today, 7);
 
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2
+       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled'
        ORDER BY booking_date ASC, booking_time ASC
        LIMIT 10`,
       [today, sevenDaysLaterStr]
