@@ -752,7 +752,26 @@
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
     }
+
+    // Always reset date/time and re-render calendar when service changes
+    selectedDate = null;
+    selectedTime = null;
+    document.getElementById('summaryDate').textContent = 'Not selected';
+    document.getElementById('summaryTime').textContent = 'Not selected';
+    document.getElementById('timeSlotsGrid').innerHTML = '';
+    document.getElementById('timeMessage').style.display = 'block';
+    renderCalendar();
   });
+
+  // Returns 'mobile', 'location', or null based on the currently selected service
+  function getSelectedServiceCategory() {
+    const serviceValue = document.querySelector('select[name="serviceType"]').value;
+    if (!serviceValue) return null;
+    const tag = getServiceTagFromName(serviceValue);
+    if (tag === 'MOBILE' || tag === 'EXTRA FEE') return 'mobile';
+    if (tag === 'LOCATION ONLY') return 'location';
+    return 'mobile'; // default fallback
+  }
 
   function generateTimeSlots(dayOfWeek) {
     const hours = businessHours[dayOfWeek];
@@ -768,6 +787,20 @@
   }
 
   function renderCalendar() {
+    const serviceCat = getSelectedServiceCategory();
+    const timeMessage = document.getElementById('timeMessage');
+    const timeSlotsGrid = document.getElementById('timeSlotsGrid');
+
+    // If no service is selected, show prompt and clear time slots
+    if (!serviceCat) {
+      timeMessage.textContent = 'Select a service type to see available dates.';
+      timeMessage.style.display = 'block';
+      timeSlotsGrid.innerHTML = '';
+    } else if (!selectedDate) {
+      timeMessage.textContent = 'Select a date to view available times.';
+      timeMessage.style.display = 'block';
+    }
+
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
@@ -801,12 +834,18 @@
       const cellDate = new Date(year, month, day);
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
 
-      // Disable past dates (using ET) and closed days
-      if (cellDate < todayET || !businessHours[dayOfWeek]) {
+      // Determine if this day is open for the selected service type
+      const isMobileDay    = dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
+      const isLocationDay  = dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
+      const isDayAvailable = serviceCat === 'mobile'   ? isMobileDay
+                           : serviceCat === 'location' ? isLocationDay
+                           : false; // No service selected → nothing available
+
+      if (cellDate < todayET || !isDayAvailable) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
       } else {
-        dayCell.classList.add('available'); // Mark available dates in light green
+        dayCell.classList.add('available');
         dayCell.addEventListener('click', () => selectDate(cellDate));
       }
 
