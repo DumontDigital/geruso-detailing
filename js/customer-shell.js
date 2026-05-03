@@ -28,11 +28,26 @@
     } catch (e) { return ''; }
   }
 
+  function getUserRole() {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return '';
+      const u = JSON.parse(raw);
+      return u.role || '';
+    } catch (e) { return ''; }
+  }
+
   function renderAuthControl() {
     if (isLoggedIn()) {
       const label = getUserLabel();
+      const role = getUserRole();
       const titleAttr = label ? ` title="Signed in as ${label}"` : '';
-      return `<button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button>`;
+      // Owner / dev get a Dashboard link back to their staff portal
+      // while still being able to browse customer pages.
+      const dashLink = (role === 'owner' || role === 'dev')
+        ? `<a href="/app" class="nav-signin" style="margin-right:10px;">Dashboard</a>`
+        : '';
+      return `${dashLink}<button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button>`;
     }
     return `<a href="/login" class="nav-signin">Sign In</a>`;
   }

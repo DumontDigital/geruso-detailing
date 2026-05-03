@@ -141,14 +141,26 @@
     <div class="sidebar-nav">
       <div class="sidebar-item active" onclick="showSection('overview')">📊 Overview</div>
       <div class="sidebar-item" onclick="showSection('bookings')">📅 Bookings</div>
-      <div class="sidebar-item" onclick="showSection('services')">🔧 Services</div>
-      <div class="sidebar-item" onclick="showSection('addons')">➕ Add-ons</div>
-      <div class="sidebar-item" onclick="showSection('schedule')">⏰ Schedule</div>
-      <div class="sidebar-item" onclick="showSection('content')">📝 Content</div>
+      <!-- Owner-only sections (Services, Add-ons, Schedule, Content)
+           are hidden for dev role via JS below to limit dev access. -->
+      <div class="sidebar-item owner-only" onclick="showSection('services')">🔧 Services</div>
+      <div class="sidebar-item owner-only" onclick="showSection('addons')">➕ Add-ons</div>
+      <div class="sidebar-item owner-only" onclick="showSection('schedule')">⏰ Schedule</div>
+      <div class="sidebar-item owner-only" onclick="showSection('content')">📝 Content</div>
     </div>
     <div class="sidebar-footer">
+      <a href="/home.html" style="display: block; padding: 10px; margin-bottom: 8px; text-align: center; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;">Customer View</a>
       <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
+    <script>
+      // Hide owner-only sections when the signed-in user is a dev.
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || 'null');
+        if (u && u.role === 'dev') {
+          document.querySelectorAll('.sidebar-item.owner-only').forEach(el => el.style.display = 'none');
+        }
+      } catch (e) {}
+    </script>
   </div>
 
   <!-- Main Content -->
