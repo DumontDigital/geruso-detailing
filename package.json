@@ -16,7 +16,8 @@
     "jsonwebtoken": "^9.0.2",
     "resend": "^3.0.0",
     "stripe": "^14.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "google-auth-library": "^9.0.0"
   },
   "engines": {
     "node": "18.x"

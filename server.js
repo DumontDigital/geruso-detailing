@@ -294,7 +294,7 @@ app.get('/api/init-db', async (req, res) => {
 });
 
 // Register API routes
-app.use('/api/admin', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/availability', availabilityRoutes);

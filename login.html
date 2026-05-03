@@ -280,6 +280,8 @@
       }
     }
   </style>
+  <!-- Google Sign-In Library -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="login-container">
@@ -503,13 +505,55 @@
       }
     });
 
-    // Google OAuth buttons (placeholders - will set up later)
-    document.getElementById('googleLoginBtn').addEventListener('click', () => {
-      alert('Google OAuth integration coming soon!');
-    });
+    // Google OAuth Handler
+    window.handleGoogleSignIn = async (response) => {
+      try {
+        // Send the ID token to backend for authentication
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: response.credential })
+        });
 
-    document.getElementById('googleRegisterBtn').addEventListener('click', () => {
-      alert('Google OAuth integration coming soon!');
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert('Login failed: ' + (data.error || 'Unknown error'));
+          return;
+        }
+
+        // Store token and user info
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Redirect to app
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Google sign-in error:', error);
+        alert('Sign-in failed: ' + error.message);
+      }
+    };
+
+    // Initialize Google Sign-In
+    window.addEventListener('load', function() {
+      if (window.google && window.google.accounts) {
+        google.accounts.id.initialize({
+          client_id: '538501956164-0je68bac6jsc97q1ravlv78rf6473fe7.apps.googleusercontent.com',
+          callback: window.handleGoogleSignIn
+        });
+
+        // Render sign-in button for login tab
+        google.accounts.id.renderButton(
+          document.getElementById('googleLoginBtn'),
+          { theme: 'dark', size: 'large', width: '100%' }
+        );
+
+        // Render sign-in button for register tab
+        google.accounts.id.renderButton(
+          document.getElementById('googleRegisterBtn'),
+          { theme: 'dark', size: 'large', width: '100%' }
+        );
+      }
     });
 
     // Check if already logged in
