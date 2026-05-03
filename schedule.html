@@ -771,6 +771,38 @@
     }
   }
 
+  // Hide service options that don't match the selected day's category.
+  // Thu/Fri = Mobile day → show MOBILE + EXTRA FEE add-ons.
+  // Sat/Sun = Location day → show LOCATION ONLY only.
+  // dayOfWeek = null restores all options (e.g. before a date is picked).
+  function filterServicesByDay(dayOfWeek) {
+    const select = document.querySelector('select[name="serviceType"]');
+    if (!select) return;
+    const isMobileDay = dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
+    const isLocationDay = dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
+
+    Array.from(select.options).forEach(opt => {
+      if (!opt.value) { opt.hidden = false; opt.disabled = false; return; } // placeholder
+      const tag = serviceTagMap[opt.value] || 'MOBILE';
+      let show = true;
+      if (isMobileDay)        show = (tag === 'MOBILE' || tag === 'EXTRA FEE');
+      else if (isLocationDay) show = (tag === 'LOCATION ONLY');
+      opt.hidden = !show;
+      opt.disabled = !show;
+    });
+
+    // If the currently selected service no longer matches, reset the dropdown
+    // and clear the booking summary's service line.
+    const currentOpt = select.options[select.selectedIndex];
+    if (currentOpt && (currentOpt.hidden || currentOpt.disabled)) {
+      select.value = '';
+      const summaryService = document.getElementById('summaryService');
+      const summaryPrice = document.getElementById('summaryPrice');
+      if (summaryService) summaryService.textContent = 'Not selected';
+      if (summaryPrice) summaryPrice.textContent = 'Not selected';
+    }
+  }
+
   function selectDate(date) {
     selectedDate = date;
     selectedTime = null;
@@ -780,6 +812,9 @@
 
     document.getElementById('summaryDate').textContent = dayName;
     document.getElementById('bookingSummary').style.display = 'block';
+
+    // Filter the service dropdown to only services valid for this day.
+    filterServicesByDay(dayOfWeek);
 
     // Show/hide Service Address field based on day of week
     const addressFieldGroup = document.getElementById('addressFieldGroup');
