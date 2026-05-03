@@ -73,6 +73,57 @@ img { max-width: 100%; display: block; }
 }
 .nav-cta:hover { background: var(--primary-light); transform: translateY(-1px); }
 
+/* Sign In link in nav — gray-on-black like nav-links */
+.nav-signin {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.nav-signin:hover { color: var(--primary); border-color: var(--primary); background: rgba(0, 255, 65, 0.05); }
+
+/* Cart button in nav — gray-on-black, matches sign-in */
+.nav-cart {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.nav-cart:hover { color: var(--primary); border-color: var(--primary); background: rgba(0, 255, 65, 0.05); }
+.nav-cart svg { width: 16px; height: 16px; stroke: currentColor; flex-shrink: 0; }
+.nav-cart .cart-label { line-height: 1; }
+.nav-cart .cart-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.2s;
+}
+.nav-cart:hover .cart-count { background: var(--primary); color: #000; }
+.nav-cart.is-empty .cart-count { background: var(--border); color: var(--text-muted); }
+
 .nav-toggle { display: none; }
 .nav-toggle-label { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
 .nav-toggle-label span { width: 24px; height: 2px; background: var(--primary); border-radius: 2px; transition: 0.2s; }

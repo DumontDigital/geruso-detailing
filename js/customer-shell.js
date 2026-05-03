@@ -31,7 +31,18 @@
         </label>
         <ul class="nav-links">
           ${links}
-          <li><a href="/booking.html" class="nav-cta">Book Now</a></li>
+          <li><a href="/login" class="nav-signin">Sign In</a></li>
+          <li>
+            <button type="button" id="cartBtn" class="nav-cart is-empty" aria-label="View cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"></path>
+              </svg>
+              <span class="cart-label">Cart</span>
+              <span class="cart-count">0</span>
+            </button>
+          </li>
         </ul>
       </nav>
     `;
