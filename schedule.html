@@ -369,7 +369,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" id="submitBtn">Book & Pay Deposit</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Book and Add to Cart</button>
         </form>
       </div>
     </div>
@@ -936,6 +936,19 @@
     });
   }
 
+  // Hide the "Prev" button for regular customers — they shouldn't browse
+  // months in the past. Owner / dev keep it for admin reference.
+  (function gatePrevMonthByRole() {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      const role = u && u.role;
+      if (role !== 'owner' && role !== 'dev') {
+        const prev = document.getElementById('prevMonth');
+        if (prev) prev.style.display = 'none';
+      }
+    } catch (e) {}
+  })();
+
   document.getElementById('prevMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
     renderCalendar();
@@ -1042,48 +1055,36 @@
       console.log('[Booking Response] Status:', response.status, 'Data:', data);
 
       if (response.ok && data.success) {
-        // Booking was successful
-        if (data.checkoutUrl) {
-          // Stripe is configured - redirect to payment
-          console.log('[Booking Success] Redirecting to Stripe Checkout...');
-          showMessage('Redirecting to payment...', 'success');
-
-          // Clear cart after successful booking
-          clearCart();
-          console.log('[Booking] Cart cleared');
-
-          // Redirect to Stripe Checkout
-          setTimeout(() => {
-            window.location.href = data.checkoutUrl;
-          }, 500);
-        } else {
-          // Stripe is not configured - booking saved but no payment processing
-          console.log('[Booking Success] Booking saved (Stripe not configured)');
-          showMessage(data.message || 'Booking request received. Payment is not connected yet.', 'success');
-
-          // Clear cart after successful booking
-          clearCart();
-          console.log('[Booking] Cart cleared');
-
-          // Reload calendar to show the new booked slot
-          await loadBookedTimeSlots();
-          renderCalendar();
-          if (selectedDate) {
-            const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
-            renderTimeSlots(dayOfWeek, selectedDate);
+        // Booking was saved server-side and the confirmation email has
+        // been sent. Add the booked service to the cart so the customer
+        // sees what they reserved, then either send them to Stripe (if
+        // configured) or open the cart modal for review.
+        const serviceName = bookingData.serviceType;
+        const priceMatch = (serviceName || '').match(/\$(\d+)/) || (serviceName || '').match(/(\d+)/);
+        const price = priceMatch ? parseInt(priceMatch[1] || priceMatch[0], 10) : 0;
+        const serviceTag = (typeof getServiceTagFromName === 'function')
+          ? getServiceTagFromName(serviceName)
+          : 'MOBILE';
+        try {
+          if (typeof addToCart === 'function') {
+            addToCart(serviceName, price, serviceTag, 'standard');
           }
+        } catch (e) { console.warn('[Booking] addToCart failed:', e); }
 
-          // Reset form after 3 seconds
-          setTimeout(() => {
-            document.getElementById('bookingForm').reset();
-            document.getElementById('bookingSummary').style.display = 'none';
-            selectedDate = null;
-            selectedTime = null;
-            renderCalendar();
-            document.getElementById('timeSlotsGrid').innerHTML = '';
-            document.getElementById('timeMessage').textContent = 'Select a date to view available times';
-          }, 3000);
+        if (data.checkoutUrl) {
+          showMessage('Booking confirmed — redirecting to checkout...', 'success');
+          setTimeout(() => { window.location.href = data.checkoutUrl; }, 600);
+        } else {
+          showMessage('Booking confirmed! Review your cart to checkout.', 'success');
+          // Open the cart modal so the customer can hit "Proceed to Checkout".
+          if (typeof toggleCartModal === 'function') {
+            setTimeout(() => toggleCartModal(), 500);
+          }
         }
+
+        // Reload calendar so the just-booked slot grays out for the next visitor.
+        await loadBookedTimeSlots();
+        renderCalendar();
       } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
         // Handle double booking - time slot was just taken
         showMessage('This time was just booked. Please choose another slot.', 'error');
@@ -1111,7 +1112,7 @@
       console.error('[Booking Error] Network/Fetch error:', error);
     } finally {
       document.getElementById('submitBtn').disabled = false;
-      document.getElementById('submitBtn').innerHTML = 'Book & Pay Deposit';
+      document.getElementById('submitBtn').innerHTML = 'Book and Add to Cart';
     }
   });
 
@@ -1204,11 +1205,32 @@
   }
 
 
+  // Pre-select service when arriving from /services.html?service=XYZ
+  // This auto-fills the dropdown, fires the existing change handler to
+  // toggle the address field, and the calendar's service-type filter.
+  function applyServiceFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const want = params.get('service');
+      if (!want) return;
+      const sel = document.querySelector('select[name="serviceType"]');
+      if (!sel) return;
+      const match = Array.from(sel.options).find(o => o.value === want);
+      if (!match) return;
+      sel.value = want;
+      sel.dispatchEvent(new Event('change'));
+    } catch (e) {}
+  }
+
   // Load cart when page initializes
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadCartOnPageLoad);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCartOnPageLoad();
+      applyServiceFromUrl();
+    });
   } else {
     loadCartOnPageLoad();
+    applyServiceFromUrl();
   }
 
   // Auto-refresh time slots to update past times in real-time

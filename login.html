@@ -373,11 +373,6 @@
             <input type="password" id="registerPassword" placeholder="••••••••" required minlength="8">
           </div>
 
-          <div class="form-group">
-            <label>Confirm Password</label>
-            <input type="password" id="registerConfirm" placeholder="••••••••" required minlength="8">
-          </div>
-
           <button type="submit" class="submit-btn" id="registerSubmitBtn">Create Account</button>
           <div class="loading" id="registerLoading">Creating account...</div>
         </form>
@@ -466,7 +461,6 @@
       const lastName = document.getElementById('registerLastName').value;
       const email = document.getElementById('registerEmail').value;
       const password = document.getElementById('registerPassword').value;
-      const confirm = document.getElementById('registerConfirm').value;
 
       const errorDiv = document.getElementById('registerError');
       const successDiv = document.getElementById('registerSuccess');
@@ -475,12 +469,6 @@
 
       errorDiv.classList.remove('show');
       successDiv.classList.remove('show');
-
-      if (password !== confirm) {
-        errorDiv.textContent = 'Passwords do not match';
-        errorDiv.classList.add('show');
-        return;
-      }
 
       submitBtn.disabled = true;
       loading.style.display = 'block';

@@ -1527,14 +1527,23 @@
   };
   
   window.ownerDeleteBooking = async (bookingId) => {
+    if (!bookingId) {
+      alert('Cannot delete: missing booking id.');
+      return;
+    }
     if (!confirm('Delete this booking permanently? This cannot be undone.')) return;
     try {
-      const response = await fetch(`/api/owner/booking/${bookingId}`, { method: 'DELETE' });
-      if (response.ok) {
-        loadBookings();
+      const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body.error || `Server returned ${response.status}`);
       }
+      loadBookings();
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Failed to delete: ' + error.message);
     }
   };
   

@@ -9,7 +9,11 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: 'No token provided' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  // Use same fallback secret routes/auth.js uses when signing — otherwise
+  // tokens signed with the fallback never verify and every admin endpoint
+  // returns 401 (which is why the Delete button silently failed).
+  const SECRET = process.env.JWT_SECRET || 'your-secret-key';
+  jwt.verify(token, SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ error: 'Invalid token' });
     }
