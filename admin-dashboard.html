@@ -148,10 +148,8 @@
       <div class="sidebar-item owner-only" onclick="showSection('schedule')">⏰ Schedule</div>
       <div class="sidebar-item owner-only" onclick="showSection('content')">📝 Content</div>
     </div>
-    <div class="sidebar-footer">
-      <!-- Logout intentionally removed — parent app.html top bar
-           already provides Customer View + Logout, so we don't double up. -->
-    </div>
+    <!-- Sidebar footer removed — parent app.html top bar already
+         provides Customer View + Logout, no need for a stray empty strip. -->
     <script>
       // Hide owner-only sections when the signed-in user is a dev.
       try {
