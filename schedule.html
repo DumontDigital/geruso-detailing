@@ -1027,11 +1027,8 @@
     }
 
     // Build booking data with all required fields
-    // CRITICAL: Format date as YYYY-MM-DD WITHOUT UTC conversion (use local timezone)
-    const year = selectedDate.getFullYear();
-    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedDate.getDate()).padStart(2, '0');
-    const localDateStr = `${year}-${month}-${day}`;
+    // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
+    const localDateStr = dateStr;
 
     const bookingData = {
       customerName,
