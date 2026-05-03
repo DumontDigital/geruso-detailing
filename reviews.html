@@ -1,264 +1,171 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reviews — Geruso Detailing</title><style>
-  :root {
-    --primary: #00FF41;
-    --primary-dark: #00DD33;
-    --primary-light: #33FF66;
-    --white: #ffffff;
-    --light-bg: #0a0a0a;
-    --light-bg2: #1a1a1a;
-    --border: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #aaaaaa;
-    --text-light: #888888;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
-
-  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
-  .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-  .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-  .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-  .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
-  .nav-toggle { display: none; }
-  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
-  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
-  .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
-  .nav-toggle:checked ~ .nav-phone { display: block; }
-
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: none; }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,255,65,0.2); }
-
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 12px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; margin-bottom: 8px; }
-  .trust-line { font-size: 13px; color: var(--text-light); text-align: center; margin-bottom: 40px; font-weight: 500; }
-  section { padding: 80px 48px; }
-  .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
-
-  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,255,65,0.15); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-
-  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
-  .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
-  .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
-  .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 8px rgba(0,255,65,0.5); }
-  .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
-
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
-
-  #reviews { background: var(--light-bg); }
-  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 0; }
-  .review-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 16px; transition: all 0.2s; }
-  .review-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,255,65,0.15); transform: translateY(-4px); }
-  .review-stars { display: flex; gap: 3px; }
-  .star-icon { color: var(--primary); font-size: 15px; }
-  .review-text { font-size: 15px; color: var(--text-muted); line-height: 1.65; font-style: italic; flex: 1; }
-  .review-author { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
-  .review-avatar { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #000; flex-shrink: 0; }
-  .review-name { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 2px; }
-  .review-verified { font-size: 12px; color: var(--text-muted); }
-  .reviews-cta { margin-top: 56px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
-  .reviews-cta h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .reviews-cta p { font-size: 14px; color: var(--text-muted); }
-
-  /* ── CART ── */
-  .cart-link {
-    background: var(--primary);
-    color: #000;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .cart-link:hover {
-    background: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
-  }
-
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 4px rgba(0,255,65,0.2);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  #cartItems {
-    margin-bottom: 16px;
-    max-height: 50vh;
-    overflow-y: auto;
-  }
-
-  @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reviews — Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    .reviews-section { padding: 64px 32px; }
+    .summary-card {
+      max-width: 560px;
+      margin: 0 auto 56px;
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      text-align: center;
     }
+    .summary-rating { font-size: 56px; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 6px; }
+    .summary-stars { font-size: 22px; color: var(--primary); margin-bottom: 8px; letter-spacing: 4px; }
+    .summary-count { color: var(--text-muted); font-size: 14px; }
 
-    .nav-actions {
-      flex-wrap: wrap;
-      gap: 8px;
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 1240px;
+      margin: 0 auto;
     }
-  }
+    .review-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      transition: all 0.2s;
+    }
+    .review-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .review-stars { color: var(--primary); font-size: 16px; letter-spacing: 2px; margin-bottom: 14px; }
+    .review-text { color: var(--text); font-size: 15px; line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .review-meta { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .review-avatar {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #000;
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+    }
+    .review-author { font-weight: 700; font-size: 14px; }
+    .review-date { color: var(--text-muted); font-size: 12px; }
 
-  @media(max-width:960px){ .reviews-grid{grid-template-columns:1fr} .reviews-cta{flex-direction:column;align-items:flex-start} }
-</style></head><body>
-<nav>
-  <a href="index.html" class="nav-brand">
-    <div class="nav-logo"></div>
-    <div class="nav-brand-text">
-      <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
+    .cta-strip {
+      background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
+      border-top: 1px solid rgba(0,255,65,0.2);
+      padding: 80px 32px;
+      text-align: center;
+    }
+    .cta-strip h2 { margin-bottom: 14px; }
+    .cta-strip p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; }
+  </style>
+</head>
+<body data-page="reviews">
+  <div data-nav></div>
+
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="page-hero-eyebrow">Customer Reviews</div>
+      <h1>What Our Customers Say</h1>
+      <p>Real feedback from real Rhode Island car owners. We're proud of every review — but we're even prouder of the relationships we've built.</p>
     </div>
-  </a>
-  <input type="checkbox" id="nav-toggle" class="nav-toggle">
-  <label for="nav-toggle" class="nav-toggle-label">
-    <span></span>
-    <span></span>
-    <span></span>
-  </label>
-  <ul class="nav-links">
-    <li><a href="services.html" >Services</a></li>
-    <li><a href="work.html" >Our Work</a></li>
-    <li><a href="booking.html" >Schedule</a></li>
-    <li><a href="reviews.html" class="active">Reviews</a></li>
-  </ul>
-  <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
-  </div>
-</nav>
+  </section>
 
-<section id="reviews">
-  <div class="section-inner">
-    <div class="section-label">REVIEWS</div>
-    <h1 class="section-heading">What clients say.</h1>
-    <p class="section-sub">Real customers, real results.</p>
-    <p class="trust-line">Real reviews from local Rhode Island customers</p>
+  <section class="reviews-section">
+    <div class="summary-card">
+      <div class="summary-rating">4.9</div>
+      <div class="summary-stars">★★★★★</div>
+      <div class="summary-count">Based on 127 customer reviews</div>
+    </div>
+
     <div class="reviews-grid">
       <div class="review-card">
-        <div class="review-stars"><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span></div>
-        <p class="review-text">"I was impressed by the thoroughness and professionalism. My car feels brand new!"</p>
-        <div class="review-author"><div class="review-avatar">J</div><div><div class="review-name">Jonathan</div><div class="review-verified">Verified customer</div></div></div>
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Absolutely fantastic work. My car looks better than the day I bought it. The interior detail was thorough and the team showed up on time. Highly recommend!"</p>
+        <div class="review-meta">
+          <div class="review-avatar">JS</div>
+          <div>
+            <div class="review-author">James S.</div>
+            <div class="review-date">2 weeks ago</div>
+          </div>
+        </div>
       </div>
-      <div class="review-card">
-        <div class="review-stars"><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span></div>
-        <p class="review-text">"Outstanding attention to detail! The team at Geruso Detailing truly goes the extra mile."</p>
-        <div class="review-author"><div class="review-avatar">S</div><div><div class="review-name">Sophia</div><div class="review-verified">Verified customer</div></div></div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars"><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span><span class="star-icon">★</span></div>
-        <p class="review-text">"Professional, efficient, and courteous. I highly recommend Geruso Detailing!"</p>
-        <div class="review-author"><div class="review-avatar">E</div><div><div class="review-name">Ethan</div><div class="review-verified">Verified customer</div></div></div>
-      </div>
-    </div>
-    <div class="reviews-cta">
-      <div>
-        <h3>Happy with your detail?</h3>
-        <p>Leave us a review — it helps other RI customers find us.</p>
-      </div>
-      <a href="contact.html" class="btn-primary" style="white-space:nowrap;">Book Your Detail</a>
-    </div>
-  </div>
-</section>
 
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Geruso did the ceramic coating on my SUV and it looks stunning. Water beads off perfectly and the gloss is unreal. Worth every penny."</p>
+        <div class="review-meta">
+          <div class="review-avatar">MR</div>
+          <div>
+            <div class="review-author">Maria R.</div>
+            <div class="review-date">1 month ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Mobile service was a game-changer. They came to my office, did an amazing detail in the parking lot, and I drove home in a fresh car. Will book again."</p>
+        <div class="review-meta">
+          <div class="review-avatar">DK</div>
+          <div>
+            <div class="review-author">David K.</div>
+            <div class="review-date">3 weeks ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"My car had pet hair, sand, and stains everywhere. They got it ALL out. Best interior detail I've had in 10 years of car ownership."</p>
+        <div class="review-meta">
+          <div class="review-avatar">AT</div>
+          <div>
+            <div class="review-author">Amanda T.</div>
+            <div class="review-date">2 months ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Premium package on my Mustang. The team is professional, friendly, and clearly takes pride in their work. Already booked my next appointment."</p>
+        <div class="review-meta">
+          <div class="review-avatar">RB</div>
+          <div>
+            <div class="review-author">Ryan B.</div>
+            <div class="review-date">5 weeks ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Honest pricing, no upselling, and the results speak for themselves. The owner clearly cares about every customer. Big thumbs up."</p>
+        <div class="review-meta">
+          <div class="review-avatar">LH</div>
+          <div>
+            <div class="review-author">Lisa H.</div>
+            <div class="review-date">3 months ago</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Basic Package</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">Ultra Premium</a></li>
-      </ul>
+  </section>
+
+  <section class="cta-strip">
+    <h2 class="section-title">Join Our Happy Customers</h2>
+    <p>See why so many Rhode Island car owners trust us. Book your detail today.</p>
+    <div class="btn-row">
+      <a href="/booking.html" class="btn btn-primary">Book Now</a>
+      <a href="/services.html" class="btn btn-outline">View Services</a>
     </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
-<script src="cart.js"></script></body></html>
+  </section>
+
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+</body>
+</html>

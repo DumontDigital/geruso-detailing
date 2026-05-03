@@ -1,940 +1,237 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Services & Pricing — Geruso Detailing</title><style>
-  :root {
-    --primary: #00FF41;
-    --primary-dark: #00DD33;
-    --primary-light: #33FF66;
-    --white: #ffffff;
-    --light-bg: #0a0a0a;
-    --light-bg2: #1a1a1a;
-    --border: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #aaaaaa;
-    --text-light: #888888;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
-
-  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
-  .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-  .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-  .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-  .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
-  .nav-toggle { display: none; }
-  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
-  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: none; }
-  .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
-  .nav-toggle:checked ~ .nav-phone { display: block; }
-
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 24px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.8; margin-bottom: 16px; }
-  section { padding: 80px 48px; }
-  .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
-
-  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
-  .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
-  .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
-  .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
-
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
-
-  #services { background: var(--light-bg); }
-
-  /* Location & Info Notes */
-  .service-info { background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, transparent 100%); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 60px; }
-  .info-item { margin-bottom: 20px; }
-  .info-item:last-child { margin-bottom: 0; }
-  .info-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
-  .info-text { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
-  .info-text strong { color: var(--text); font-weight: 600; }
-
-  /* Services Grid */
-  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 32px; margin-top: 48px; }
-
-  .service-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; overflow: hidden; }
-  .service-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); opacity: 0; transition: opacity 0.3s; }
-  .service-card:hover { border-color: var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.2); transform: translateY(-4px); }
-  .service-card:hover::before { opacity: 1; }
-
-  .service-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 16px; line-height: 1.4; }
-  .service-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-  .service-time { display: flex; flex-direction: column; }
-  .service-time-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 4px; }
-  .service-time-value { font-size: 14px; color: var(--text-muted); }
-  .service-price { display: flex; flex-direction: column; }
-  .service-price-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 4px; }
-  .service-price-value { font-size: 20px; font-weight: 700; color: var(--primary); }
-  .service-price-value small { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-
-  .service-description { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; flex-grow: 1; }
-  .service-tag { display: inline-block; font-size: 10px; padding: 6px 12px; background: rgba(0,255,65,0.1); color: var(--primary); border-radius: 6px; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-
-  .service-availability { display: flex; flex-direction: column; margin-bottom: 16px; }
-  .service-availability-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--primary); margin-bottom: 2px; }
-  .service-availability-value { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-
-  .btn-book { width: 100%; padding: 14px 24px; background: var(--primary); color: #000; font-weight: 700; font-size: 14px; border: none; border-radius: 8px; text-decoration: none; display: inline-block; text-align: center; transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-book:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  /* Premium Disclaimers */
-  .disclaimers-section { margin-top: 80px; padding-top: 60px; border-top: 2px solid var(--border); }
-  .disclaimers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 32px; }
-  .disclaimer-card { background: linear-gradient(135deg, rgba(255,107,107,0.05) 0%, transparent 100%); border: 1px solid rgba(255,107,107,0.2); border-radius: 10px; padding: 24px; }
-  .disclaimer-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; letter-spacing: 0.5px; }
-  .disclaimer-text { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
-
-  /* Quote Form Styling */
-  #quoteFormSection input:focus,
-  #quoteFormSection textarea:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 8px rgba(0,255,65,0.2);
-  }
-
-  #addressSuggestions::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #addressSuggestions::-webkit-scrollbar-track {
-    background: var(--light-bg);
-  }
-
-  #addressSuggestions::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-  }
-
-  #addressSuggestions::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-  }
-
-  #quoteForm button[type="submit"]:hover:not(:disabled) {
-    background: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
-  }
-
-  #quoteForm button[type="submit"]:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  @media(max-width:960px) {
-    .services-grid { grid-template-columns: 1fr; gap: 24px; }
-    .service-meta { flex-direction: column; align-items: flex-start; }
-    .disclaimers-grid { grid-template-columns: 1fr; }
-    section { padding: 60px 24px; }
-    #quoteFormSection { padding: 0 !important; }
-    #quoteFormSection > div { padding: 20px !important; }
-  }
-
-  /* ── CART ── */
-  .cart-link {
-    background: var(--primary);
-    color: #000;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 0 12px rgba(0,255,65,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .cart-link:hover {
-    background: var(--primary-light);
-    transform: translateY(-1px);
-    box-shadow: 0 0 20px rgba(0,255,65,0.6);
-  }
-
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 8px rgba(0,255,65,0.3);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  #cartItems {
-    margin-bottom: 16px;
-    max-height: 50vh;
-    overflow-y: auto;
-  }
-
-  @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Services — Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    .services-section { padding: 64px 32px; }
+    .category-tab-bar { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+    .category-tab {
+      background: var(--light-bg2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
     }
-
-    .nav-actions {
-      flex-wrap: wrap;
-      gap: 8px;
+    .category-tab:hover, .category-tab.active {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
     }
-  }
-</style></head><body>
-<nav>
-  <a href="index.html" class="nav-brand">
-    <div class="nav-logo"></div>
-    <div class="nav-brand-text">
-      <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+    .service-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .service-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,255,65,0.08);
+    }
+    .service-card-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      padding: 4px 10px;
+      background: rgba(0,255,65,0.08);
+      border-radius: 999px;
+      margin-bottom: 14px;
+      align-self: flex-start;
+    }
+    .service-card h3 { font-size: 22px; margin-bottom: 8px; color: var(--text); }
+    .service-card .price { font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+    .service-card p { color: var(--text-muted); font-size: 14px; line-height: 1.7; margin-bottom: 24px; flex: 1; }
+    .service-card .features { list-style: none; margin-bottom: 24px; }
+    .service-card .features li { color: var(--text-muted); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .service-card .features li:before { content: '\2713  '; color: var(--primary); font-weight: 700; margin-right: 6px; }
+    .service-card .features li:last-child { border-bottom: none; }
+    .service-card .btn { width: 100%; text-align: center; }
+
+    .quote-section {
+      background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
+      border-top: 1px solid rgba(0,255,65,0.2);
+      padding: 80px 32px;
+      text-align: center;
+    }
+    .quote-section h2 { margin-bottom: 14px; }
+    .quote-section p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; max-width: 620px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body data-page="services">
+  <div data-nav></div>
+
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="page-hero-eyebrow">Our Services</div>
+      <h1>Pricing &amp; Service Details</h1>
+      <p>Hand-crafted detailing services with transparent pricing. No hidden fees, no surprises.</p>
     </div>
-  </a>
-  <input type="checkbox" id="nav-toggle" class="nav-toggle">
-  <label for="nav-toggle" class="nav-toggle-label">
-    <span></span>
-    <span></span>
-    <span></span>
-  </label>
-  <ul class="nav-links">
-    <li><a href="services.html" class="active">Services</a></li>
-    <li><a href="work.html" >Our Work</a></li>
-    <li><a href="booking.html" >Schedule</a></li>
-    <li><a href="reviews.html" >Reviews</a></li>
-  </ul>
-  <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
-  </div>
-</nav>
+  </section>
 
-<!-- Cart Modal -->
-<div id="cartModal" class="cart-modal" style="display: none;">
-  <div class="cart-content">
-    <h2>Your Cart</h2>
-    <div id="cartItems"></div>
-    <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
-    <button id="proceedCheckout" class="btn-primary">Proceed to Checkout</button>
-    <button id="closeCart" class="btn-secondary">Close</button>
-  </div>
-</div>
-
-<section id="services">
-  <div class="section-inner">
-    <div class="section-label">PREMIUM DETAILING</div>
-    <h1 class="section-heading">Professional Detailing Services</h1>
-    <p class="section-sub">Precision detailing tailored to your vehicle's needs. From quick wash services to comprehensive restorations, we deliver excellence at every level.</p>
-
-    <!-- Location & Service Info -->
-    <div class="service-info">
-      <div class="info-item">
-        <div class="info-label">Service Location</div>
-        <div class="info-text"><strong>Business location is now based in Mapleville, RI.</strong> Mobile detailing available throughout all Rhode Island.</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Important Service Note</div>
-        <div class="info-text">Services requiring polishing, waxing, paint correction, or ceramic coating must be completed at my location due to 6+ hour service time and the need for proper shade / controlled conditions.</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Add-On Services</div>
-        <div class="info-text">Individual add-on services are available separately. Contact us for custom service combinations.</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Mobile Detailing Water Access</div>
-        <div class="info-text">For mobile detailing services, we kindly request access to your water. This helps us ensure the best possible service for your vehicle. Thank you for your understanding!</div>
-      </div>
+  <section class="services-section">
+    <div class="category-tab-bar">
+      <button class="category-tab active" data-cat="all">All Services</button>
+      <button class="category-tab" data-cat="mobile">Mobile</button>
+      <button class="category-tab" data-cat="location">Location Only</button>
     </div>
 
-    <!-- Services Grid -->
     <div class="services-grid">
-      <!-- Service 1 -->
-      <div class="service-card" data-service-name="Full Motorcycle Service" data-service-tag="MOBILE" data-service-price="70">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Full Motorcycle Service</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">2 hours</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Price</div>
-            <div class="service-price-value">$70</div>
-          </div>
-        </div>
-        <div class="service-description">Complete motorcycle detailing including wash, wax, and interior cleaning for optimal protection and shine.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile</span>
+        <h3>Car Wash</h3>
+        <div class="price">$85</div>
+        <p>Professional exterior wash, tire shine, and quick interior wipe-down. The perfect routine clean.</p>
+        <ul class="features">
+          <li>Hand wash &amp; rinse</li>
+          <li>Tire &amp; wheel cleaning</li>
+          <li>Interior vacuum</li>
+          <li>Exterior dressing</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 2 -->
-      <div class="service-card" data-service-name="Interior Detailing" data-service-tag="MOBILE" data-service-price="100">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Interior Detailing</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">2 hr 15 min</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$100</div>
-          </div>
-        </div>
-        <div class="service-description">Deep cleaning and conditioning of interior surfaces including seats, carpets, and dashboard.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile</span>
+        <h3>Interior Detailing</h3>
+        <div class="price">$100</div>
+        <p>Deep interior cleaning that restores your cabin to like-new condition.</p>
+        <ul class="features">
+          <li>Full vacuum &amp; steam clean</li>
+          <li>Leather conditioning</li>
+          <li>Dashboard &amp; trim refresh</li>
+          <li>Window cleaning (interior)</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 3 -->
-      <div class="service-card" data-service-name="Car Wash" data-service-tag="MOBILE" data-service-price="85">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Car Wash</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">1 hr 35 min</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$85</div>
-          </div>
-        </div>
-        <div class="service-description">Professional exterior wash and dry with attention to detail for a pristine finish.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile · Popular</span>
+        <h3>Premium Package</h3>
+        <div class="price">$170</div>
+        <p>Full exterior wash plus complete interior detail. Our most popular package.</p>
+        <ul class="features">
+          <li>Full exterior hand wash</li>
+          <li>Interior deep clean</li>
+          <li>Leather &amp; vinyl conditioning</li>
+          <li>Tire shine &amp; trim restore</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 4 -->
-      <div class="service-card" data-service-name="Ceramic Coating" data-service-tag="LOCATION ONLY" data-service-price="400">
-        <div class="service-tag">LOCATION ONLY</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Sat–Sun, 6:00 AM–11:00 AM</div>
-        </div>
-        <div class="service-name">Ceramic Coating</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">6 hours</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$400</div>
-          </div>
-        </div>
-        <div class="service-description">Professional-grade ceramic coating application for long-lasting paint protection and hydrophobic properties.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile</span>
+        <h3>Ultra Premium</h3>
+        <div class="price">$335</div>
+        <p>The full treatment. Top-to-bottom detail with every premium service included.</p>
+        <ul class="features">
+          <li>Premium package included</li>
+          <li>Engine bay cleaning</li>
+          <li>Headlight restoration</li>
+          <li>Paint enhancement</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 5 -->
-      <div class="service-card" data-service-name="Premium Package" data-service-tag="MOBILE" data-service-price="170">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Premium Package</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">4 hours</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$170</div>
-          </div>
-        </div>
-        <div class="service-description">Comprehensive exterior and interior detail including washing, waxing, and full cabin cleaning.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile</span>
+        <h3>Engine Bay Cleaning</h3>
+        <div class="price">$75</div>
+        <p>Clean and degrease your engine bay safely with professional equipment.</p>
+        <ul class="features">
+          <li>Safe degreaser application</li>
+          <li>Hand-detailed components</li>
+          <li>Plastic &amp; rubber dressing</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 6 -->
-      <div class="service-card" data-service-name="Ultra Premium" data-service-tag="MOBILE" data-service-price="335">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Ultra Premium</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">4 hr 45 min</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$335</div>
-          </div>
-        </div>
-        <div class="service-description">Ultimate detailing experience with complete transformation including engine bay cleaning and premium protection.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="mobile">
+        <span class="service-card-tag">Mobile</span>
+        <h3>Full Motorcycle Service</h3>
+        <div class="price">$70</div>
+        <p>Complete motorcycle detailing including frame, wheels, and chrome polish.</p>
+        <ul class="features">
+          <li>Full hand wash</li>
+          <li>Chrome &amp; metal polish</li>
+          <li>Chain cleaning</li>
+          <li>Leather seat care</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 7 -->
-      <div class="service-card" data-service-name="Pet Hair / Odor Elimination" data-service-tag="EXTRA FEE" data-service-price="50">
-        <div class="service-tag">EXTRA FEE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Pet Hair / Odor Elimination</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">2 hours</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Price</div>
-            <div class="service-price-value">$50</div>
-          </div>
-        </div>
-        <div class="service-description">Specialized deep cleaning to remove pet hair and eliminate odors from interior surfaces.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="location">
+        <span class="service-card-tag">Location Only</span>
+        <h3>Ceramic Coating</h3>
+        <div class="price">$400</div>
+        <p>Professional ceramic coating with multi-year hydrophobic protection.</p>
+        <ul class="features">
+          <li>Paint correction included</li>
+          <li>2+ year protection</li>
+          <li>Hydrophobic finish</li>
+          <li>UV &amp; chemical resistance</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <!-- Service 8 -->
-      <div class="service-card" data-service-name="Headlight Restoration" data-service-tag="EXTRA FEE" data-service-price="50">
-        <div class="service-tag">EXTRA FEE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Headlight Restoration</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">30 minutes</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Per headlight</div>
-            <div class="service-price-value">$50</div>
-          </div>
-        </div>
-        <div class="service-description">Restore clarity and brightness to oxidized or cloudy headlights with professional polishing.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
-      </div>
-
-      <!-- Service 9 -->
-      <div class="service-card" data-service-name="Engine Bay Cleaning" data-service-tag="MOBILE" data-service-price="75">
-        <div class="service-tag">MOBILE</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Thu–Fri, 12:00 PM–6:00 PM</div>
-        </div>
-        <div class="service-name">Engine Bay Cleaning</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">1 hr 20 min</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Price</div>
-            <div class="service-price-value">$75</div>
-          </div>
-        </div>
-        <div class="service-description">Professional engine bay detailing to remove built-up grime and restore visual appeal under the hood.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
-      </div>
-
-      <!-- Service 10 -->
-      <div class="service-card" data-service-name="Full Vehicle Polish" data-service-tag="LOCATION ONLY" data-service-price="250">
-        <div class="service-tag">LOCATION ONLY</div>
-        <div class="service-availability">
-          <div class="service-availability-label">Available</div>
-          <div class="service-availability-value">Sat–Sun, 6:00 AM–11:00 AM</div>
-        </div>
-        <div class="service-name">Full Vehicle Polish</div>
-        <div class="service-meta">
-          <div class="service-time">
-            <div class="service-time-label">Time Required</div>
-            <div class="service-time-value">3 hr 15 min</div>
-          </div>
-          <div class="service-price">
-            <div class="service-price-label">Starting from</div>
-            <div class="service-price-value">$250</div>
-          </div>
-        </div>
-        <div class="service-description">Professional multi-stage polishing to remove swirls, scratches, and restore paint clarity and gloss.</div>
-        <button class="btn-book" type="button">Add to Cart</button>
+      <div class="service-card" data-cat="location">
+        <span class="service-card-tag">Location Only</span>
+        <h3>Full Vehicle Polish</h3>
+        <div class="price">$250</div>
+        <p>Multi-stage paint polish that removes swirl marks and restores depth.</p>
+        <ul class="features">
+          <li>Two-stage paint correction</li>
+          <li>Swirl &amp; scratch removal</li>
+          <li>High-gloss finishing wax</li>
+          <li>Mirror-like depth</li>
+        </ul>
+        <a href="/booking.html" class="btn btn-primary">Book This Service</a>
       </div>
     </div>
+  </section>
 
-    <!-- Quick Quote Form -->
-    <div id="quoteFormSection" style="margin-top: 80px; padding-top: 60px; border-top: 2px solid var(--border); display: none;">
-      <div class="section-label">Quick Request</div>
-      <h2 style="font-size: 28px; color: var(--text); margin-bottom: 12px;">Request a Quote</h2>
-      <p class="section-sub">Fill out the form below to get a quick quote for the selected service.</p>
-
-      <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 40px; max-width: 600px; margin-top: 40px;">
-        <div id="quoteMessage"></div>
-
-        <form id="quoteForm">
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Service Type <span style="color: #ef4444;">*</span></label>
-            <select id="quoteService" name="quoteService" required style="appearance: none; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s; cursor: pointer; background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%278%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%23aaaaaa%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px;">
-              <option value="">Select a service...</option>
-              <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
-              <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
-              <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
-              <option value="Ceramic Coating">Ceramic Coating - Starting from $400 (Location Only)</option>
-              <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
-              <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
-              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
-              <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
-              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
-              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
-            </select>
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Full Name</label>
-            <input type="text" name="firstName" placeholder="Your full name" required style="background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s;">
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Email</label>
-            <input type="email" name="email" placeholder="your@email.com" required style="background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s;">
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Phone</label>
-            <input type="tel" name="phone" placeholder="(401) 555-0000" required style="background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s;">
-          </div>
-
-          <div id="addressFieldGroup" style="margin-bottom: 20px; display: none; position: relative;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Service Address <span style="color: #ef4444;">*</span></label>
-            <input type="text" id="serviceAddressInput" name="serviceAddress" placeholder="Enter service address" autocomplete="off" style="background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s;">
-            <div id="addressSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--light-bg2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; max-height: 240px; overflow-y: auto; width: 100%; z-index: 1000; display: none; margin-top: -1px;"></div>
-          </div>
-
-          <div id="locationNoteGroup" style="margin-bottom: 20px; display: none; background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
-            <strong style="color: var(--primary);">Location Service</strong><br>
-            This service is provided at our Mapleville location only. No address needed.
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Message (Optional)</label>
-            <textarea name="message" placeholder="Any additional details or special requests..." style="background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); width: 100%; outline: none; transition: border 0.2s; min-height: 100px; resize: vertical;"></textarea>
-          </div>
-
-          <button type="submit" style="width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 12px rgba(0,255,65,0.3);">Send Quote Request</button>
-        </form>
-      </div>
+  <section class="quote-section">
+    <h2 class="section-title">Need Something Custom?</h2>
+    <p>Have a specialty vehicle or unique request? Get in touch and we'll build a custom quote for you.</p>
+    <div class="btn-row">
+      <a href="/contact.html" class="btn btn-primary">Request a Quote</a>
+      <a href="/booking.html" class="btn btn-outline">Book Standard Service</a>
     </div>
+  </section>
 
-    <!-- Disclaimers Section -->
-    <div class="disclaimers-section">
-      <div class="section-label">Important Information</div>
-      <h2 style="font-size: 24px; color: var(--text); margin-bottom: 32px;">Service Requirements & Policies</h2>
-
-      <div class="disclaimers-grid">
-        <div class="disclaimer-card">
-          <div class="disclaimer-title">Biohazard Cleanup</div>
-          <div class="disclaimer-text">Any biological cleanup including vomit, pet waste, urine, or other hazardous contamination requires approval and signed consent form before service.</div>
-        </div>
-
-        <div class="disclaimer-card">
-          <div class="disclaimer-title">Location Requirements</div>
-          <div class="disclaimer-text">Services requiring polishing, waxing, paint correction, or ceramic coating must be completed at our Mapleville location due to 6+ hour service time and the need for proper shade and controlled conditions.</div>
-        </div>
-
-        <div class="disclaimer-card">
-          <div class="disclaimer-title">Mobile Service</div>
-          <div class="disclaimer-text">Mobile detailing available throughout all Rhode Island for services that don't require location-based setup. Distance to drive may be added to final price.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
-    </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Car Wash</a></li>
-        <li><a href="services.html">Interior Detailing</a></li>
-        <li><a href="services.html">Ceramic Coating</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-      </ul>
-    </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&language=en" async defer></script>
-<script>
-  document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
-
-  console.log('[Services] Initializing quote form...');
-
-  // ========================================
-  // SERVICE TYPE DROPDOWN & ADDRESS FIELD MAPPING
-  // ========================================
-  const serviceTagMap = {
-    'Full Motorcycle Service': 'MOBILE',
-    'Interior Detailing': 'MOBILE',
-    'Car Wash': 'MOBILE',
-    'Ceramic Coating': 'LOCATION ONLY',
-    'Premium Package': 'MOBILE',
-    'Ultra Premium': 'MOBILE',
-    'Pet Hair / Odor Elimination': 'EXTRA FEE',
-    'Headlight Restoration': 'EXTRA FEE',
-    'Engine Bay Cleaning': 'MOBILE',
-    'Full Vehicle Polish': 'LOCATION ONLY'
-  };
-
-  // ========================================
-  // HANDLE ADD TO CART BUTTON CLICKS
-  // ========================================
-  document.querySelectorAll('.btn-book').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      console.log('[Services] Add to Cart clicked');
-
-      // Get service info from the card's data attributes
-      const card = this.closest('.service-card');
-      const serviceName = card.getAttribute('data-service-name');
-      const servicePrice = card.getAttribute('data-service-price');
-      const serviceTag = card.getAttribute('data-service-tag');
-
-      console.log('[Services] Adding to cart:', serviceName, 'Price:', servicePrice, 'Tag:', serviceTag);
-
-      // Add to cart using the cart.js function
-      if (typeof addToCart === 'function') {
-        addToCart(serviceName, servicePrice, serviceTag);
-        console.log('[Services] Item added to cart successfully');
-      } else {
-        console.error('[Services] addToCart function not available');
-      }
-    });
-  });
-
-  // ========================================
-  // HANDLE SERVICE DROPDOWN CHANGES
-  // ========================================
-  const serviceDropdown = document.getElementById('quoteService');
-  if (serviceDropdown) {
-    serviceDropdown.addEventListener('change', function(e) {
-      const selectedService = this.value;
-      console.log('[Services] Service dropdown changed to:', selectedService);
-
-      if (selectedService) {
-        // Get the service tag from the map
-        const serviceTag = serviceTagMap[selectedService];
-        console.log('[Services] Service tag:', serviceTag);
-
-        // Update address field visibility
-        updateAddressFieldVisibility(serviceTag);
-      } else {
-        // No service selected - hide address field
-        const addressFieldGroup = document.getElementById('addressFieldGroup');
-        const locationNoteGroup = document.getElementById('locationNoteGroup');
-        addressFieldGroup.style.display = 'none';
-        locationNoteGroup.style.display = 'none';
-        console.log('[Services] Address field: HIDDEN (no service selected)');
-      }
-    });
-  }
-
-  // ========================================
-  // UPDATE ADDRESS FIELD VISIBILITY
-  // ========================================
-  function updateAddressFieldVisibility(serviceTag) {
-    const addressFieldGroup = document.getElementById('addressFieldGroup');
-    const locationNoteGroup = document.getElementById('locationNoteGroup');
-    const serviceAddressInput = document.getElementById('serviceAddressInput');
-
-    console.log('[Services] Updating address field for tag:', serviceTag);
-
-    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
-      // Show address field
-      addressFieldGroup.style.display = 'block';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = true;
-      console.log('[Services] Address field: SHOWN (required)');
-    } else if (serviceTag === 'LOCATION ONLY') {
-      // Hide address field
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'block';
-      serviceAddressInput.required = false;
-      serviceAddressInput.value = ''; // Clear previous address
-      console.log('[Services] Address field: HIDDEN, location note shown');
-    } else {
-      // Default: hide
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
-      console.log('[Services] Address field: HIDDEN (default)');
-    }
-  }
-
-  // ========================================
-  // GOOGLE PLACES AUTOCOMPLETE
-  // ========================================
-  let autocompleteService;
-  let sessionToken;
-
-  function initializeAddressAutocomplete() {
-    const apiKey = document.querySelector('script[src*="maps.googleapis.com"]')?.src.includes('YOUR_API_KEY') ? null : true;
-    if (!apiKey) {
-      console.warn('[Services] Google Places API key not configured.');
-      return;
-    }
-
-    const addressInput = document.getElementById('serviceAddressInput');
-    const suggestionsContainer = document.getElementById('addressSuggestions');
-
-    if (!window.google || !window.google.maps) {
-      console.warn('[Services] Google Maps API not loaded yet');
-      return;
-    }
-
-    console.log('[Services] Initializing Google Places Autocomplete');
-    autocompleteService = new google.maps.places.AutocompleteService();
-    sessionToken = new google.maps.places.AutocompleteSessionToken();
-
-    addressInput.addEventListener('input', async (e) => {
-      const value = e.target.value;
-
-      if (value.length < 3) {
-        suggestionsContainer.style.display = 'none';
-        return;
-      }
-
-      try {
-        const request = {
-          input: value,
-          componentRestrictions: { country: 'us' },
-          sessionToken: sessionToken,
-        };
-
-        const predictions = await autocompleteService.getPlacePredictions(request);
-
-        if (predictions.predictions && predictions.predictions.length > 0) {
-          // Filter for Rhode Island
-          const riPredictions = predictions.predictions.filter(p =>
-            p.description.includes('RI') || p.description.includes('Rhode Island')
-          );
-
-          suggestionsContainer.innerHTML = '';
-
-          if (riPredictions.length > 0) {
-            riPredictions.slice(0, 5).forEach(prediction => {
-              const div = document.createElement('div');
-              div.style.cssText = 'padding: 12px 14px; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all 0.2s; border-bottom: 1px solid var(--border);';
-              div.textContent = prediction.description;
-              div.addEventListener('mouseover', () => {
-                div.style.background = 'rgba(0,255,65,0.1)';
-                div.style.color = 'var(--primary)';
-              });
-              div.addEventListener('mouseout', () => {
-                div.style.background = 'transparent';
-                div.style.color = 'var(--text-muted)';
-              });
-              div.addEventListener('click', () => selectAddress(prediction));
-              suggestionsContainer.appendChild(div);
-            });
-            suggestionsContainer.style.display = 'block';
-          } else {
-            suggestionsContainer.style.display = 'none';
-          }
-        } else {
-          suggestionsContainer.style.display = 'none';
-        }
-      } catch (error) {
-        console.error('[Services] Autocomplete error:', error);
-      }
-    });
-
-    addressInput.addEventListener('blur', () => {
-      setTimeout(() => suggestionsContainer.style.display = 'none', 200);
-    });
-  }
-
-  function selectAddress(prediction) {
-    const addressInput = document.getElementById('serviceAddressInput');
-    const suggestionsContainer = document.getElementById('addressSuggestions');
-
-    addressInput.value = prediction.description;
-    suggestionsContainer.style.display = 'none';
-    console.log('[Services] Address selected:', prediction.description);
-  }
-
-  // Initialize autocomplete when Google Maps is loaded
-  if (window.google && window.google.maps) {
-    initializeAddressAutocomplete();
-  } else {
-    window.addEventListener('load', initializeAddressAutocomplete);
-  }
-
-  // ========================================
-  // FORM SUBMISSION
-  // ========================================
-  const quoteForm = document.getElementById('quoteForm');
-  if (quoteForm) {
-    quoteForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      console.log('[Services] Form submitted');
-
-      const serviceName = document.getElementById('quoteService').value;
-      const firstName = document.querySelector('input[name="firstName"]').value.trim();
-      const email = document.querySelector('input[name="email"]').value.trim();
-      const phone = document.querySelector('input[name="phone"]').value.trim();
-      const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
-      const message = document.querySelector('textarea[name="message"]').value.trim();
-
-      // Validate required fields
-      if (!firstName || !email || !phone) {
-        showQuoteMessage('Please fill in all required fields.', 'error');
-        return;
-      }
-
-      // Check if address is required
-      const addressFieldGroup = document.getElementById('addressFieldGroup');
-      if (addressFieldGroup.style.display !== 'none' && !serviceAddress) {
-        showQuoteMessage('Please enter a service address.', 'error');
-        return;
-      }
-
-      const submitBtn = quoteForm.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,255,65,0.3); border-top-color: #00FF41; border-radius: 50%; animation: spin 0.8s linear infinite;"></span> Sending...';
-
-      try {
-        const quoteData = {
-          firstName,
-          lastName: '',
-          email,
-          phone,
-          service: serviceName,
-          message: serviceAddress ? `Address: ${serviceAddress}${message ? ' | ' + message : ''}` : message
-        };
-
-        console.log('[Services] Sending quote:', quoteData);
-
-        const response = await fetch('/api/quote', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(quoteData)
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+  <script>
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const cat = tab.dataset.cat;
+        document.querySelectorAll('.service-card').forEach(card => {
+          card.style.display = (cat === 'all' || card.dataset.cat === cat) ? 'flex' : 'none';
         });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          showQuoteMessage('Quote request sent! We\'ll contact you within 24 hours.', 'success');
-          quoteForm.reset();
-          document.getElementById('quoteService').value = '';
-          setTimeout(() => {
-            document.getElementById('quoteFormSection').style.display = 'none';
-          }, 2000);
-        } else {
-          showQuoteMessage(data.error || 'Failed to send quote request.', 'error');
-        }
-      } catch (error) {
-        showQuoteMessage('Error submitting quote: ' + error.message, 'error');
-        console.error('[Services] Quote Error:', error);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Send Quote Request';
-      }
+      });
     });
-  }
-
-  function showQuoteMessage(text, type) {
-    const messageBox = document.getElementById('quoteMessage');
-    messageBox.style.cssText = `padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; ${
-      type === 'success'
-        ? 'background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #10b981;'
-        : 'background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #ef4444;'
-    }`;
-    messageBox.textContent = text;
-    messageBox.style.display = 'block';
-  }
-
-  console.log('[Services] Quote form initialization complete');
-</script>
-<style>
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-</style>
-<script src="cart.js"></script></body></html>
+  </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geruso Detailing — Premium Mobile Car Detailing in Rhode Island</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    /* HOME-only styles */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 32px;
+      background:
+        linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(10,10,10,0.7) 100%),
+        url('/images/full-interior-detail.png') center/cover no-repeat;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-text { max-width: 640px; }
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--primary);
+      padding: 8px 14px;
+      border: 1px solid rgba(0,255,65,0.35);
+      border-radius: 999px;
+      margin-bottom: 24px;
+      background: rgba(0,255,65,0.05);
+    }
+    .hero h1 {
+      font-size: clamp(40px, 5.5vw, 68px);
+      line-height: 1.05;
+      font-weight: 800;
+      margin-bottom: 22px;
+      color: var(--text);
+    }
+    .hero h1 .accent { color: var(--primary); }
+    .hero-desc {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      line-height: 1.7;
+      max-width: 560px;
+    }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 36px; }
+    .hero-quick {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      padding-top: 28px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero-quick-item .num { display: block; font-size: 24px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .hero-quick-item .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: block; }
+    .hero-image {
+      display: none;
+    }
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero { min-height: auto; padding: 60px 24px; }
+    }
+
+    /* VALUE PROPS */
+    .values { background: var(--light-bg); padding: 80px 32px; }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; max-width: 1240px; margin: 0 auto; }
+    .value-item {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      transition: all 0.2s;
+    }
+    .value-item:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .value-item .num { font-size: 13px; font-weight: 700; color: var(--primary); letter-spacing: 1.5px; margin-bottom: 12px; display: block; }
+    .value-item h3 { font-size: 18px; margin-bottom: 10px; color: var(--text); }
+    .value-item p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+
+    /* SERVICES PREVIEW */
+    .preview-services { background: var(--light-bg2); padding: 80px 32px; }
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1240px; margin: 0 auto 40px; }
+    .preview-card {
+      background: var(--light-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,255,65,0.08); }
+    .preview-card h3 { font-size: 18px; margin-bottom: 6px; color: var(--text); }
+    .preview-card .price { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 14px; }
+    .preview-card p { color: var(--text-muted); font-size: 14px; line-height: 1.7; flex: 1; margin-bottom: 18px; }
+    .preview-card .link { color: var(--primary); font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
+
+    /* WORK PREVIEW */
+    .preview-work { background: var(--light-bg); padding: 80px 32px; }
+    .work-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1240px; margin: 0 auto 40px; }
+    .work-tile {
+      aspect-ratio: 4/3;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: all 0.25s;
+    }
+    .work-tile:hover { transform: scale(1.02); border-color: var(--primary); }
+    .work-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+    .work-tile:hover img { transform: scale(1.05); }
+    .work-tile-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%);
+      color: var(--white);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    @media (max-width: 768px) { .work-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .work-grid { grid-template-columns: 1fr; } }
+
+    /* CTA STRIP */
+    .cta-strip {
+      background: linear-gradient(135deg, rgba(0,255,65,0.12) 0%, rgba(0,255,65,0.04) 100%);
+      border-top: 1px solid rgba(0,255,65,0.25);
+      border-bottom: 1px solid rgba(0,255,65,0.25);
+      padding: 80px 32px;
+      text-align: center;
+    }
+    .cta-strip h2 { font-size: clamp(28px, 3.5vw, 42px); margin-bottom: 14px; }
+    .cta-strip p { color: var(--text-muted); font-size: 17px; margin-bottom: 28px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body data-page="home">
+  <div data-nav></div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <span class="hero-eyebrow">Mobile Detailing · Rhode Island</span>
+        <h1>Your Vehicle, <span class="accent">Perfected.</span></h1>
+        <p class="hero-desc">
+          Professional, hand-crafted detailing brought right to your driveway. From a deep interior refresh to full paint correction and ceramic coating — we treat every car like it's our own.
+        </p>
+        <div class="hero-cta">
+          <a href="/booking.html" class="btn btn-primary">Book a Service</a>
+          <a href="/services.html" class="btn btn-outline">View Services</a>
+        </div>
+        <div class="hero-quick">
+          <div class="hero-quick-item">
+            <span class="num">500+</span>
+            <span class="label">Vehicles Detailed</span>
+          </div>
+          <div class="hero-quick-item">
+            <span class="num">4.9★</span>
+            <span class="label">Customer Rating</span>
+          </div>
+          <div class="hero-quick-item">
+            <span class="num">10+</span>
+            <span class="label">Years Experience</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUE PROPS -->
+  <section class="values">
+    <div style="max-width: 1240px; margin: 0 auto 48px; text-align: center;">
+      <span class="section-eyebrow">Why Choose Us</span>
+      <h2 class="section-title">Detailing Done Right</h2>
+      <p class="section-sub" style="margin-left: auto; margin-right: auto;">
+        Every appointment is treated like our showroom car. No shortcuts, no skipped steps.
+      </p>
+    </div>
+    <div class="values-grid">
+      <div class="value-item">
+        <span class="num">01</span>
+        <h3>Mobile Service</h3>
+        <p>We come to your home or office with everything we need. You don't have to drive anywhere or wait around.</p>
+      </div>
+      <div class="value-item">
+        <span class="num">02</span>
+        <h3>Premium Products</h3>
+        <p>Only the best — pH-balanced soaps, microfiber towels, and professional-grade ceramic coatings.</p>
+      </div>
+      <div class="value-item">
+        <span class="num">03</span>
+        <h3>Trained Specialists</h3>
+        <p>Every detail is performed by a trained technician — not someone with a bucket and a sponge.</p>
+      </div>
+      <div class="value-item">
+        <span class="num">04</span>
+        <h3>Satisfaction Promise</h3>
+        <p>If you're not completely happy with the result, we'll come back and make it right. No questions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES PREVIEW -->
+  <section class="preview-services">
+    <div style="max-width: 1240px; margin: 0 auto 40px; text-align: center;">
+      <span class="section-eyebrow">Popular Services</span>
+      <h2 class="section-title">Choose Your Detail</h2>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-card">
+        <h3>Interior Detailing</h3>
+        <div class="price">$100</div>
+        <p>Deep vacuum, steam clean, leather conditioning, and full interior refresh. Your cabin will feel brand new.</p>
+        <a href="/services.html" class="link">Learn More →</a>
+      </div>
+      <div class="preview-card">
+        <h3>Premium Package</h3>
+        <div class="price">$170</div>
+        <p>Full exterior wash + interior detail. The most popular package for a thorough top-to-bottom clean.</p>
+        <a href="/services.html" class="link">Learn More →</a>
+      </div>
+      <div class="preview-card">
+        <h3>Ceramic Coating</h3>
+        <div class="price">$400</div>
+        <p>Long-lasting paint protection with hydrophobic finish. Keeps your car looking new for years.</p>
+        <a href="/services.html" class="link">Learn More →</a>
+      </div>
+    </div>
+    <div style="text-align: center;">
+      <a href="/services.html" class="btn btn-outline">See All Services</a>
+    </div>
+  </section>
+
+  <!-- WORK PREVIEW -->
+  <section class="preview-work">
+    <div style="max-width: 1240px; margin: 0 auto 40px; text-align: center;">
+      <span class="section-eyebrow">Our Work</span>
+      <h2 class="section-title">Recent Detailing Jobs</h2>
+    </div>
+    <div class="work-grid">
+      <a href="/work.html" class="work-tile">
+        <img src="/images/full-interior-detail.png" alt="Full interior detail">
+        <div class="work-tile-label">Full Interior Detail</div>
+      </a>
+      <a href="/work.html" class="work-tile">
+        <img src="/images/dashboard-detail.png" alt="Dashboard detail">
+        <div class="work-tile-label">Dashboard Refresh</div>
+      </a>
+      <a href="/work.html" class="work-tile">
+        <img src="/images/wheel-tire-detail.png" alt="Wheel and tire detail">
+        <div class="work-tile-label">Wheels &amp; Tires</div>
+      </a>
+    </div>
+    <div style="text-align: center;">
+      <a href="/work.html" class="btn btn-outline">View Full Gallery</a>
+    </div>
+  </section>
+
+  <!-- CTA STRIP -->
+  <section class="cta-strip">
+    <h2>Ready for a Showroom-Quality Clean?</h2>
+    <p>Book your detail in under a minute. We'll come to you anywhere in Rhode Island.</p>
+    <div class="btn-row">
+      <a href="/booking.html" class="btn btn-primary">Book Appointment</a>
+      <a href="/contact.html" class="btn btn-outline">Get a Quote</a>
+    </div>
+  </section>
+
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+</body>
+</html>

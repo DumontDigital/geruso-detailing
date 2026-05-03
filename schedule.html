@@ -1,271 +1,154 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Hours & Service Area — Geruso Detailing</title><style>
-  :root {
-    --primary: #00FF41;
-    --primary-dark: #00DD33;
-    --primary-light: #33FF66;
-    --white: #ffffff;
-    --light-bg: #0a0a0a;
-    --light-bg2: #1a1a1a;
-    --border: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #aaaaaa;
-    --text-light: #888888;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
-
-  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
-  .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-  .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-  .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-  .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
-  .nav-toggle { display: none; }
-  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
-  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: none; }
-  .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
-  .nav-toggle:checked ~ .nav-phone { display: block; }
-
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
-
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
-  section { padding: 80px 48px; }
-  .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
-
-  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-
-  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
-  .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
-  .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
-  .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
-
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
-
-  #schedule { background: var(--light-bg); }
-  .mobile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; align-items: start; }
-  .hours-table { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--light-bg2); }
-  .hours-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); }
-  .hours-row:last-child { border-bottom: none; }
-  .hours-row:hover { background: rgba(0,255,65,0.05); }
-  .hours-day { font-weight: 600; font-size: 15px; color: var(--text); }
-  .hours-right { display: flex; align-items: center; gap: 12px; }
-  .hours-time { font-size: 14px; color: var(--text-muted); }
-  .hours-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 6px; }
-  .tag-open { background: rgba(0,255,65,0.2); color: var(--primary); }
-  .tag-limited { background: rgba(255,193,7,0.2); color: #FFD700; }
-  .tag-closed { background: rgba(0,0,0,0.3); color: var(--text-muted); }
-  .service-area-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-top: 20px; }
-  .service-area-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-  .service-area-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px; }
-  .area-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .area-tag { background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; color: var(--text-muted); }
-  .benefit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .benefit-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: all 0.2s; }
-  .benefit-card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); }
-  .benefit-icon { font-size: 24px; margin-bottom: 12px; color: var(--primary); }
-  .benefit-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .benefit-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
-
-  /* ── CART ── */
-  .cart-link {
-    background: var(--primary);
-    color: #000;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .cart-link:hover {
-    background: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
-  }
-
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 4px rgba(0,255,65,0.2);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  #cartItems {
-    margin-bottom: 16px;
-    max-height: 50vh;
-    overflow-y: auto;
-  }
-
-  @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hours &amp; Service Area — Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    .schedule-section { padding: 64px 32px; }
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      max-width: 1100px;
+      margin: 0 auto;
     }
-
-    .nav-actions {
-      flex-wrap: wrap;
-      gap: 8px;
+    @media (max-width: 768px) { .schedule-grid { grid-template-columns: 1fr; } }
+    .info-block {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 32px;
     }
-  }
+    .info-block h2 { font-size: 22px; margin-bottom: 24px; color: var(--primary); }
+    .hours-list { list-style: none; }
+    .hours-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+    }
+    .hours-list li:last-child { border-bottom: none; }
+    .hours-list .day { color: var(--text); font-weight: 600; }
+    .hours-list .time { color: var(--text-muted); }
+    .hours-list li.closed .time { color: var(--accent); }
 
-  @media(max-width:960px){ .mobile-grid{grid-template-columns:1fr} .benefit-grid{grid-template-columns:1fr} }
-</style></head><body>
-<nav>
-  <a href="index.html" class="nav-brand">
-    <div class="nav-logo"></div>
-    <div class="nav-brand-text">
-      <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
+    .area-list { list-style: none; }
+    .area-list li {
+      padding: 12px 0;
+      color: var(--text-muted);
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    .area-list li:before { content: '\2022  '; color: var(--primary); font-weight: 700; margin-right: 8px; }
+    .area-list li:last-child { border-bottom: none; }
+
+    .service-types {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 48px auto 0;
+    }
+    @media (max-width: 768px) { .service-types { grid-template-columns: 1fr; } }
+    .type-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .type-card .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      padding: 4px 10px;
+      background: rgba(0,255,65,0.08);
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .type-card h3 { font-size: 19px; margin-bottom: 10px; }
+    .type-card p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+
+    .cta-strip {
+      background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
+      border-top: 1px solid rgba(0,255,65,0.2);
+      padding: 80px 32px;
+      text-align: center;
+    }
+    .cta-strip h2 { margin-bottom: 14px; }
+    .cta-strip p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; }
+  </style>
+</head>
+<body data-page="schedule">
+  <div data-nav></div>
+
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="page-hero-eyebrow">Hours &amp; Service Area</div>
+      <h1>When &amp; Where We Operate</h1>
+      <p>Open 7 days a week with mobile service throughout Rhode Island. Find the best time and location for your appointment.</p>
     </div>
-  </a>
-  <input type="checkbox" id="nav-toggle" class="nav-toggle">
-  <label for="nav-toggle" class="nav-toggle-label">
-    <span></span>
-    <span></span>
-    <span></span>
-  </label>
-  <ul class="nav-links">
-    <li><a href="services.html" >Services</a></li>
-    <li><a href="work.html" >Our Work</a></li>
-    <li><a href="schedule.html" class="active">Schedule</a></li>
-    <li><a href="reviews.html" >Reviews</a></li>
-  </ul>
-  <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
-  </div>
-</nav>
+  </section>
 
-<section id="schedule">
-  <div class="section-inner">
-    <div class="section-label">HOURS & SERVICE AREA</div>
-    <h1 class="section-heading">When & Where We Operate</h1>
-    <p class="section-sub">Mobile detailing throughout Rhode Island. On-site services at our Mapleville location. Call to book your appointment.</p>
-    <div class="mobile-grid">
-      <div>
-        <div class="hours-table">
-          <div class="hours-row"><span class="hours-day">Thursday & Friday</span><div class="hours-right"><span class="hours-time">12:00 PM – 6:00 PM</span><span class="hours-tag tag-open">Mobile</span></div></div>
-          <div class="hours-row"><span class="hours-day">Saturday & Sunday</span><div class="hours-right"><span class="hours-time">6:00 AM – 11:00 AM</span><span class="hours-tag tag-limited">Location Only</span></div></div>
-          <div class="hours-row"><span class="hours-day">Mon, Tue, Wed</span><div class="hours-right"><span class="hours-time">—</span><span class="hours-tag tag-closed">Closed</span></div></div>
-          <div class="hours-row"><span class="hours-day">Holidays</span><div class="hours-right"><span class="hours-time">—</span><span class="hours-tag tag-closed">Closed</span></div></div>
-        </div>
-        <div class="service-area-card">
-          <div class="service-area-title">Service Area & Location</div>
-          <div class="service-area-desc"><strong>Location:</strong> Mapleville, RI (Mapleville only). <strong>Mobile Service:</strong> Available throughout all of Rhode Island Thursday-Friday 12:00 PM – 6:00 PM. <strong>On-Site Services:</strong> Available at Mapleville location Saturday-Sunday 6:00 AM – 11:00 AM.</div>
-          <div class="area-tags">
-            <span class="area-tag">Mapleville, RI Location</span><span class="area-tag">Mobile Throughout RI</span><span class="area-tag">Thursday-Friday 12:00 PM – 6:00 PM</span><span class="area-tag">Saturday-Sunday 6:00 AM – 11:00 AM</span>
-          </div>
-        </div>
+  <section class="schedule-section">
+    <div class="schedule-grid">
+      <div class="info-block">
+        <h2>Business Hours</h2>
+        <ul class="hours-list">
+          <li><span class="day">Monday</span><span class="time">6:00 AM – 6:00 PM</span></li>
+          <li><span class="day">Tuesday</span><span class="time">6:00 AM – 6:00 PM</span></li>
+          <li><span class="day">Wednesday</span><span class="time">6:00 AM – 6:00 PM</span></li>
+          <li><span class="day">Thursday</span><span class="time">6:00 AM – 6:00 PM</span></li>
+          <li><span class="day">Friday</span><span class="time">6:00 AM – 6:00 PM</span></li>
+          <li><span class="day">Saturday</span><span class="time">7:00 AM – 5:00 PM</span></li>
+          <li><span class="day">Sunday</span><span class="time">8:00 AM – 4:00 PM</span></li>
+        </ul>
       </div>
-      <div class="benefit-grid">
-        <div class="benefit-card"><div class="benefit-icon">•</div><div class="benefit-title">We Come to You</div><div class="benefit-desc">No drop-off needed. We work at your home or office.</div></div>
-        <div class="benefit-card"><div class="benefit-icon">•</div><div class="benefit-title">Self-Contained</div><div class="benefit-desc">We bring our own water and equipment.</div></div>
-        <div class="benefit-card"><div class="benefit-icon">•</div><div class="benefit-title">Fast Turnaround</div><div class="benefit-desc">Most details done in 2–4 hours.</div></div>
-        <div class="benefit-card"><div class="benefit-icon">•</div><div class="benefit-title">Owner-Operated</div><div class="benefit-desc">Cameron handles every job personally.</div></div>
+
+      <div class="info-block">
+        <h2>Service Area</h2>
+        <ul class="area-list">
+          <li>Providence</li>
+          <li>Warwick</li>
+          <li>Cranston</li>
+          <li>Pawtucket</li>
+          <li>East Providence</li>
+          <li>North Kingstown</li>
+          <li>Smithfield</li>
+          <li>And surrounding RI areas</li>
+        </ul>
       </div>
     </div>
-  </div>
-</section>
 
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
+    <div class="service-types">
+      <div class="type-card">
+        <span class="badge">Mobile Service</span>
+        <h3>We Come To You</h3>
+        <p>Most services are mobile — we arrive at your home or office with all the equipment, water, and power needed. You don't have to leave the house.</p>
+      </div>
+      <div class="type-card">
+        <span class="badge">Location Only</span>
+        <h3>Specialty Services at Our Shop</h3>
+        <p>Ceramic coatings and full paint polishes are performed in our climate-controlled shop. We coordinate drop-off and pickup at your convenience.</p>
+      </div>
     </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Basic Package</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">Ultra Premium</a></li>
-      </ul>
+  </section>
+
+  <section class="cta-strip">
+    <h2 class="section-title">Ready to Book?</h2>
+    <p>Pick your day and time on our booking page. We'll handle the rest.</p>
+    <div class="btn-row">
+      <a href="/booking.html" class="btn btn-primary">View Available Times</a>
+      <a href="/contact.html" class="btn btn-outline">Contact Us</a>
     </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="schedule.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
-<script src="cart.js"></script></body></html>
+  </section>
+
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+</body>
+</html>

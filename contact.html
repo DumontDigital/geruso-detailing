@@ -1,550 +1,178 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Get a Quote — Geruso Detailing</title><style>
-  :root {
-    --primary: #00FF41;
-    --primary-dark: #00DD33;
-    --primary-light: #33FF66;
-    --white: #ffffff;
-    --light-bg: #0a0a0a;
-    --light-bg2: #1a1a1a;
-    --border: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #aaaaaa;
-    --text-light: #888888;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
-
-  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
-  .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-  .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-  .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-  .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
-  .nav-toggle { display: none; }
-  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
-  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: none; }
-  .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
-  .nav-toggle:checked ~ .nav-phone { display: block; }
-
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
-
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
-  section { padding: 80px 48px; }
-  .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
-
-  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-
-  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
-  .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
-  .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
-  .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
-
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
-
-  #contact { background: var(--light-bg); }
-  .quote-layout { display: grid; grid-template-columns: 1fr 520px; gap: 60px; align-items: start; }
-  .contact-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
-  .contact-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.2s; }
-  .contact-card:hover { border-color: var(--primary); box-shadow: 0 0 16px rgba(0,255,65,0.2); }
-  .contact-icon { width: 40px; height: 40px; background: rgba(0,255,65,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; color: var(--primary); }
-  .contact-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
-  .contact-val { font-size: 15px; font-weight: 700; color: var(--text); }
-  .quote-form-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
-  .form-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .form-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-  .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
-  .form-input, .form-select, .form-textarea { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border 0.2s; width: 100%; }
-  .form-input::placeholder, .form-textarea::placeholder { color: var(--text-light); }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
-  .form-textarea { resize: vertical; min-height: 100px; }
-  .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 18px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .success-msg { display: none; background: rgba(0,255,65,0.15); border: 1px solid rgba(0,255,65,0.4); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--primary); margin-bottom: 18px; text-align: center; animation: slideIn 0.3s ease; }
-  .success-msg.success { display: block; background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
-  .success-msg.error { display: block; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #ef4444; }
-  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-  @media(max-width:960px){ .quote-layout{grid-template-columns:1fr} .form-row{grid-template-columns:1fr} }
-
-  /* ── CART ── */
-  .cart-link {
-    background: var(--primary);
-    color: #000;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .cart-link:hover {
-    background: var(--primary-light);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
-  }
-
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 4px rgba(0,255,65,0.2);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  #cartItems {
-    margin-bottom: 16px;
-    max-height: 50vh;
-    overflow-y: auto;
-  }
-
-  @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    .contact-section { padding: 64px 32px; }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 40px;
+      max-width: 1100px;
+      margin: 0 auto;
     }
+    @media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; } }
 
-    .nav-actions {
-      flex-wrap: wrap;
-      gap: 8px;
+    .contact-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 32px;
     }
-  }
-</style></head><body>
-<nav>
-  <a href="index.html" class="nav-brand">
-    <div class="nav-logo"></div>
-    <div class="nav-brand-text">
-      <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
+    .contact-card h2 { font-size: 20px; margin-bottom: 24px; color: var(--primary); }
+    .contact-info-item { padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .contact-info-item:last-child { border-bottom: none; }
+    .contact-info-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .contact-info-value { font-size: 16px; color: var(--text); font-weight: 600; }
+    .contact-info-value a { color: var(--text); transition: color 0.2s; }
+    .contact-info-value a:hover { color: var(--primary); }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--light-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+    .form-msg { padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; }
+    .form-msg.success { background: rgba(16,185,129,0.1); border: 1px solid var(--success); color: var(--success); display: block; }
+    .form-msg.error { background: rgba(239,68,68,0.1); border: 1px solid var(--error); color: var(--error); display: block; }
+  </style>
+</head>
+<body data-page="contact">
+  <div data-nav></div>
+
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <div class="page-hero-eyebrow">Get In Touch</div>
+      <h1>Contact Geruso Detailing</h1>
+      <p>Questions about our services? Need a custom quote? We're here to help — usually responding within an hour during business hours.</p>
     </div>
-  </a>
-  <input type="checkbox" id="nav-toggle" class="nav-toggle">
-  <label for="nav-toggle" class="nav-toggle-label">
-    <span></span>
-    <span></span>
-    <span></span>
-  </label>
-  <ul class="nav-links">
-    <li><a href="services.html" >Services</a></li>
-    <li><a href="work.html" >Our Work</a></li>
-    <li><a href="booking.html" >Schedule</a></li>
-    <li><a href="reviews.html" >Reviews</a></li>
-  </ul>
-  <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
-  </div>
-</nav>
+  </section>
 
-
-<!-- Cart Modal -->
-<div id="cartModal" class="cart-modal" style="display: none;">
-  <div class="cart-content">
-    <h2>Your Cart</h2>
-    <div id="cartItems"></div>
-    <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
-    <button id="proceedCheckout" class="btn-primary">Proceed to Checkout</button>
-    <button id="closeCart" class="btn-secondary">Close</button>
-  </div>
-</div>
-
-<section id="contact">
-  <div class="section-inner">
-    <div class="section-label">CONTACT US</div>
-    <h1 class="section-heading">Get Your Free Quote</h1>
-    <p class="section-sub">Fill out the form or call us directly. We'll respond within 24 hours with a detailed quote and availability. First-time customers receive 10% off their service.</p>
-
-    <div class="quote-layout">
-      <div>
-        <div class="contact-cards">
-          <a href="tel:4014901236" class="contact-card">
-            <div class="contact-icon">☎</div>
-            <div>
-              <div class="contact-label">Phone</div>
-              <div class="contact-val">401-490-1236</div>
-            </div>
-          </a>
-          <a href="sms:4014901236" class="contact-card">
-            <div class="contact-icon">✉</div>
-            <div>
-              <div class="contact-label">Text Message</div>
-              <div class="contact-val">401-490-1236</div>
-            </div>
-          </a>
-          <div class="contact-card">
-            <div class="contact-icon">◉</div>
-            <div>
-              <div class="contact-label">Location</div>
-              <div class="contact-val">Mapleville, RI</div>
-            </div>
-          </div>
+  <section class="contact-section">
+    <div class="contact-grid">
+      <div class="contact-card">
+        <h2>Get In Touch</h2>
+        <div class="contact-info-item">
+          <div class="contact-info-label">Phone</div>
+          <div class="contact-info-value"><a href="tel:4014901236">(401) 490-1236</a></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-label">Email</div>
+          <div class="contact-info-value"><a href="mailto:gerusodetailing@gmail.com">gerusodetailing@gmail.com</a></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-label">Service Area</div>
+          <div class="contact-info-value">Rhode Island &amp; Surrounding</div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-label">Response Time</div>
+          <div class="contact-info-value">Within 1 hour (business hours)</div>
+        </div>
+        <div style="margin-top: 24px;">
+          <a href="/booking.html" class="btn btn-primary" style="width: 100%; text-align: center;">Skip the Form, Book Now</a>
         </div>
       </div>
 
-      <div class="quote-form-card">
-        <h3 class="form-title">Request a Quote</h3>
-        <p class="form-sub">Get a free estimate for your vehicle.</p>
-        <form id="quoteForm">
+      <div class="contact-card">
+        <h2>Send a Message</h2>
+        <div class="form-msg" id="formMsg"></div>
+        <form id="contactForm">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">First Name</label>
-              <input type="text" class="form-input" name="firstName" placeholder="John" required>
+              <label>Your Name</label>
+              <input type="text" name="name" required placeholder="John Smith">
             </div>
             <div class="form-group">
-              <label class="form-label">Last Name</label>
-              <input type="text" class="form-input" name="lastName" placeholder="Doe" required>
+              <label>Phone</label>
+              <input type="tel" name="phone" required placeholder="(401) 555-0123">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" name="email" placeholder="john@example.com" required>
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="john@example.com">
           </div>
           <div class="form-group">
-            <label class="form-label">Phone</label>
-            <input type="tel" class="form-input" name="phone" placeholder="(401) 555-0000" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Service Type</label>
-            <select class="form-select" name="service" id="quoteServiceSelect" required>
-              <option value="">Select a service...</option>
-              <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
-              <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
-              <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
-              <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
-              <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
-              <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
-              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
-              <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
-              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
-              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
+            <label>Service Interest</label>
+            <select name="service">
+              <option value="">Choose a service...</option>
+              <option>Car Wash</option>
+              <option>Interior Detailing</option>
+              <option>Premium Package</option>
+              <option>Ultra Premium</option>
+              <option>Ceramic Coating</option>
+              <option>Full Vehicle Polish</option>
+              <option>Engine Bay Cleaning</option>
+              <option>Motorcycle Service</option>
+              <option>Custom / Not Sure</option>
             </select>
           </div>
-
-          <div class="form-group" id="quoteAddressFieldGroup" style="display: none;">
-            <label class="form-label">Service Address <span style="color: #ef4444;">*</span></label>
-            <input type="text" class="form-input" id="quoteServiceAddressInput" name="serviceAddress" placeholder="Enter service address" autocomplete="off">
-          </div>
-
-          <div class="form-group" id="quoteLocationNoteGroup" style="display: none;">
-            <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
-              <strong style="color: var(--primary);">Location Service</strong><br>
-              This service is completed at our Mapleville location only.
-            </div>
-          </div>
-
           <div class="form-group">
-            <label class="form-label">Message</label>
-            <textarea class="form-textarea" name="message" placeholder="Tell us about your vehicle and any special requests..."></textarea>
+            <label>Message</label>
+            <textarea name="message" required placeholder="Tell us about your vehicle and what you're looking for..."></textarea>
           </div>
-          <button type="submit" class="btn-submit">Get Your Quote</button>
-          <div class="success-msg" id="successMsg">Quote request sent! We'll contact you within 24 hours.</div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
         </form>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
-    </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Car Wash</a></li>
-        <li><a href="services.html">Interior Detailing</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">View All Services</a></li>
-      </ul>
-    </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
-<script>
-  document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')";
-
-  // ========================================
-  // SERVICE TAG MAP FOR ADDRESS FIELD LOGIC
-  // ========================================
-  const serviceTagMap = {
-    'Full Motorcycle Service': 'MOBILE',
-    'Interior Detailing': 'MOBILE',
-    'Car Wash': 'MOBILE',
-    'Ceramic Coating': 'LOCATION ONLY',
-    'Premium Package': 'MOBILE',
-    'Ultra Premium': 'MOBILE',
-    'Pet Hair / Odor Elimination': 'EXTRA FEE',
-    'Headlight Restoration': 'EXTRA FEE',
-    'Engine Bay Cleaning': 'MOBILE',
-    'Full Vehicle Polish': 'LOCATION ONLY'
-  };
-
-  // ========================================
-  // GET SERVICE TAG FROM SERVICE NAME
-  // ========================================
-  function getServiceTagFromName(serviceName) {
-    return serviceTagMap[serviceName] || 'MOBILE';
-  }
-
-  // ========================================
-  // UPDATE ADDRESS FIELD VISIBILITY
-  // ========================================
-  function updateAddressFieldVisibility(serviceTag) {
-    const addressFieldGroup = document.getElementById('quoteAddressFieldGroup');
-    const locationNoteGroup = document.getElementById('quoteLocationNoteGroup');
-    const serviceAddressInput = document.getElementById('quoteServiceAddressInput');
-
-    console.log('[Quote Form] Updating address field for service tag:', serviceTag);
-
-    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
-      // Show address field for mobile/extra fee services
-      addressFieldGroup.style.display = 'block';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = true;
-      console.log('[Quote Form] Address field shown (required)');
-    } else if (serviceTag === 'LOCATION ONLY') {
-      // Hide address field for location-only services
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'block';
-      serviceAddressInput.required = false;
-      serviceAddressInput.value = ''; // Clear previous address
-      console.log('[Quote Form] Address field hidden, location note shown');
-    } else {
-      // Default: hide address field
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
-    }
-  }
-
-  // Wait for DOM to be ready
-  document.addEventListener('DOMContentLoaded', function() {
-    const quoteForm = document.getElementById('quoteForm');
-    const successMsg = document.getElementById('successMsg');
-    const serviceSelect = document.getElementById('quoteServiceSelect');
-
-    if (!quoteForm) {
-      console.error('[Quote Form] ERROR: Form element not found!');
-      return;
-    }
-
-    console.log('[Quote Form] Form initialized and ready');
-
-    // Add change listener to service dropdown
-    if (serviceSelect) {
-      serviceSelect.addEventListener('change', (e) => {
-        const serviceName = e.target.value;
-        console.log('[Quote Form] Service selected:', serviceName);
-
-        if (serviceName) {
-          const serviceTag = getServiceTagFromName(serviceName);
-          console.log('[Quote Form] Service tag:', serviceTag);
-          updateAddressFieldVisibility(serviceTag);
-        } else {
-          // No service selected - hide address field
-          document.getElementById('quoteAddressFieldGroup').style.display = 'none';
-          document.getElementById('quoteLocationNoteGroup').style.display = 'none';
-        }
-      });
-      console.log('[Quote Form] Service dropdown listener attached');
-    }
-
-    quoteForm.addEventListener('submit', async function(e) {
-      console.log('[Quote Form] Submit event triggered');
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const form = e.target;
+      const msg = document.getElementById('formMsg');
+      const btn = form.querySelector('button[type=submit]');
+      const data = Object.fromEntries(new FormData(form));
 
-      // Validate form fields
-      const firstName = this.querySelector('[name="firstName"]').value.trim();
-      const lastName = this.querySelector('[name="lastName"]').value.trim();
-      const email = this.querySelector('[name="email"]').value.trim();
-      const phone = this.querySelector('[name="phone"]').value.trim();
-      const service = this.querySelector('[name="service"]').value;
-      const message = this.querySelector('[name="message"]').value.trim();
-      const serviceAddress = document.getElementById('quoteServiceAddressInput').value.trim();
-
-      console.log('[Quote Form] Form data:', { firstName, lastName, email, phone, service, serviceAddress });
-
-      // Validate required fields
-      if (!firstName || !lastName || !email || !phone) {
-        console.error('[Quote Form] Validation failed: missing required fields');
-        showError('Please fill in all required fields (First Name, Last Name, Email, Phone)');
-        return;
-      }
-
-      // Validate service address if required (for MOBILE or EXTRA FEE services)
-      if (service) {
-        const serviceTag = getServiceTagFromName(service);
-        if ((serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') && !serviceAddress) {
-          console.error('[Quote Form] Validation failed: address required for mobile/extra fee service');
-          showError('Please enter a service address for this service type');
-          return;
-        }
-      }
-
-      // Prepare data
-      const formDataObj = { firstName, lastName, email, phone, service, message, serviceAddress };
-
-      // Disable button and show loading state
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending...';
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
 
       try {
-        console.log('[Quote Form] Sending to /api/quote...');
-
-        // Create fetch with 15-second timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-        const response = await fetch('/api/quote', {
+        // Try to submit via API; fall back gracefully if endpoint missing
+        const res = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formDataObj),
-          signal: controller.signal
+          body: JSON.stringify(data),
         });
-
-        clearTimeout(timeoutId);
-        console.log('[Quote Form] Response status:', response.status);
-        const data = await response.json();
-        console.log('[Quote Form] Response data:', data);
-
-        if (response.ok && data.success) {
-          console.log('[Quote Form] SUCCESS - Email sent');
-          successMsg.style.display = 'block';
-          successMsg.className = 'success-msg success';
-          successMsg.textContent = '✓ Quote request sent! We\'ll contact you within 24 hours.';
-          successMsg.setAttribute('style', 'display: block !important; padding: 16px !important; margin-bottom: 18px !important; background: rgba(16,185,129,0.15) !important; border: 1px solid rgba(16,185,129,0.4) !important; border-radius: 8px !important; color: #10b981 !important; font-weight: 600 !important;');
-          quoteForm.reset();
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
-
-          // Keep success message visible for 8 seconds
-          setTimeout(() => {
-            successMsg.style.display = 'none';
-          }, 8000);
+        if (res.ok) {
+          msg.className = 'form-msg success';
+          msg.textContent = 'Thanks! We’ll get back to you within an hour.';
+          form.reset();
         } else {
-          console.error('[Quote Form] Server returned error:', data.error || 'Unknown error');
-          console.error('[Quote Form] Full response:', data);
-          showError(data.error || 'Failed to send quote. Please try again.');
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
+          throw new Error('API unavailable');
         }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        console.error('[Quote Form] Network/Fetch error:', error.message);
-
-        let errorMsg = 'Error submitting form: ' + error.message;
-        if (error.name === 'AbortError') {
-          errorMsg = 'Request timed out. Server is not responding. Please try again.';
-          console.error('[Quote Form] REQUEST TIMEOUT - Backend did not respond within 15 seconds');
-        }
-
-        showError(errorMsg);
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
+      } catch (err) {
+        // Fallback: open mail client
+        const subject = encodeURIComponent(`Quote request from ${data.name}`);
+        const body = encodeURIComponent(`Name: ${data.name}\nPhone: ${data.phone}\nEmail: ${data.email}\nService: ${data.service || 'Not specified'}\n\nMessage:\n${data.message}`);
+        window.location.href = `mailto:gerusodetailing@gmail.com?subject=${subject}&body=${body}`;
+        msg.className = 'form-msg success';
+        msg.textContent = 'Opening your email app to send the message...';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
       }
     });
-
-    function showError(message) {
-      console.error('[Quote Form] ERROR:', message);
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'success-msg error';
-      errorDiv.textContent = '✗ ' + message;
-      errorDiv.setAttribute('style', 'display: block !important; padding: 16px !important; margin-bottom: 18px !important; background: rgba(239,68,68,0.15) !important; border: 1px solid rgba(239,68,68,0.4) !important; border-radius: 8px !important; color: #ef4444 !important; font-weight: 600 !important;');
-      quoteForm.insertBefore(errorDiv, quoteForm.firstChild);
-
-      // Keep error visible for 10 seconds, then fade out
-      setTimeout(() => {
-        errorDiv.style.opacity = '0.5';
-      }, 8000);
-
-      setTimeout(() => errorDiv.remove(), 10000);
-    }
-  });
-</script><script src="cart.js"></script></body></html>
+  </script>
+</body>
+</html>

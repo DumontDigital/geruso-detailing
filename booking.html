@@ -236,11 +236,11 @@
 <!-- BUILD TEST: HOME-SCHEDULE-FIX-001 -->
 <!-- LIVE FILE CONFIRMED 002 - booking.html IFRAME is being served -->
 <nav>
-  <a href="#" class="nav-brand" id="navBrand" onclick="showSection('home'); return false;">
-    <div class="nav-logo"></div>
+  <a href="/home.html" class="nav-brand">
+    <img src="/logo.png" style="width: 42px; height: 42px; border-radius: 6px; object-fit: cover;" alt="Logo">
     <div class="nav-brand-text">
       <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
+      <span class="nav-brand-sub">PREMIUM AUTO CARE</span>
     </div>
   </a>
   <input type="checkbox" id="nav-toggle" class="nav-toggle">
@@ -250,15 +250,16 @@
     <span></span>
   </label>
   <ul class="nav-links">
-    <li><a href="services.html">Services</a></li>
-    <li><a href="work.html">Our Work</a></li>
-    <li><a href="#" onclick="showSection('booking'); return false;" class="active">Schedule</a></li>
-    <li><a href="reviews.html">Reviews</a></li>
+    <li><a href="/home.html">Home</a></li>
+    <li><a href="/services.html">Services</a></li>
+    <li><a href="/work.html">Our Work</a></li>
+    <li><a href="/schedule.html">Schedule</a></li>
+    <li><a href="/reviews.html">Reviews</a></li>
+    <li><a href="/contact.html">Contact</a></li>
   </ul>
   <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
+    <a href="tel:4014901236" class="nav-phone">(401) 490-1236</a>
+    <a href="#" id="cartBtn" class="cart-link" style="font-size: 13px; color: var(--text-muted); padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;">Cart (0)</a>
   </div>
 </nav>
 
@@ -1240,13 +1241,13 @@
     }
   };
 
-  // Show home section by default on page load
+  // Show booking section by default — this page IS the booking page
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      showSection('home');
+      showSection('booking');
     });
   } else {
-    showSection('home');
+    showSection('booking');
   }
 </script>
 
