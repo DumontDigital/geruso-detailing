@@ -111,6 +111,10 @@ app.get('/schedule', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'schedule.html'));
 });
+app.get('/schedule.html', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'schedule.html'));
+});
 app.get('/reviews', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'reviews.html'));
