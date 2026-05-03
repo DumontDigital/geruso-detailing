@@ -16,15 +16,21 @@
       background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
+      color: #fff;
+    }
+
+    .login-page-main {
+      flex: 1;
+      display: flex;
       justify-content: center;
       align-items: center;
-      color: #fff;
+      padding: 40px 20px;
     }
 
     .login-container {
       width: 100%;
       max-width: 440px;
-      padding: 20px;
     }
 
     .login-box {
@@ -305,10 +311,15 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/css/customer.css">
   <!-- Google Sign-In Library -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body>
+<body data-page="login">
+  <!-- Shared customer nav so users can navigate away from /login -->
+  <div data-nav></div>
+
+  <main class="login-page-main">
   <div class="login-container">
     <div class="login-box">
       <div class="logo-section">
@@ -410,7 +421,9 @@
       </div>
     </div>
   </div>
+  </main>
 
+  <script src="/js/customer-shell.js"></script>
   <script>
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -515,7 +528,7 @@
           successDiv.classList.add('show');
 
           setTimeout(() => {
-            window.location.href = '/schedule.html';
+            window.location.href = '/';
           }, 2000);
         } else {
           errorDiv.textContent = data.error || 'Registration failed';

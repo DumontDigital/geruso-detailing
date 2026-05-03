@@ -10,22 +10,29 @@
     { href: '/contact.html',  label: 'Contact' },
   ];
 
-  function getLoggedInUser() {
+  function isLoggedIn() {
+    // Treat "logged in" loosely — if there's ANY token or user record in
+    // localStorage, show Logout. Avoids cases where one of the two is
+    // missing or malformed (older builds set only one, etc.).
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
+      return !!(localStorage.getItem('token') || localStorage.getItem('user'));
+    } catch (e) { return false; }
+  }
+
+  function getUserLabel() {
+    try {
       const raw = localStorage.getItem('user');
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
+      if (!raw) return '';
+      const u = JSON.parse(raw);
+      return u.email || u.first_name || u.name || '';
+    } catch (e) { return ''; }
   }
 
   function renderAuthControl() {
-    const user = getLoggedInUser();
-    if (user) {
-      const label = user.email || user.first_name || 'Account';
-      return `<button type="button" class="nav-signin" id="navLogoutBtn" title="Signed in as ${label}">Logout</button>`;
+    if (isLoggedIn()) {
+      const label = getUserLabel();
+      const titleAttr = label ? ` title="Signed in as ${label}"` : '';
+      return `<button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button>`;
     }
     return `<a href="/login" class="nav-signin">Sign In</a>`;
   }
