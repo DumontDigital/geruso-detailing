@@ -176,7 +176,15 @@ function updateNavCartBadge() {
   const count = getCartCount();
   const cartBtns = document.querySelectorAll('#cartBtn');
   cartBtns.forEach(btn => {
-    btn.textContent = `Cart (${count})`;
+    const countEl = btn.querySelector('.cart-count');
+    if (countEl) {
+      // New structured cart button: keep icon/label, only update count badge.
+      countEl.textContent = count;
+      btn.classList.toggle('is-empty', count === 0);
+    } else {
+      // Legacy plain-text cart button — preserve old behavior.
+      btn.textContent = `Cart (${count})`;
+    }
   });
 }
 
