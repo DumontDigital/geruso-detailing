@@ -10,6 +10,26 @@
     { href: '/contact.html',  label: 'Contact' },
   ];
 
+  function getLoggedInUser() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function renderAuthControl() {
+    const user = getLoggedInUser();
+    if (user) {
+      const label = user.email || user.first_name || 'Account';
+      return `<button type="button" class="nav-signin" id="navLogoutBtn" title="Signed in as ${label}">Logout</button>`;
+    }
+    return `<a href="/login" class="nav-signin">Sign In</a>`;
+  }
+
   function renderNav(activePage) {
     const links = NAV_LINKS.map(l => {
       const isActive = activePage && (l.href.includes(activePage));
@@ -31,7 +51,7 @@
         </label>
         <ul class="nav-links">
           ${links}
-          <li><a href="/login" class="nav-signin">Sign In</a></li>
+          <li>${renderAuthControl()}</li>
           <li>
             <button type="button" id="cartBtn" class="nav-cart is-empty" aria-label="View cart">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -46,6 +66,16 @@
         </ul>
       </nav>
     `;
+  }
+
+  function wireAuthControl() {
+    const btn = document.getElementById('navLogoutBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    });
   }
 
   function renderFooter() {
@@ -97,6 +127,7 @@
     const activePage = document.body.dataset.page || '';
     if (navMount) navMount.outerHTML = renderNav(activePage);
     if (footerMount) footerMount.outerHTML = renderFooter();
+    wireAuthControl();
   });
 
   window.GerusoShell = { renderNav, renderFooter };

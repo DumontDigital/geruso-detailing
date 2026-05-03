@@ -49,14 +49,15 @@ img { max-width: 100%; display: block; }
 .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .nav-brand-name { font-weight: 700; font-size: 19px; color: var(--primary); letter-spacing: 0.3px; }
 .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 1.4px; text-transform: uppercase; margin-top: 2px; }
-.nav-links { display: flex; gap: 32px; list-style: none; align-items: center; }
+.nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
 .nav-links a {
   color: var(--text-muted);
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
   transition: color 0.2s;
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 2px solid transparent;
+  letter-spacing: 0.2px;
 }
 .nav-links a:hover, .nav-links a.active {
   color: var(--primary);

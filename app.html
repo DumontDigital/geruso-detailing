@@ -217,7 +217,10 @@
       const role = auth.getRole();
 
       if (role === 'customer') {
-        customerView.classList.add('active');
+        // Customers don't use the iframe shell — send them to the regular
+        // home page which already has the shared customer nav with Logout.
+        window.location.href = '/';
+        return;
       } else if (role === 'owner') {
         ownerView.classList.add('active');
       } else if (role === 'dev') {
