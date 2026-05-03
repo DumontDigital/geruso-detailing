@@ -149,8 +149,8 @@
       <div class="sidebar-item owner-only" onclick="showSection('content')">📝 Content</div>
     </div>
     <div class="sidebar-footer">
-      <a href="/home.html" style="display: block; padding: 10px; margin-bottom: 8px; text-align: center; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;">Customer View</a>
-      <button class="btn-logout" onclick="logout()">Logout</button>
+      <!-- Logout intentionally removed — parent app.html top bar
+           already provides Customer View + Logout, so we don't double up. -->
     </div>
     <script>
       // Hide owner-only sections when the signed-in user is a dev.

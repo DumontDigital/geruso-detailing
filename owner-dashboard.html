@@ -730,14 +730,14 @@
   <!-- Owner Dashboard -->
   <div id="ownerDashboard" style="display: none;">
     <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
-      <div style="font-weight: 700; color: var(--primary);">Owner Dashboard - Phase 1 [BUILD-2025]</div>
-      <button id="ownerLogoutBtn" style="background: var(--accent); color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Logout</button>
+      <div style="font-weight: 700; color: var(--primary);">Owner Dashboard</div>
+      <!-- Logout intentionally removed — the parent app.html top bar
+           provides "Customer View" + "Logout" so we don't double up. -->
     </nav>
 
-    <!-- Debug Info: Build Version & Current Eastern Time -->
-    <div style="background: rgba(0, 255, 65, 0.05); border-bottom: 1px solid var(--border); padding: 12px 24px; color: var(--primary); font-size: 12px; font-weight: 700;">
-      Build Version: <span id="debugBuildVersion">2026-05-02T19:00:00Z</span> | Current Eastern Time: <span id="debugEasternTime">--</span>
-    </div>
+    <!-- Debug strip removed for cleaner production UI. -->
+    <span id="debugBuildVersion" style="display:none;"></span>
+    <span id="debugEasternTime" style="display:none;"></span>
 
     <div style="display: flex;">
       <!-- Sidebar Navigation -->
