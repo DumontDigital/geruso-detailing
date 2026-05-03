@@ -14,7 +14,9 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const client = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-// Login endpoint
+// Login endpoint — queries the `users` table (single source of truth for
+// owner / dev / customer roles). Previously queried a stale `admins` table
+// which is why every demo account silently failed with "Invalid credentials".
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -23,9 +25,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // Find admin by email
     const result = await pool.query(
-      'SELECT id, email, password_hash, is_active FROM admins WHERE email = $1',
+      'SELECT id, email, password_hash, first_name, last_name, role, is_active FROM users WHERE email = $1',
       [email]
     );
 
@@ -33,26 +34,34 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const admin = result.rows[0];
+    const user = result.rows[0];
 
-    if (!admin.is_active) {
+    if (!user.is_active) {
       return res.status(401).json({ error: 'Account is inactive' });
     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
-      { id: admin.id, email: admin.email },
-      JWT_SECRET,
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET || 'your-secret-key',
       { expiresIn: JWT_EXPIRY }
     );
 
-    res.json({ success: true, token, message: 'Login successful' });
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
