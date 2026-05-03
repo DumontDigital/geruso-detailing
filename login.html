@@ -526,8 +526,8 @@
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Redirect to app
-        window.location.href = '/';
+        // Redirect to authenticated dashboard
+        window.location.href = '/app';
       } catch (error) {
         console.error('Google sign-in error:', error);
         alert('Sign-in failed: ' + error.message);

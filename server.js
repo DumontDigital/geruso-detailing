@@ -37,8 +37,8 @@ app.get('/', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  // GERUSO NEW BUILD TEST - server.js is executing
-  res.sendFile(path.join(__dirname, 'app.html'));
+  // Public landing page with login button
+  res.sendFile(path.join(__dirname, 'landing.html'));
 });
 
 // Login portal - standalone page
@@ -49,8 +49,17 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// App page (main application)
+// App page (main application - authenticated users only)
 app.get('/app', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  // Authenticated dashboard
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+// Dashboard alias (after login redirect)
+app.get('/dashboard', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');

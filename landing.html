@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geruso Detailing - Professional Auto Care</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #00FF41;
+      --primary-dark: #00DD33;
+      --white: #ffffff;
+      --light-bg: #0a0a0a;
+      --light-bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --text-light: #888888;
+    }
+
+    body {
+      background: var(--light-bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* HEADER / NAV */
+    .header {
+      background: var(--light-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 255, 65, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .login-btn {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .login-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 255, 65, 0.3);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      padding: 80px 24px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, rgba(0,0,0,0) 100%);
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 16px 40px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .cta-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 255, 65, 0.3);
+    }
+
+    /* SERVICES SECTION */
+    .section {
+      padding: 80px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .section-heading {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .service-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .service-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(0, 255, 65, 0.1);
+      transform: translateY(-4px);
+    }
+
+    .service-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .service-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    .service-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* GALLERY SECTION */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-item {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* REVIEWS SECTION */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .review-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .stars {
+      color: var(--primary);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .review-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    .review-author {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: var(--light-bg2);
+      border-top: 1px solid var(--border);
+      padding: 60px 24px 24px;
+      margin-top: 80px;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      margin-bottom: 32px;
+    }
+
+    .footer-brand-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .footer-tagline {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .footer-col-title {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 8px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-bottom a {
+      color: var(--text-light);
+      text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+      color: var(--primary);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .section {
+        padding: 60px 20px;
+      }
+
+      .section-heading {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left" onclick="window.location.href='/'">
+      <img src="/logo.png" alt="Geruso Detailing" class="header-logo">
+      <div class="header-title">Geruso Detailing</div>
+    </div>
+    <div class="header-right">
+      <button class="login-btn" onclick="window.location.href='/login'">Login</button>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <div class="hero">
+    <h1>Your Vehicle, Perfected</h1>
+    <p>Professional car detailing services including washing, waxing, ceramic coating and more. Transform your car's appearance with our expert care.</p>
+    <button class="cta-btn" onclick="window.location.href='/login'">Book Now</button>
+  </div>
+
+  <!-- SERVICES SECTION -->
+  <div class="section">
+    <div class="section-label">WHAT WE OFFER</div>
+    <h2 class="section-heading">Premium Detailing Services</h2>
+    <p class="section-sub">Choose from our range of professional detailing services</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🚗</div>
+        <h3>Car Wash</h3>
+        <p>Professional hand washing and drying to keep your vehicle pristine</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">✨</div>
+        <h3>Interior Detailing</h3>
+        <p>Deep cleaning of seats, carpets, panels, and surfaces</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💎</div>
+        <h3>Ceramic Coating</h3>
+        <p>Long-lasting protection and shine for your vehicle's paint</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">⭐</div>
+        <h3>Premium Package</h3>
+        <p>Complete detailing service including interior and exterior</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALLERY SECTION -->
+  <div class="section">
+    <div class="section-label">OUR WORK</div>
+    <h2 class="section-heading">Real Detailing Results</h2>
+    <p class="section-sub">See the incredible results we achieve for our customers</p>
+
+    <div class="gallery-grid">
+      <div class="gallery-item">
+        <img src="/images/work/interior-detail.png" alt="Interior Detail" onerror="this.style.display='none'">
+      </div>
+      <div class="gallery-item">
+        <img src="/images/work/steering-wheel-detail.png" alt="Steering Wheel Detail" onerror="this.style.display='none'">
+      </div>
+      <div class="gallery-item">
+        <img src="/images/work/full-interior-detail.png" alt="Full Interior Detail" onerror="this.style.display='none'">
+      </div>
+      <div class="gallery-item">
+        <img src="/images/work/dashboard-detail.png" alt="Dashboard Detail" onerror="this.style.display='none'">
+      </div>
+      <div class="gallery-item">
+        <img src="/images/work/wheel-tire-detail.png" alt="Wheel & Tire Detail" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS SECTION -->
+  <div class="section">
+    <div class="section-label">TESTIMONIALS</div>
+    <h2 class="section-heading">What Customers Say</h2>
+    <p class="section-sub">Read reviews from our satisfied customers</p>
+
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p class="review-text">"I was impressed by the thoroughness and professionalism. My car feels brand new!"</p>
+        <p class="review-author">John Smith</p>
+      </div>
+      <div class="review-card">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p class="review-text">"Best detailing service in Rhode Island. Highly recommended!"</p>
+        <p class="review-author">Sarah Johnson</p>
+      </div>
+      <div class="review-card">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p class="review-text">"Professional, friendly, and they really care about your vehicle."</p>
+        <p class="review-author">Mike Davis</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand-name">🚗 Geruso Detailing</div>
+        <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Mapleville, Rhode Island</p>
+        <p style="font-size: 13px;">
+          📞 <a href="tel:4014901236" style="color: var(--text-muted); text-decoration: none;">401-490-1236</a><br>
+          📧 <a href="mailto:gerusodetailing@gmail.com" style="color: var(--text-muted); text-decoration: none;">gerusodetailing@gmail.com</a>
+        </p>
+      </div>
+      <div>
+        <div class="footer-col-title">Services</div>
+        <ul class="footer-links">
+          <li><a>Car Wash</a></li>
+          <li><a>Interior Detailing</a></li>
+          <li><a>Ceramic Coating</a></li>
+          <li><a>Premium Package</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Quick Links</div>
+        <ul class="footer-links">
+          <li><a onclick="window.location.href='/login'">Book Now</a></li>
+          <li><a>About Us</a></li>
+          <li><a>Contact</a></li>
+          <li><a>Reviews</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Geruso Detailing • <a href="#">Privacy Policy</a> • <a href="#">Accessibility</a> • SSL Secured • Payments Powered by Stripe</span>
+    </div>
+  </footer>
+</body>
+</html>
