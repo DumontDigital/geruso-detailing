@@ -341,6 +341,31 @@ router.post('/booking/:id/cancel', verifyToken, async (req, res) => {
   }
 });
 
+// Mark booking as completed (admin only)
+router.post('/booking/:id/mark-completed', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      ['completed', id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      success: true,
+      booking: result.rows[0],
+      message: 'Booking marked as completed'
+    });
+  } catch (error) {
+    console.error('Error marking booking as completed:', error);
+    res.status(500).json({ error: 'Failed to mark booking as completed' });
+  }
+});
+
 // ===== SERVICES ENDPOINTS =====
 
 // Get all services (admin only)

@@ -410,6 +410,9 @@ app.post('/api/owner/booking/:id/confirm', verifyToken, requireRole(['owner', 'd
       'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       ['confirmed', id]
     );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
     res.json({ success: true, booking: result.rows[0] });
   } catch (error) {
     console.error('Error confirming booking:', error);
@@ -425,6 +428,9 @@ app.post('/api/owner/booking/:id/complete', verifyToken, requireRole(['owner', '
       'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       ['completed', id]
     );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
     res.json({ success: true, booking: result.rows[0] });
   } catch (error) {
     console.error('Error completing booking:', error);
@@ -440,6 +446,9 @@ app.post('/api/owner/booking/:id/cancel', verifyToken, requireRole(['owner', 'de
       'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       ['cancelled', id]
     );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
     res.json({ success: true, booking: result.rows[0] });
   } catch (error) {
     console.error('Error cancelling booking:', error);
@@ -455,6 +464,9 @@ app.delete('/api/owner/booking/:id', verifyToken, requireRole(['owner', 'dev']),
       'DELETE FROM bookings WHERE id = $1 RETURNING *',
       [id]
     );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting booking:', error);

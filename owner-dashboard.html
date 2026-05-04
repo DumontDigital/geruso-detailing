@@ -1045,6 +1045,13 @@
     setInterval(updateEasternTimeDisplay, 1000);
   }
 
+  function ownerAuthHeaders(extraHeaders = {}) {
+    return {
+      ...auth.getAuthHeaders(),
+      ...extraHeaders
+    };
+  }
+
   function setupTabNavigation() {
     document.querySelectorAll('.owner-nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1196,8 +1203,11 @@
 
   async function loadBookings() {
     try {
-      const response = await fetch('/api/owner/bookings');
+      const response = await fetch('/api/owner/bookings', {
+        headers: ownerAuthHeaders()
+      });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Server returned ${response.status}`);
 
       if (!data.bookings || data.bookings.length === 0) {
         document.getElementById('upcomingBookingsList').innerHTML = '';
@@ -1436,10 +1446,13 @@
   window.ownerConfirmBooking = async (bookingId) => {
     if (!confirm('Confirm this booking?')) return;
     try {
-      const response = await fetch(`/api/owner/booking/${bookingId}/confirm`, { method: 'POST' });
-      if (response.ok) {
-        loadBookings();
-      }
+      const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/confirm`, {
+        method: 'POST',
+        headers: ownerAuthHeaders()
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      loadBookings();
     } catch (error) {
       alert('Error: ' + error.message);
     }
@@ -1451,7 +1464,7 @@
     try {
       const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: ownerAuthHeaders()
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
@@ -1468,7 +1481,7 @@
     try {
       const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/cancel`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: ownerAuthHeaders()
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
@@ -1487,7 +1500,7 @@
     try {
       const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        headers: ownerAuthHeaders()
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
