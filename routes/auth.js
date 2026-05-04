@@ -19,6 +19,7 @@ const client = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 // real auth (passwords, 2FA, or SSO) before going to production.
 const STAFF_EMAIL_BYPASS = {
   'gerusodetailing@gmail.com': { role: 'owner', first_name: 'Cameron', last_name: 'Geruso' },
+  'dumontdigital@gmail.com':   { role: 'dev',   first_name: 'Dumont',  last_name: 'Digital' },
   'dumontdigital1@gmail.com':  { role: 'dev',   first_name: 'Dumont',  last_name: 'Digital' },
 };
 

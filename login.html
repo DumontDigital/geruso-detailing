@@ -408,65 +408,19 @@
     });
 
     // Login form
-    // Staff emails sign in passwordless — when one is typed (and matches
-    // exactly), hide the password field AND auto-submit the login after a
-    // brief debounce so the user is logged in without clicking anything.
-    const STAFF_EMAILS = ['gerusodetailing@gmail.com', 'dumontdigital1@gmail.com'];
+    // Staff emails sign in passwordless — when one is typed, hide the
+    // password field. The user still presses Sign In; the backend bypasses
+    // the password check for these emails.
+    const STAFF_EMAILS = [
+      'gerusodetailing@gmail.com',
+      'dumontdigital@gmail.com',
+      'dumontdigital1@gmail.com',
+    ];
     const passwordGroup = document.getElementById('loginPasswordGroup');
-    let staffAutoLoginTimer = null;
-    let staffAutoLoginInFlight = false;
-
-    async function staffAutoLogin(email) {
-      if (staffAutoLoginInFlight) return;
-      staffAutoLoginInFlight = true;
-      const errorDiv = document.getElementById('loginError');
-      const submitBtn = document.getElementById('loginSubmitBtn');
-      const loading = document.getElementById('loginLoading');
-      errorDiv.classList.remove('show');
-      if (submitBtn) submitBtn.disabled = true;
-      if (loading) loading.style.display = 'block';
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = '/app';
-        } else {
-          errorDiv.textContent = data.error || 'Sign in failed';
-          errorDiv.classList.add('show');
-          staffAutoLoginInFlight = false;
-          if (submitBtn) submitBtn.disabled = false;
-          if (loading) loading.style.display = 'none';
-        }
-      } catch (err) {
-        errorDiv.textContent = 'Connection error: ' + err.message;
-        errorDiv.classList.add('show');
-        staffAutoLoginInFlight = false;
-        if (submitBtn) submitBtn.disabled = false;
-        if (loading) loading.style.display = 'none';
-      }
-    }
-
     document.getElementById('loginEmail').addEventListener('input', (e) => {
       const v = (e.target.value || '').trim().toLowerCase();
       const isStaff = STAFF_EMAILS.includes(v);
       if (passwordGroup) passwordGroup.style.display = isStaff ? 'none' : 'block';
-
-      // Debounce auto-login so partial typing of the email doesn't fire
-      // (e.g. before the user finishes typing). 250ms after they stop and
-      // the value matches a staff email exactly, we sign them in.
-      if (staffAutoLoginTimer) {
-        clearTimeout(staffAutoLoginTimer);
-        staffAutoLoginTimer = null;
-      }
-      if (isStaff && !staffAutoLoginInFlight) {
-        staffAutoLoginTimer = setTimeout(() => staffAutoLogin(v), 250);
-      }
     });
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
