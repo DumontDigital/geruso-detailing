@@ -936,28 +936,66 @@
     });
   }
 
-  // Hide the "Prev" button for regular customers — they shouldn't browse
-  // months in the past. Owner / dev keep it for admin reference.
-  (function gatePrevMonthByRole() {
+  // Customers can use both arrows but cannot navigate before the current
+  // ET month. Owner / dev can browse anywhere for admin reference.
+  function isStaffUser() {
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null');
-      const role = u && u.role;
-      if (role !== 'owner' && role !== 'dev') {
-        const prev = document.getElementById('prevMonth');
-        if (prev) prev.style.display = 'none';
-      }
-    } catch (e) {}
-  })();
+      return u && (u.role === 'owner' || u.role === 'dev');
+    } catch (e) { return false; }
+  }
+
+  // Disable the Prev button visually + functionally when a customer is
+  // already on (or somehow earlier than) the current ET month.
+  function updatePrevButtonState() {
+    const prev = document.getElementById('prevMonth');
+    if (!prev) return;
+    if (isStaffUser()) {
+      prev.disabled = false;
+      prev.style.opacity = '';
+      prev.style.cursor = '';
+      prev.title = '';
+      return;
+    }
+    const et = getCurrentTimeET();
+    const onOrBeforeCurrentMonth =
+      currentDate.getFullYear() < et.year ||
+      (currentDate.getFullYear() === et.year && currentDate.getMonth() <= et.month);
+    if (onOrBeforeCurrentMonth) {
+      prev.disabled = true;
+      prev.style.opacity = '0.4';
+      prev.style.cursor = 'not-allowed';
+      prev.title = 'Past months are unavailable';
+    } else {
+      prev.disabled = false;
+      prev.style.opacity = '';
+      prev.style.cursor = '';
+      prev.title = '';
+    }
+  }
 
   document.getElementById('prevMonth').addEventListener('click', () => {
+    // Customer guard: refuse to step before the current ET month.
+    if (!isStaffUser()) {
+      const et = getCurrentTimeET();
+      if (currentDate.getFullYear() < et.year ||
+          (currentDate.getFullYear() === et.year && currentDate.getMonth() <= et.month)) {
+        return;
+      }
+    }
     currentDate.setMonth(currentDate.getMonth() - 1);
     renderCalendar();
+    updatePrevButtonState();
   });
 
   document.getElementById('nextMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
+    updatePrevButtonState();
   });
+
+  // Keep the Prev button state correct on every initial / programmatic render.
+  updatePrevButtonState();
 
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
