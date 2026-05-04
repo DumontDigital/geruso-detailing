@@ -17,9 +17,21 @@ const verifyToken = (req, res, next) => {
     if (err) {
       return res.status(401).json({ error: 'Invalid token' });
     }
+    // Historical name was req.admin; keep it for compatibility.
     req.admin = decoded;
+    req.user = decoded;
     next();
   });
 };
 
-module.exports = { verifyToken };
+const requireRole = (roles = []) => {
+  const allowed = Array.isArray(roles) ? roles : [roles];
+  return (req, res, next) => {
+    const role = req.user?.role || req.admin?.role;
+    if (!role) return res.status(401).json({ error: 'Invalid token' });
+    if (allowed.length === 0 || allowed.includes(role)) return next();
+    return res.status(403).json({ error: 'Forbidden' });
+  };
+};
+
+module.exports = { verifyToken, requireRole };

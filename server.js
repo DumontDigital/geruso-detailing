@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const bookingsRoutes = require('./routes/bookings');
 const availabilityRoutes = require('./routes/availability');
 const adminRoutes = require('./routes/admin');
+const { verifyToken, requireRole } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -300,230 +301,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/availability', availabilityRoutes);
 
-// ========== UNIFIED AUTHENTICATION - LOGIN PORTAL ==========
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-// Unified login endpoint - works for customer, dev, and owner
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
-    }
-
-    // Find user by email
-    const result = await pool.query(
-      'SELECT id, email, password_hash, first_name, last_name, role, is_active FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const user = result.rows[0];
-
-    if (!user.is_active) {
-      return res.status(401).json({ error: 'Account is inactive' });
-    }
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
-    );
-
-    console.log(`[Auth] User logged in: ${email} (role: ${user.role})`);
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('[Auth] Login error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Register endpoint - customers can self-register
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, first_name, last_name } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // Create user with customer role
-    const result = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
-       VALUES ($1, $2, $3, $4, 'customer', true)
-       RETURNING id, email, first_name, last_name, role`,
-      [email, passwordHash, first_name || '', last_name || '']
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(500).json({ error: 'Failed to create account' });
-    }
-
-    const user = result.rows[0];
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
-    );
-
-    console.log(`[Auth] New user registered: ${email}`);
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    if (error.code === '23505') { // Unique constraint error
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-    console.error('[Auth] Register error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// DEBUG ENDPOINT: Fix test user passwords (remove in production)
-app.post('/api/debug/fix-passwords', async (req, res) => {
-  try {
-    const testPassword = 'Test1234!';
-
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(testPassword, salt);
-
-    // Update all test users
-    const users = [
-      'owner@geruso-detailing.com',
-      'dev@geruso-detailing.com',
-      'customer@example.com'
-    ];
-
-    const results = [];
-    for (const email of users) {
-      const result = await pool.query(
-        'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2 RETURNING email, role',
-        [passwordHash, email]
-      );
-
-      if (result.rows.length > 0) {
-        results.push({ email: result.rows[0].email, role: result.rows[0].role, updated: true });
-      } else {
-        results.push({ email, updated: false });
-      }
-    }
-
-    console.log('[Debug] Fixed test user passwords');
-    res.json({
-      success: true,
-      message: 'Passwords fixed for test users',
-      updated: results,
-      testPassword: testPassword
-    });
-  } catch (error) {
-    console.error('[Debug] Error fixing passwords:', error);
-    res.status(500).json({ error: 'Failed to fix passwords' });
-  }
-});
-
 // Test endpoint to verify deployment
 app.get('/api/test-deployment', (req, res) => {
   res.json({ message: 'Deployment test - this should be visible if new code is deployed', timestamp: new Date().toISOString() });
 });
 
-// SIMPLE FIX: Upsert demo accounts with known password (for testing).
-// Inserts the three demo users if missing, otherwise resets their password
-// to "Test1234!". Idempotent — safe to call repeatedly.
-app.post('/api/quick-fix-passwords', async (req, res) => {
-  try {
-    const testPassword = 'Test1234!';
-
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(testPassword, salt);
-
-    const demoUsers = [
-      { email: 'owner@geruso-detailing.com',  first: 'Cameron',  last: 'Geruso',  role: 'owner' },
-      { email: 'dev@geruso-detailing.com',    first: 'Dev',      last: 'Admin',   role: 'dev' },
-      { email: 'customer@example.com',        first: 'Test',     last: 'Customer', role: 'customer' },
-    ];
-
-    const results = [];
-    for (const u of demoUsers) {
-      const r = await pool.query(
-        `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
-         VALUES ($1, $2, $3, $4, $5, true)
-         ON CONFLICT (email) DO UPDATE
-           SET password_hash = EXCLUDED.password_hash,
-               role = EXCLUDED.role,
-               is_active = true,
-               updated_at = CURRENT_TIMESTAMP
-         RETURNING email, role, (xmax = 0) AS inserted`,
-        [u.email, passwordHash, u.first, u.last, u.role]
-      );
-      const row = r.rows[0];
-      results.push({ email: row.email, role: row.role, action: row.inserted ? 'inserted' : 'updated' });
-      console.log(`[Quick Fix] ${row.inserted ? 'Inserted' : 'Updated'} ${row.email}`);
-    }
-
-    res.json({ success: true, message: 'Demo accounts ready', password: testPassword, users: results });
-  } catch (error) {
-    console.error('[Quick Fix] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Legacy owner login for backward compatibility
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'SecureOwner2024!';
-
-app.post('/api/owner/login', (req, res) => {
-  const { password } = req.body;
-  if (password === OWNER_PASSWORD) {
-    // Generate JWT token for owner
-    const token = jwt.sign(
-      { role: 'owner', email: 'owner@geruso-detailing.com' },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
-    );
-    res.json({ success: true, token });
-  } else {
-    res.status(401).json({ success: false, error: 'Invalid password' });
-  }
-});
 
 // Get current date and time in Eastern Time
 function getCurrentTimeInEastern() {
@@ -554,7 +336,7 @@ function getCurrentTimeInEastern() {
 }
 
 // Get all bookings for owner (shows ONLY real customer bookings, not placeholder slots)
-app.get('/api/owner/bookings', async (req, res) => {
+app.get('/api/owner/bookings', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC"
@@ -574,7 +356,7 @@ app.get('/api/owner/bookings', async (req, res) => {
 });
 
 // Confirm booking
-app.post('/api/owner/booking/:id/confirm', async (req, res) => {
+app.post('/api/owner/booking/:id/confirm', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -589,7 +371,7 @@ app.post('/api/owner/booking/:id/confirm', async (req, res) => {
 });
 
 // Mark booking completed
-app.post('/api/owner/booking/:id/complete', async (req, res) => {
+app.post('/api/owner/booking/:id/complete', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -604,7 +386,7 @@ app.post('/api/owner/booking/:id/complete', async (req, res) => {
 });
 
 // Cancel booking
-app.post('/api/owner/booking/:id/cancel', async (req, res) => {
+app.post('/api/owner/booking/:id/cancel', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -619,7 +401,7 @@ app.post('/api/owner/booking/:id/cancel', async (req, res) => {
 });
 
 // Delete booking
-app.delete('/api/owner/booking/:id', async (req, res) => {
+app.delete('/api/owner/booking/:id', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -634,7 +416,7 @@ app.delete('/api/owner/booking/:id', async (req, res) => {
 });
 
 // Get schedule
-app.get('/api/owner/schedule', async (req, res) => {
+app.get('/api/owner/schedule', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     // Return default schedule - can be extended to fetch from database
     const schedule = {
@@ -654,7 +436,7 @@ app.get('/api/owner/schedule', async (req, res) => {
 });
 
 // Save schedule day
-app.post('/api/owner/schedule-day', async (req, res) => {
+app.post('/api/owner/schedule-day', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { day, status, startTime, endTime } = req.body;
     // This can be extended to save to database
@@ -667,7 +449,7 @@ app.post('/api/owner/schedule-day', async (req, res) => {
 });
 
 // Get blocked dates
-app.get('/api/owner/blocked-dates', async (req, res) => {
+app.get('/api/owner/blocked-dates', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT * FROM blocked_dates ORDER BY blocked_date DESC'
@@ -680,7 +462,7 @@ app.get('/api/owner/blocked-dates', async (req, res) => {
 });
 
 // Block date
-app.post('/api/owner/block-date', async (req, res) => {
+app.post('/api/owner/block-date', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { blockedDate, reason } = req.body;
     const result = await pool.query(
@@ -695,7 +477,7 @@ app.post('/api/owner/block-date', async (req, res) => {
 });
 
 // Unblock date
-app.delete('/api/owner/blocked-date/:id', async (req, res) => {
+app.delete('/api/owner/blocked-date/:id', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
@@ -712,7 +494,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Admin: Reset system to availability slots (clears old bookings)
-app.post('/api/admin/reset-availability', async (req, res) => {
+app.post('/api/admin/reset-availability', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     console.log('[Admin Reset] Resetting system to availability slots...');
     const { resetToAvailability } = require('./utils/clearBookings');

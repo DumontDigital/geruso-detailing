@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Geruso Detailing – Mobile Car Detailing, North Providence RI</title><style>
+<!DOCTYPE html><html lang="en" style="background-color: #0a0a0a;"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Geruso Detailing – Mobile Car Detailing, North Providence RI</title><style>
   :root {
     --primary: #00FF41;
     --primary-dark: #00DD33;
@@ -589,6 +589,12 @@
       gap: 8px;
     }
   }
+
+  /* Prevent white table rows */
+  #upcomingBookingsList tr,
+  #historyBookingsList tr { background: var(--light-bg2); }
+  #upcomingBookingsList td,
+  #historyBookingsList td { color: var(--text); }
 </style></head><body>
 <nav>
   <a href="index.html" class="nav-brand">
@@ -1449,6 +1455,7 @@
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      alert('✓ Booking marked as completed');
       loadBookings();
     } catch (error) {
       alert('Failed to mark complete: ' + error.message);
@@ -1486,6 +1493,7 @@
       if (!response.ok) {
         throw new Error(body.error || `Server returned ${response.status}`);
       }
+      alert('✓ Booking deleted');
       loadBookings();
     } catch (error) {
       alert('Failed to delete: ' + error.message);

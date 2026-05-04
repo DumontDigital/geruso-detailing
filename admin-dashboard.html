@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color: #0a0a0a;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,7 +69,8 @@
 
     table { width: 100%; border-collapse: collapse; }
     th { background: var(--light-bg); padding: 14px; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-    td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 14px; background: var(--light-bg2); color: var(--text); }
+    tbody tr { background: var(--light-bg2); }
     tbody tr:hover { background: rgba(0,255,65,0.05); }
 
     .status-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -601,7 +602,8 @@
       });
       if (!res.ok) throw new Error('Failed to load bookings');
 
-      const bookings = await res.json();
+      const data = await res.json();
+      const bookings = data.bookings || [];
       const tbody = document.getElementById('bookingsTableBody');
       tbody.innerHTML = bookings.map(b => `
         <tr>
