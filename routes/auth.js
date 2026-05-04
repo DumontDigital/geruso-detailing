@@ -14,53 +14,71 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const client = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-// Login endpoint — queries the `users` table (single source of truth for
-// owner / dev / customer roles). Previously queried a stale `admins` table
-// which is why every demo account silently failed with "Invalid credentials".
+// Whitelisted staff accounts that sign in with email only (no password).
+// SECURITY: anyone who knows these emails gets full owner/dev access — add
+// real auth (passwords, 2FA, or SSO) before going to production.
+const STAFF_EMAIL_BYPASS = {
+  'gerusodetailing@gmail.com': { role: 'owner', first_name: 'Cameron', last_name: 'Geruso' },
+  'dumontdigital1@gmail.com':  { role: 'dev',   first_name: 'Dumont',  last_name: 'Digital' },
+};
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+    const lower = String(email).trim().toLowerCase();
+    const SECRET = JWT_SECRET || 'your-secret-key';
+
+    // ── Staff passwordless bypass ──────────────────────────────────
+    if (STAFF_EMAIL_BYPASS[lower]) {
+      const cfg = STAFF_EMAIL_BYPASS[lower];
+      let row;
+      const existing = await pool.query(
+        'SELECT id, email, role, first_name, last_name FROM users WHERE LOWER(email) = $1',
+        [lower]
+      );
+      if (existing.rows.length === 0) {
+        const ins = await pool.query(
+          `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
+           VALUES ($1, '!passwordless!', $2, $3, $4, true)
+           RETURNING id, email, role, first_name, last_name`,
+          [lower, cfg.first_name, cfg.last_name, cfg.role]
+        );
+        row = ins.rows[0];
+      } else {
+        row = existing.rows[0];
+        if (row.role !== cfg.role) {
+          await pool.query('UPDATE users SET role = $1, is_active = true WHERE id = $2', [cfg.role, row.id]);
+          row.role = cfg.role;
+        }
+      }
+      const token = jwt.sign({ id: row.id, email: row.email, role: row.role }, SECRET, { expiresIn: JWT_EXPIRY });
+      return res.json({
+        success: true, token,
+        user: { id: row.id, email: row.email, first_name: row.first_name, last_name: row.last_name, role: row.role }
+      });
     }
+
+    // ── Normal customer login (password required) ──────────────────
+    if (!password) return res.status(400).json({ error: 'Password required' });
 
     const result = await pool.query(
       'SELECT id, email, password_hash, first_name, last_name, role, is_active FROM users WHERE email = $1',
       [email]
     );
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
 
     const user = result.rows[0];
-
-    if (!user.is_active) {
-      return res.status(401).json({ error: 'Account is inactive' });
-    }
+    if (!user.is_active) return res.status(401).json({ error: 'Account is inactive' });
 
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (!isPasswordValid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET || 'your-secret-key',
-      { expiresIn: JWT_EXPIRY }
-    );
-
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: JWT_EXPIRY });
     res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role
-      }
+      success: true, token,
+      user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: user.role }
     });
   } catch (error) {
     console.error('Login error:', error);

@@ -325,9 +325,9 @@
             <input type="email" id="loginEmail" placeholder="name@example.com" required>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" id="loginPasswordGroup">
             <label>Password</label>
-            <input type="password" id="loginPassword" placeholder="••••••••" required>
+            <input type="password" id="loginPassword" placeholder="••••••••">
           </div>
 
           <button type="submit" class="submit-btn" id="loginSubmitBtn">Sign In</button>
@@ -339,12 +339,6 @@
         <!-- Google renders its own branded button into this empty mount -->
         <div class="oauth-mount" id="googleLoginBtn"></div>
 
-        <div class="demo-section">
-          <h4>Demo Accounts (Password: Test1234!)</h4>
-          <div class="demo-credentials">owner@geruso-detailing.com</div>
-          <div class="demo-credentials">dev@geruso-detailing.com</div>
-          <div class="demo-credentials">customer@example.com</div>
-        </div>
       </div>
 
       <!-- REGISTER TAB -->
@@ -414,6 +408,16 @@
     });
 
     // Login form
+    // Staff emails sign in passwordless — hide the password field for them
+    // and reveal it again the moment a non-staff email is typed.
+    const STAFF_EMAILS = ['gerusodetailing@gmail.com', 'dumontdigital1@gmail.com'];
+    const passwordGroup = document.getElementById('loginPasswordGroup');
+    document.getElementById('loginEmail').addEventListener('input', (e) => {
+      const v = (e.target.value || '').trim().toLowerCase();
+      const isStaff = STAFF_EMAILS.includes(v);
+      if (passwordGroup) passwordGroup.style.display = isStaff ? 'none' : 'block';
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
