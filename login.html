@@ -442,20 +442,30 @@
           body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        // Handle HTML / non-JSON responses gracefully (e.g. when a stale
+        // service-worker or proxy returns a 404 page). Otherwise the
+        // browser crashes on JSON.parse with the cryptic
+        // "Unexpected token '<'" error.
+        const ctype = response.headers.get('content-type') || '';
+        let data = {};
+        if (ctype.includes('application/json')) {
+          data = await response.json();
+        } else {
+          await response.text(); // drain body
+          data = { error: response.ok ? 'Unexpected response from server' : 'Sign in failed' };
+        }
 
         if (response.ok && data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
-
-          // Redirect to app which will show appropriate view based on role
           window.location.href = '/';
         } else {
-          errorDiv.textContent = data.error || 'Login failed';
+          errorDiv.textContent = data.error || `Sign in failed (${response.status})`;
           errorDiv.classList.add('show');
         }
       } catch (error) {
-        errorDiv.textContent = 'Connection error: ' + error.message;
+        errorDiv.textContent = 'Connection error — please try again.';
+        console.error('[Login] error:', error);
         errorDiv.classList.add('show');
       } finally {
         submitBtn.disabled = false;
