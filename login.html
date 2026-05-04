@@ -468,30 +468,7 @@
       80%{ box-shadow: 0 0 0 12px rgba(0,255,65,0); }
       100%{ box-shadow: 0 0 0 12px rgba(0,255,65,0); }
     }
-    .interactive-row{
-      margin-top: 14px;
-      display:flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .chip{
-      font-size: 11px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke2);
-      background: rgba(255,255,255,.02);
-      color: rgba(255,255,255,.78);
-      cursor: pointer;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
-      user-select:none;
-    }
-    .chip:hover{ transform: translateY(-1px); border-color: rgba(0,255,65,.35); background: rgba(0,255,65,.06); }
-    .chip[aria-pressed="true"]{
-      border-color: rgba(0,255,65,.55);
-      background: rgba(0,255,65,.08);
-      color: rgba(255,255,255,.92);
-    }
+    /* (chips removed; Google-only sign-in) */
     .legal{
       margin-top: 14px;
       color: var(--muted2);
@@ -598,24 +575,24 @@
           </div>
           <div>
             <div class="hero-title">Geruso Detailing</div>
-            <div class="hero-sub">A clean, simple sign-in for customers and staff. We use Google for secure access during this phase.</div>
+            <div class="hero-sub">Sign in once with Google for a faster checkout and a smoother booking experience. No extra passwords to remember.</div>
           </div>
         </div>
 
         <div class="hero-badges" aria-label="Trust badges">
           <div class="badge"><span class="badge-dot"></span> Secure Google sign‑in</div>
-          <div class="badge"><span class="badge-dot"></span> Staff dashboard access</div>
-          <div class="badge"><span class="badge-dot"></span> Fast booking flow</div>
+          <div class="badge"><span class="badge-dot"></span> Faster booking</div>
+          <div class="badge"><span class="badge-dot"></span> Easy access on mobile</div>
         </div>
 
         <div class="hero-cards">
           <div class="mini">
-            <h4>Customer experience</h4>
-            <p>Book services, manage your info, and get updates without juggling extra passwords.</p>
+            <h4>Book in minutes</h4>
+            <p>Save time on repeat visits and keep everything in one place using your Google account.</p>
           </div>
           <div class="mini">
-            <h4>Owner & Dev tools</h4>
-            <p>Track bookings, manage schedules, and keep operations moving from one dashboard.</p>
+            <h4>Updates you can trust</h4>
+            <p>A secure sign-in helps protect your booking details and keeps your experience consistent.</p>
           </div>
         </div>
 
@@ -623,9 +600,7 @@
           <div class="tip-icon" aria-hidden="true">
             <span style="color: var(--primary); font-weight: 900;">i</span>
           </div>
-          <div class="tip-text" id="rotatingTip">
-            Tip: If you’re staff, make sure you sign in with the exact approved email.
-          </div>
+          <div class="tip-text" id="rotatingTip">Tip: Use the Google account you want to book with.</div>
         </div>
       </section>
 
@@ -646,11 +621,6 @@
           <!-- Google renders its own branded button into this empty mount -->
           <div class="oauth-mount" id="googleLoginBtn"></div>
 
-          <div class="interactive-row" aria-label="Sign-in mode">
-            <button type="button" class="chip" id="chipCustomer" aria-pressed="true">Customer</button>
-            <button type="button" class="chip" id="chipStaff" aria-pressed="false">Staff</button>
-          </div>
-
           <div class="legal">
             By continuing, you agree to use this site responsibly. Need help? Visit <a href="/contact">Contact</a>.
           </div>
@@ -662,29 +632,13 @@
 
   <script src="/js/customer-shell.js"></script>
   <script>
-    // Small interactive touches: mode chips + rotating tips (no auth impact)
-    const chipCustomer = document.getElementById('chipCustomer');
-    const chipStaff = document.getElementById('chipStaff');
-    const panelSubtitle = document.getElementById('panelSubtitle');
+    // Small interactive touch: rotating tips (no auth impact)
     const rotatingTip = document.getElementById('rotatingTip');
 
-    function setMode(mode){
-      const isStaff = mode === 'staff';
-      if (chipCustomer) chipCustomer.setAttribute('aria-pressed', String(!isStaff));
-      if (chipStaff) chipStaff.setAttribute('aria-pressed', String(isStaff));
-      if (panelSubtitle) {
-        panelSubtitle.textContent = isStaff
-          ? 'Use your approved staff Google email to access dashboards.'
-          : 'Continue with Google to access your account.';
-      }
-    }
-    if (chipCustomer) chipCustomer.addEventListener('click', () => setMode('customer'));
-    if (chipStaff) chipStaff.addEventListener('click', () => setMode('staff'));
-
     const tips = [
-      'Tip: If you’re staff, make sure you sign in with the exact approved email.',
-      'Tip: Customers sign in once and book faster next time.',
-      'Tip: If you don’t see your dashboard after sign‑in, sign out and choose the correct Google account.'
+      'Tip: Use the Google account you want to book with.',
+      'Tip: Signing in once makes booking faster next time.',
+      'Tip: If you picked the wrong Google account, sign out and try again.'
     ];
     let tipIdx = 0;
     setInterval(() => {
