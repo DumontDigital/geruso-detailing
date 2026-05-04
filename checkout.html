@@ -61,27 +61,82 @@
       outline: none;
     }
     .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,255,65,0.12); }
-    .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .payment-intro {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: -6px 0 14px;
+    }
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
     .payment-option {
       position: relative;
       display: block;
       cursor: pointer;
     }
-    .payment-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .payment-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+      padding: 0;
+    }
     .payment-card {
-      min-height: 94px;
+      min-height: 118px;
       border: 1px solid var(--border);
       border-radius: 10px;
       background: var(--light-bg);
       padding: 16px;
       transition: all 0.2s;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 18px;
+      gap: 12px;
+      align-items: start;
     }
-    .payment-card strong { display: block; color: var(--text); margin-bottom: 5px; }
-    .payment-card span { display: block; color: var(--text-muted); font-size: 13px; line-height: 1.45; }
+    .payment-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 15px;
+    }
+    .payment-copy { min-width: 0; }
+    .payment-copy strong { display: block; color: var(--text); margin-bottom: 5px; font-size: 15px; line-height: 1.25; }
+    .payment-copy span { display: block; color: var(--text-muted); font-size: 13px; line-height: 1.45; }
+    .payment-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      margin-top: 2px;
+      background: transparent;
+    }
     .payment-option input:checked + .payment-card {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(0,255,65,0.12);
       background: rgba(0,255,65,0.05);
+    }
+    .payment-option input:checked + .payment-card .payment-check {
+      border-color: var(--primary);
+      background: radial-gradient(circle, var(--primary) 0 42%, transparent 46%);
+    }
+    .payment-option input:focus-visible + .payment-card {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
     }
     .summary-item {
       display: grid;
@@ -164,33 +219,50 @@
           </div>
 
           <h2 style="margin-top: 18px;">Payment Method</h2>
+          <p class="payment-intro">Choose what you prefer. The next screen is Stripe Checkout, where customers can complete payment securely with the enabled methods on your Stripe account.</p>
           <div class="payment-grid" role="radiogroup" aria-label="Payment method">
             <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="card_wallet" checked>
+              <input type="radio" name="paymentMethod" value="all" checked>
               <span class="payment-card">
-                <strong>Card or Wallet</strong>
-                <span>Credit card, debit card, Apple Pay, or Google Pay when available.</span>
+                <span class="payment-icon">All</span>
+                <span class="payment-copy">
+                  <strong>All Secure Methods</strong>
+                  <span>Show every Stripe-enabled option, including cards, wallets, Cash App Pay, and bank payment when available.</span>
+                </span>
+                <span class="payment-check"></span>
+              </span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="card_wallet">
+              <span class="payment-card">
+                <span class="payment-icon">Card</span>
+                <span class="payment-copy">
+                  <strong>Card or Wallet</strong>
+                  <span>Credit card, debit card, Apple Pay, or Google Pay when available.</span>
+                </span>
+                <span class="payment-check"></span>
               </span>
             </label>
             <label class="payment-option">
               <input type="radio" name="paymentMethod" value="cashapp">
               <span class="payment-card">
-                <strong>Cash App Pay</strong>
-                <span>Use Cash App if it is enabled on the payment screen.</span>
+                <span class="payment-icon">$</span>
+                <span class="payment-copy">
+                  <strong>Cash App Pay</strong>
+                  <span>Open Stripe Checkout with Cash App Pay selected where your account is eligible.</span>
+                </span>
+                <span class="payment-check"></span>
               </span>
             </label>
             <label class="payment-option">
               <input type="radio" name="paymentMethod" value="bank">
               <span class="payment-card">
-                <strong>Bank Payment</strong>
-                <span>Pay from a US bank account if available.</span>
-              </span>
-            </label>
-            <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="other">
-              <span class="payment-card">
-                <strong>Other Options</strong>
-                <span>Stripe will show any additional enabled payment options.</span>
+                <span class="payment-icon">ACH</span>
+                <span class="payment-copy">
+                  <strong>US Bank Account</strong>
+                  <span>Pay directly from a US bank account when enabled in Stripe.</span>
+                </span>
+                <span class="payment-check"></span>
               </span>
             </label>
           </div>

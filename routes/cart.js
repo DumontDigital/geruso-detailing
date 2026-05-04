@@ -17,6 +17,12 @@ const SERVICE_CATALOG = {
   'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
 };
 
+const PAYMENT_METHOD_TYPES = {
+  card_wallet: ['card'],
+  cashapp: ['cashapp'],
+  bank: ['us_bank_account'],
+};
+
 function normalizeCartItems(items) {
   if (!Array.isArray(items)) return [];
 
@@ -39,7 +45,7 @@ function normalizeCartItems(items) {
 
 router.post('/checkout', async (req, res) => {
   try {
-    const { items, customer = {}, preferredPaymentMethod = 'card_wallet' } = req.body;
+    const { items, customer = {}, preferredPaymentMethod = 'all' } = req.body;
     const cartItems = normalizeCartItems(items);
 
     if (cartItems.length === 0) {
@@ -53,6 +59,8 @@ router.post('/checkout', async (req, res) => {
     }
 
     const customerEmail = String(customer.email || '').trim();
+    const selectedPaymentMethod = PAYMENT_METHOD_TYPES[preferredPaymentMethod] ? preferredPaymentMethod : 'all';
+    const paymentMethodTypes = PAYMENT_METHOD_TYPES[selectedPaymentMethod] || null;
     const orderId = uuidv4();
     const stripeClient = initializeStripe();
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `${req.protocol}://${req.get('host')}`;
@@ -72,9 +80,8 @@ router.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
-    const session = await stripeClient.checkout.sessions.create({
+    const checkoutSessionPayload = {
       mode: 'payment',
-      automatic_payment_methods: { enabled: true },
       line_items: lineItems,
       customer_email: customerEmail || undefined,
       client_reference_id: orderId,
@@ -82,12 +89,21 @@ router.post('/checkout', async (req, res) => {
         order_id: orderId,
         customer_name: String(customer.name || '').trim(),
         customer_phone: String(customer.phone || '').trim(),
-        preferred_payment_method: String(preferredPaymentMethod || 'card_wallet'),
+        preferred_payment_method: selectedPaymentMethod,
+        requested_payment_methods: paymentMethodTypes ? paymentMethodTypes.join(',') : 'automatic',
         source: 'cart_checkout',
       },
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout?cancelled=true`,
-    });
+    };
+
+    if (paymentMethodTypes) {
+      checkoutSessionPayload.payment_method_types = paymentMethodTypes;
+    } else {
+      checkoutSessionPayload.automatic_payment_methods = { enabled: true };
+    }
+
+    const session = await stripeClient.checkout.sessions.create(checkoutSessionPayload);
 
     res.json({
       success: true,
@@ -96,7 +112,9 @@ router.post('/checkout', async (req, res) => {
     });
   } catch (error) {
     console.error('[Cart Checkout] Error:', error.message);
-    res.status(500).json({ error: 'Unable to start checkout. Please try again.' });
+    res.status(500).json({
+      error: error && error.type ? error.message : 'Unable to start checkout. Please try again.',
+    });
   }
 });
 
