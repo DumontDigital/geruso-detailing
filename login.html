@@ -220,32 +220,6 @@
       box-shadow: none;
     }
 
-    .divider {
-      text-align: center;
-      margin: 28px 0;
-      color: #555;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      display: inline-block;
-      width: 35%;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.08);
-      vertical-align: middle;
-    }
-
-    .divider::before {
-      margin-right: 10px;
-    }
-
-    .divider::after {
-      margin-left: 10px;
-    }
-
     /* Empty mount the Google GSI library renders its own branded
        button into. No dark wrapper / extra styling — just center it. */
     .oauth-mount {
@@ -253,6 +227,7 @@
       justify-content: center;
       align-items: center;
       min-height: 44px;
+      margin-top: 24px;
     }
     .oauth-mount > div { max-width: 100%; }
 
@@ -289,7 +264,7 @@
     /* Split auth shell */
     .auth-shell{
       display: grid;
-      grid-template-columns: 1.35fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 0;
       border-radius: 22px;
       overflow: hidden;
@@ -426,14 +401,17 @@
       transition: opacity .22s ease;
     }
     .right-panel{
-      padding: 44px 38px;
+      display: flex;
+      align-items: center;
+      padding: 46px 44px;
       background: rgba(18,18,18,.55);
     }
     .panel-card{
+      width: 100%;
       background: rgba(10,10,10,.40);
       border: 1px solid var(--stroke2);
       border-radius: 18px;
-      padding: 26px 22px;
+      padding: 30px 28px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
     }
     .panel-header{
@@ -616,8 +594,6 @@
 
           <div id="loginError" class="error-message"></div>
 
-          <div class="divider">SIGN IN WITH GOOGLE</div>
-
           <!-- Google renders its own branded button into this empty mount -->
           <div class="oauth-mount" id="googleLoginBtn"></div>
 
@@ -699,9 +675,10 @@
       const el = document.getElementById(mountId);
       if (!el || !window.google || !window.google.accounts) return;
       el.innerHTML = ''; // wipe any prior render before re-mounting
+      const buttonWidth = Math.min(400, Math.max(280, el.clientWidth || 360));
       google.accounts.id.renderButton(el, {
         theme: 'filled_black', size: 'large',
-        text: 'continue_with', shape: 'rectangular', width: 360
+        text: 'continue_with', shape: 'rectangular', width: buttonWidth
       });
     }
     function initGoogle() {
