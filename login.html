@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Geruso Detailing - Login</title>
   <style>
+    :root{
+      --bg0:#070707;
+      --bg1:#0c0c0c;
+      --card: rgba(18,18,18,.72);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.06);
+      --text:#fff;
+      --muted:#a7a7a7;
+      --muted2:#7b7b7b;
+      --primary:#00FF41;
+      --primary2:#00DD33;
+      --danger:#ff6b6b;
+      --shadow: 0 25px 80px rgba(0,0,0,.65);
+    }
     * {
       margin: 0;
       padding: 0;
@@ -13,7 +27,11 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(0,255,65,.10), transparent 55%),
+        radial-gradient(900px 700px at 80% 20%, rgba(0,221,51,.08), transparent 55%),
+        radial-gradient(900px 700px at 30% 90%, rgba(255,255,255,.05), transparent 55%),
+        linear-gradient(135deg, var(--bg0) 0%, var(--bg1) 40%, var(--bg0) 100%);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -30,7 +48,7 @@
 
     .login-container {
       width: 100%;
-      max-width: 440px;
+      max-width: 1100px;
     }
 
     .login-box {
@@ -238,6 +256,262 @@
     }
     .oauth-mount > div { max-width: 100%; }
 
+    /* Ambient animated blobs */
+    .bg-ambient { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+    .blob {
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: .55;
+      transform: translate3d(0,0,0);
+      animation: drift 16s ease-in-out infinite;
+      background: radial-gradient(circle at 30% 30%, rgba(0,255,65,.35), transparent 60%);
+    }
+    .blob.b2{
+      width: 620px; height: 620px; opacity: .40;
+      background: radial-gradient(circle at 40% 40%, rgba(0,221,51,.25), transparent 62%);
+      animation-duration: 20s;
+      animation-direction: reverse;
+    }
+    .blob.b3{
+      width: 420px; height: 420px; opacity: .25;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.14), transparent 60%);
+      animation-duration: 24s;
+    }
+    @keyframes drift{
+      0% { transform: translate(-10%, -10%) scale(1); }
+      50% { transform: translate(12%, 8%) scale(1.08); }
+      100% { transform: translate(-10%, -10%) scale(1); }
+    }
+
+    /* Split auth shell */
+    .auth-shell{
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 0;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid var(--stroke);
+      background: rgba(10,10,10,.50);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      position: relative;
+      isolation: isolate;
+    }
+    .auth-shell::before{
+      content:'';
+      position:absolute; inset:-1px;
+      background: linear-gradient(120deg, rgba(0,255,65,.18), rgba(0,0,0,0) 30%, rgba(0,221,51,.12));
+      opacity:.9;
+      z-index:-1;
+    }
+    .left-hero{
+      padding: 46px 44px;
+      border-right: 1px solid var(--stroke2);
+      background:
+        radial-gradient(800px 500px at 30% 0%, rgba(0,255,65,.12), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+      position: relative;
+      min-height: 520px;
+    }
+    .hero-top{
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .brand-mark{
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,255,65,.35);
+      background: rgba(0,255,65,.08);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 10px 30px rgba(0,255,65,.12), inset 0 1px 0 rgba(255,255,255,.06);
+      flex: 0 0 auto;
+    }
+    .brand-mark svg{ width: 26px; height: 26px; }
+    .hero-title{
+      font-size: 34px;
+      letter-spacing: -0.8px;
+      line-height: 1.05;
+      font-weight: 800;
+    }
+    .hero-sub{
+      margin-top: 10px;
+      color: var(--muted);
+      max-width: 52ch;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .hero-badges{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.85);
+      font-size: 12px;
+      user-select: none;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      cursor: default;
+    }
+    .badge:hover{
+      transform: translateY(-1px);
+      border-color: rgba(0,255,65,.35);
+      background: rgba(0,255,65,.06);
+    }
+    .badge-dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,255,65,.12);
+    }
+    .hero-cards{
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .mini{
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.025);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .mini:hover{ transform: translateY(-2px); border-color: rgba(255,255,255,.14); }
+    .mini h4{
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      margin-bottom: 6px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .mini p{
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.55;
+    }
+    .hero-tip{
+      margin-top: 18px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,255,65,.18);
+      background: rgba(0,255,65,.06);
+      display:flex;
+      align-items:flex-start;
+      gap: 10px;
+    }
+    .tip-icon{
+      width: 30px; height: 30px;
+      border-radius: 10px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.28);
+      border: 1px solid rgba(0,255,65,.22);
+      flex: 0 0 auto;
+    }
+    .tip-text{
+      font-size: 12px;
+      color: rgba(255,255,255,.82);
+      line-height: 1.55;
+      transition: opacity .22s ease;
+    }
+    .right-panel{
+      padding: 44px 38px;
+      background: rgba(18,18,18,.55);
+    }
+    .panel-card{
+      background: rgba(10,10,10,.40);
+      border: 1px solid var(--stroke2);
+      border-radius: 18px;
+      padding: 26px 22px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .panel-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .panel-header h2{
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+    .panel-header p{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .pulse{
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 0 rgba(0,255,65,.35);
+      animation: pulse 1.6s ease-out infinite;
+      margin-top: 4px;
+      flex: 0 0 auto;
+    }
+    @keyframes pulse{
+      0%{ box-shadow: 0 0 0 0 rgba(0,255,65,.32); }
+      80%{ box-shadow: 0 0 0 12px rgba(0,255,65,0); }
+      100%{ box-shadow: 0 0 0 12px rgba(0,255,65,0); }
+    }
+    .interactive-row{
+      margin-top: 14px;
+      display:flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .chip{
+      font-size: 11px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.02);
+      color: rgba(255,255,255,.78);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      user-select:none;
+    }
+    .chip:hover{ transform: translateY(-1px); border-color: rgba(0,255,65,.35); background: rgba(0,255,65,.06); }
+    .chip[aria-pressed="true"]{
+      border-color: rgba(0,255,65,.55);
+      background: rgba(0,255,65,.08);
+      color: rgba(255,255,255,.92);
+    }
+    .legal{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 11px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .legal a{
+      color: rgba(255,255,255,.82);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(255,255,255,.25);
+    }
+    .legal a:hover{ border-bottom-color: rgba(0,255,65,.55); color: #fff; }
+
+    @media (max-width: 980px) {
+      .auth-shell{ grid-template-columns: 1fr; }
+      .left-hero{ border-right: none; border-bottom: 1px solid var(--stroke2); min-height: unset; }
+      .hero-cards{ grid-template-columns: 1fr; }
+    }
+
     .demo-section {
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid rgba(0, 255, 65, 0.15);
@@ -291,6 +565,10 @@
       .tab-btn {
         padding: 8px;
       }
+
+      .left-hero{ padding: 28px 20px; }
+      .right-panel{ padding: 24px 16px; }
+      .hero-title{ font-size: 28px; }
     }
   </style>
   <link rel="stylesheet" href="/css/customer.css">
@@ -298,29 +576,127 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body data-page="login">
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="blob" style="left:-120px; top:-140px;"></div>
+    <div class="blob b2" style="right:-180px; top:-120px;"></div>
+    <div class="blob b3" style="left:15%; bottom:-220px;"></div>
+  </div>
   <!-- Shared customer nav so users can navigate away from /login -->
   <div data-nav></div>
 
   <main class="login-page-main">
   <div class="login-container">
-    <div class="login-box">
-      <div class="logo-section">
-        <h1>Geruso Detailing</h1>
-        <p>Professional Auto Care & Detailing</p>
-      </div>
+    <div class="auth-shell">
+      <section class="left-hero">
+        <div class="hero-top">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 14.5c2.2-5.2 6.2-8.3 11.8-9.4" stroke="rgba(0,255,65,.95)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6.3 18.1c3.6-2.6 7.4-4 11.4-4.1" stroke="rgba(255,255,255,.75)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7.5 11.5l2.2 2.2 4.8-6.2" stroke="rgba(0,255,65,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="hero-title">Geruso Detailing</div>
+            <div class="hero-sub">A clean, simple sign-in for customers and staff. We use Google for secure access during this phase.</div>
+          </div>
+        </div>
 
-      <div id="loginError" class="error-message"></div>
+        <div class="hero-badges" aria-label="Trust badges">
+          <div class="badge"><span class="badge-dot"></span> Secure Google sign‑in</div>
+          <div class="badge"><span class="badge-dot"></span> Staff dashboard access</div>
+          <div class="badge"><span class="badge-dot"></span> Fast booking flow</div>
+        </div>
 
-      <div class="divider">SIGN IN WITH GOOGLE</div>
+        <div class="hero-cards">
+          <div class="mini">
+            <h4>Customer experience</h4>
+            <p>Book services, manage your info, and get updates without juggling extra passwords.</p>
+          </div>
+          <div class="mini">
+            <h4>Owner & Dev tools</h4>
+            <p>Track bookings, manage schedules, and keep operations moving from one dashboard.</p>
+          </div>
+        </div>
 
-      <!-- Google renders its own branded button into this empty mount -->
-      <div class="oauth-mount" id="googleLoginBtn"></div>
+        <div class="hero-tip" role="note" aria-live="polite">
+          <div class="tip-icon" aria-hidden="true">
+            <span style="color: var(--primary); font-weight: 900;">i</span>
+          </div>
+          <div class="tip-text" id="rotatingTip">
+            Tip: If you’re staff, make sure you sign in with the exact approved email.
+          </div>
+        </div>
+      </section>
+
+      <section class="right-panel">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2>Sign in</h2>
+              <p id="panelSubtitle">Continue with Google to access your account.</p>
+            </div>
+            <div class="pulse" title="Ready"></div>
+          </div>
+
+          <div id="loginError" class="error-message"></div>
+
+          <div class="divider">SIGN IN WITH GOOGLE</div>
+
+          <!-- Google renders its own branded button into this empty mount -->
+          <div class="oauth-mount" id="googleLoginBtn"></div>
+
+          <div class="interactive-row" aria-label="Sign-in mode">
+            <button type="button" class="chip" id="chipCustomer" aria-pressed="true">Customer</button>
+            <button type="button" class="chip" id="chipStaff" aria-pressed="false">Staff</button>
+          </div>
+
+          <div class="legal">
+            By continuing, you agree to use this site responsibly. Need help? Visit <a href="/contact">Contact</a>.
+          </div>
+        </div>
+      </section>
     </div>
   </div>
   </main>
 
   <script src="/js/customer-shell.js"></script>
   <script>
+    // Small interactive touches: mode chips + rotating tips (no auth impact)
+    const chipCustomer = document.getElementById('chipCustomer');
+    const chipStaff = document.getElementById('chipStaff');
+    const panelSubtitle = document.getElementById('panelSubtitle');
+    const rotatingTip = document.getElementById('rotatingTip');
+
+    function setMode(mode){
+      const isStaff = mode === 'staff';
+      if (chipCustomer) chipCustomer.setAttribute('aria-pressed', String(!isStaff));
+      if (chipStaff) chipStaff.setAttribute('aria-pressed', String(isStaff));
+      if (panelSubtitle) {
+        panelSubtitle.textContent = isStaff
+          ? 'Use your approved staff Google email to access dashboards.'
+          : 'Continue with Google to access your account.';
+      }
+    }
+    if (chipCustomer) chipCustomer.addEventListener('click', () => setMode('customer'));
+    if (chipStaff) chipStaff.addEventListener('click', () => setMode('staff'));
+
+    const tips = [
+      'Tip: If you’re staff, make sure you sign in with the exact approved email.',
+      'Tip: Customers sign in once and book faster next time.',
+      'Tip: If you don’t see your dashboard after sign‑in, sign out and choose the correct Google account.'
+    ];
+    let tipIdx = 0;
+    setInterval(() => {
+      if (!rotatingTip) return;
+      tipIdx = (tipIdx + 1) % tips.length;
+      rotatingTip.style.opacity = '0';
+      setTimeout(() => {
+        rotatingTip.textContent = tips[tipIdx];
+        rotatingTip.style.opacity = '1';
+      }, 220);
+    }, 5200);
+
     // Google OAuth Handler
     window.handleGoogleSignIn = async (response) => {
       try {
