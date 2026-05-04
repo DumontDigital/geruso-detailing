@@ -28,6 +28,8 @@
 
     html {
       scroll-behavior: smooth;
+      background: var(--light-bg);
+      color-scheme: dark;
     }
 
     html, body {
@@ -108,7 +110,9 @@
       flex: 1;
       display: flex;
       min-height: 0;
+      width: 100%;
       background: var(--light-bg);
+      overflow: hidden;
     }
 
     /* View Sections */
@@ -116,7 +120,9 @@
       display: none;
       flex: 1;
       width: 100%;
+      height: 100%;
       min-height: 0;
+      background: var(--light-bg);
     }
 
     .view.active {
@@ -138,18 +144,43 @@
 
     /* Embedded dashboard wrapper — iframe fills full available area */
     .view-content {
+      position: relative;
       flex: 1;
       min-height: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
       background: var(--light-bg);
+      overflow: hidden;
+    }
+    .view-content::before {
+      content: "Loading dashboard...";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--light-bg);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
     }
     .view-content iframe {
-      flex: 1;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
       width: 100%;
       height: 100%;
       border: none;
       display: block;
       background: var(--light-bg);
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+    .view-content iframe.is-loaded {
+      opacity: 1;
     }
   </style>
 </head>
@@ -183,7 +214,7 @@
       <div id="customerView" class="view">
         <div class="view-content" id="customerContent">
           <!-- Customer view will be loaded here -->
-          <iframe id="customerFrame" src="/home.html" style="border: none; width: 100%; height: 100%;"></iframe>
+          <iframe id="customerFrame" class="dashboard-frame" src="/home.html"></iframe>
         </div>
       </div>
 
@@ -191,7 +222,7 @@
       <div id="ownerView" class="view">
         <div class="view-content" id="ownerContent">
           <!-- Owner dashboard will be loaded here -->
-          <iframe id="ownerFrame" src="/owner-dashboard.html" style="border: none; width: 100%; height: 100%;"></iframe>
+          <iframe id="ownerFrame" class="dashboard-frame" src="/owner-dashboard.html"></iframe>
         </div>
       </div>
 
@@ -199,7 +230,7 @@
       <div id="devView" class="view">
         <div class="view-content" id="devContent">
           <!-- Dev dashboard will be loaded here -->
-          <iframe id="devFrame" src="/admin-dashboard.html" style="border: none; width: 100%; height: 100%;"></iframe>
+          <iframe id="devFrame" class="dashboard-frame" src="/admin-dashboard.html"></iframe>
         </div>
       </div>
     </div>
@@ -216,6 +247,12 @@
     const userDisplay = document.getElementById('userDisplay');
     const roleDisplay = document.getElementById('roleDisplay');
     const logoutBtn = document.getElementById('logoutBtn');
+
+    document.querySelectorAll('.dashboard-frame').forEach((frame) => {
+      frame.addEventListener('load', () => {
+        frame.classList.add('is-loaded');
+      });
+    });
 
     // Initialize app
     window.addEventListener('load', () => {
