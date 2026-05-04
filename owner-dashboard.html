@@ -15,6 +15,7 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  html, body { height: 100%; min-height: 100%; }
   body {
     background: var(--light-bg);
     color: var(--text);
@@ -22,6 +23,7 @@
     font-size: 16px;
     line-height: 1.6;
   }
+  #ownerDashboard { background: var(--light-bg); min-height: 100vh; }
 
   /* ── NAV ── */
   nav {
@@ -626,71 +628,6 @@
   </div>
 </div>
 
-<section id="hero">
-  <div class="hero-content">
-    <div class="hero-subtitle">Professional Mobile Detailing</div>
-    <h1 class="hero-title">Your Vehicle, Perfected</h1>
-    <p class="hero-description">Geruso Detailing is a professional car detailing service in North Providence, Rhode Island. We specialize in detailing cars, motorcycles, SUVs, and trucks with expert washing, waxing, and cleaning. We come directly to you.</p>
-    <div class="hero-cta">
-      <a href="booking.html" class="btn-primary">Book Now</a>
-      <a href="services.html" class="btn-outline">View Services</a>
-    </div>
-  </div>
-</section>
-
-<section id="quick-links">
-  <div class="section-inner">
-    <div class="section-label">Why Choose Us</div>
-    <h2 class="section-heading">What Sets Us Apart</h2>
-    <div class="quick-links-grid">
-      <div class="quick-link-card">
-        <div class="quick-link-title">We Come to You</div>
-        <p class="quick-link-desc">Mobile service to your location. Distance to drive may be added to final price.</p>
-      </div>
-      <div class="quick-link-card">
-        <div class="quick-link-title">Owner-Operated</div>
-        <p class="quick-link-desc">Cameron handles every detail personally. Your car gets the best care.</p>
-      </div>
-      <div class="quick-link-card">
-        <div class="quick-link-title">Quality & Detail</div>
-        <p class="quick-link-desc">High-quality detailing services with keen attention to detail. Professional finishing on every job.</p>
-      </div>
-      <div class="quick-link-card">
-        <div class="quick-link-title">Self-Contained</div>
-        <p class="quick-link-desc">We bring all our water and equipment. No additional resources needed.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-    </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Basic Package</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">Ultra Premium</a></li>
-      </ul>
-    </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
 
 <!-- Hidden Owner Access Link - Only visible when ?owner=true -->
 <div id="ownerAccessContainer" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100;">
@@ -1503,26 +1440,34 @@
   };
   
   window.ownerMarkCompleted = async (bookingId) => {
+    if (!bookingId) { alert('Cannot mark complete: missing booking id.'); return; }
     if (!confirm('Mark as completed?')) return;
     try {
-      const response = await fetch(`/api/owner/booking/${bookingId}/complete`, { method: 'POST' });
-      if (response.ok) {
-        loadBookings();
-      }
+      const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      loadBookings();
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Failed to mark complete: ' + error.message);
     }
   };
-  
+
   window.ownerCancelBooking = async (bookingId) => {
+    if (!bookingId) { alert('Cannot cancel: missing booking id.'); return; }
     if (!confirm('Cancel this booking?')) return;
     try {
-      const response = await fetch(`/api/owner/booking/${bookingId}/cancel`, { method: 'POST' });
-      if (response.ok) {
-        loadBookings();
-      }
+      const response = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      loadBookings();
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Failed to cancel: ' + error.message);
     }
   };
   

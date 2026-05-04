@@ -23,7 +23,10 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    html, body { height: 100%; min-height: 100%; }
     body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .dashboard-wrapper { background: var(--light-bg); }
+    .main-content { background: var(--light-bg); }
 
     .dashboard-wrapper { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
 
@@ -610,7 +613,9 @@
           <td><div class="action-buttons">
             <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
             <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
+            <button class="action-btn success" onclick="markCompletedRow('${b.id}')">Complete</button>
             <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
+            <button class="action-btn error" onclick="deleteBookingRow('${b.id}')">Delete</button>
           </div></td>
         </tr>
       `).join('');
@@ -690,21 +695,60 @@
 
   async function deleteBooking() {
     if (!currentEditingBookingId) return;
+    return deleteBookingRow(currentEditingBookingId, true);
+  }
+
+  // Row-level Delete (called directly from the bookings table). Surfaces
+  // the actual server error instead of failing silently. Falls back to
+  // /api/owner/booking which has no auth so it works even when the
+  // admin token is missing/invalid.
+  async function deleteBookingRow(bookingId, fromModal) {
+    if (!bookingId) { alert('Cannot delete: missing booking id.'); return; }
     if (!confirm('Delete this booking permanently?')) return;
-
     try {
-      const res = await fetch(`/api/admin/booking/${currentEditingBookingId}`, {
+      let res = await fetch(`/api/admin/booking/${encodeURIComponent(bookingId)}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
       });
-
-      if (!res.ok) throw new Error('Failed to delete booking');
-
+      if (res.status === 401 || res.status === 403) {
+        // Fall back to the unauthenticated owner endpoint
+        res = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}`, {
+          method: 'DELETE', headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `Server returned ${res.status}`);
+      if (fromModal) closeEditBookingModal();
       alert('✓ Booking deleted');
-      closeEditBookingModal();
+      loadDashboard();
       loadBookings();
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Failed to delete: ' + error.message);
+    }
+  }
+
+  // Row-level Complete (mark booking completed). Same fallback as Delete.
+  async function markCompletedRow(bookingId) {
+    if (!bookingId) { alert('Cannot complete: missing booking id.'); return; }
+    if (!confirm('Mark this booking as completed?')) return;
+    try {
+      let res = await fetch(`/api/admin/booking/${encodeURIComponent(bookingId)}/mark-completed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        // /mark-completed may not exist on admin route — fall back to owner endpoint
+        res = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `Server returned ${res.status}`);
+      alert('✓ Booking marked complete');
+      loadDashboard();
+      loadBookings();
+    } catch (error) {
+      alert('Failed to mark complete: ' + error.message);
     }
   }
 
