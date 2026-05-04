@@ -8,6 +8,7 @@ require('dotenv').config();
 const { sendQuoteEmail } = require('./email');
 const authRoutes = require('./routes/auth');
 const bookingsRoutes = require('./routes/bookings');
+const cartRoutes = require('./routes/cart');
 const availabilityRoutes = require('./routes/availability');
 const adminRoutes = require('./routes/admin');
 const { verifyToken, requireRole } = require('./middleware/auth');
@@ -118,6 +119,10 @@ app.get('/reviews', (req, res) => {
 app.get('/contact', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'contact.html'));
+});
+app.get('/checkout', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'checkout.html'));
 });
 app.get('/booking', (req, res) => {
   res.redirect(301, '/schedule.html');
@@ -235,6 +240,47 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
 });
 
 // API endpoint to get payment status
+app.get('/api/payment-status/booking', async (req, res) => {
+  try {
+    const { sessionId } = req.query;
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    const result = await pool.query(
+      `SELECT id, booking_date, booking_time, service_type, payment_status, stripe_session_id
+       FROM bookings WHERE stripe_session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = result.rows[0];
+    let sessionStatus = null;
+
+    try {
+      const session = await retrieveSession(sessionId);
+      sessionStatus = session.payment_status;
+    } catch (stripeError) {
+      console.error('[Payment Status] Error retrieving Stripe session:', stripeError.message);
+    }
+
+    res.json({
+      paymentStatus: sessionStatus === 'paid' ? 'paid' : booking.payment_status,
+      sessionStatus,
+      bookingId: booking.id,
+      bookingDate: booking.booking_date,
+      bookingTime: booking.booking_time,
+      service: booking.service_type,
+    });
+  } catch (error) {
+    console.error('[Payment Status] Session lookup error:', error.message);
+    res.status(500).json({ error: 'Failed to get payment status' });
+  }
+});
+
 app.get('/api/payment-status/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -299,6 +345,7 @@ app.get('/api/init-db', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/availability', availabilityRoutes);
 
 // Test endpoint to verify deployment

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    body { background: var(--light-bg); }
+    .checkout-page {
+      min-height: calc(100vh - 76px);
+      padding: 56px 32px 80px;
+      background:
+        radial-gradient(800px 420px at 15% 10%, rgba(0,255,65,0.08), transparent 58%),
+        linear-gradient(180deg, var(--light-bg), #070707);
+    }
+    .checkout-wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .checkout-header { max-width: 1180px; margin: 0 auto 28px; }
+    .checkout-header h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.05; margin-bottom: 10px; }
+    .checkout-header p { color: var(--text-muted); max-width: 680px; }
+    .checkout-panel,
+    .order-summary {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .checkout-panel h2,
+    .order-summary h2 {
+      font-size: 20px;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { margin-bottom: 14px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--light-bg);
+      color: var(--text);
+      font: inherit;
+      padding: 13px 14px;
+      outline: none;
+    }
+    .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,255,65,0.12); }
+    .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .payment-option {
+      position: relative;
+      display: block;
+      cursor: pointer;
+    }
+    .payment-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .payment-card {
+      min-height: 94px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--light-bg);
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    .payment-card strong { display: block; color: var(--text); margin-bottom: 5px; }
+    .payment-card span { display: block; color: var(--text-muted); font-size: 13px; line-height: 1.45; }
+    .payment-option input:checked + .payment-card {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,255,65,0.12);
+      background: rgba(0,255,65,0.05);
+    }
+    .summary-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-name { color: var(--text); font-weight: 700; }
+    .summary-meta { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+    .summary-price { color: var(--text); font-weight: 800; white-space: nowrap; }
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 12px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .checkout-actions { margin-top: 22px; display: grid; gap: 10px; }
+    .checkout-note { color: var(--text-light); font-size: 12px; text-align: center; }
+    .message {
+      display: none;
+      margin-top: 16px;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+    .message.show { display: block; }
+    .message.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #ff9b9b; }
+    .message.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: #8ff0be; }
+    .empty-cart {
+      text-align: center;
+      padding: 34px 18px;
+      color: var(--text-muted);
+    }
+    @media (max-width: 900px) {
+      .checkout-wrap { grid-template-columns: 1fr; }
+      .order-summary { order: -1; }
+    }
+    @media (max-width: 640px) {
+      .checkout-page { padding: 36px 18px 60px; }
+      .field-grid,
+      .payment-grid { grid-template-columns: 1fr; }
+      .checkout-panel,
+      .order-summary { padding: 18px; }
+    }
+  </style>
+</head>
+<body data-page="checkout">
+  <div data-nav></div>
+
+  <main class="checkout-page">
+    <div class="checkout-header">
+      <span class="section-eyebrow">Checkout</span>
+      <h1>Complete Your Purchase</h1>
+      <p>Review your cart, choose how you want to pay, and continue to secure payment.</p>
+    </div>
+
+    <div class="checkout-wrap">
+      <section class="checkout-panel">
+        <h2>Customer Details</h2>
+        <form id="checkoutForm">
+          <div class="field-grid">
+            <div class="field full">
+              <label for="customerName">Full Name</label>
+              <input id="customerName" name="name" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="customerEmail">Email</label>
+              <input id="customerEmail" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div class="field">
+              <label for="customerPhone">Phone</label>
+              <input id="customerPhone" name="phone" type="tel" autocomplete="tel">
+            </div>
+          </div>
+
+          <h2 style="margin-top: 18px;">Payment Method</h2>
+          <div class="payment-grid" role="radiogroup" aria-label="Payment method">
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="card_wallet" checked>
+              <span class="payment-card">
+                <strong>Card or Wallet</strong>
+                <span>Credit card, debit card, Apple Pay, or Google Pay when available.</span>
+              </span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="cashapp">
+              <span class="payment-card">
+                <strong>Cash App Pay</strong>
+                <span>Use Cash App if it is enabled on the payment screen.</span>
+              </span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="bank">
+              <span class="payment-card">
+                <strong>Bank Payment</strong>
+                <span>Pay from a US bank account if available.</span>
+              </span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="other">
+              <span class="payment-card">
+                <strong>Other Options</strong>
+                <span>Stripe will show any additional enabled payment options.</span>
+              </span>
+            </label>
+          </div>
+
+          <div id="checkoutMessage" class="message"></div>
+          <div class="checkout-actions">
+            <button class="btn btn-primary" id="payBtn" type="submit">Continue to Secure Payment</button>
+            <a class="btn btn-outline" href="/services.html">Keep Shopping</a>
+            <div class="checkout-note">Payments are processed securely by Stripe.</div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="order-summary">
+        <h2>Order Summary</h2>
+        <div id="summaryItems"></div>
+        <div class="summary-total">
+          <span>Total</span>
+          <span id="summaryTotal">$0.00</span>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/js/customer-shell.js"></script>
+  <script>
+    const CART_STORAGE_KEY = 'gerusoCart';
+    const SERVICE_CATALOG = {
+      'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
+      'Interior Detailing': { price: 100, tag: 'MOBILE' },
+      'Car Wash': { price: 85, tag: 'MOBILE' },
+      'Ceramic Coating': { price: 400, tag: 'LOCATION ONLY' },
+      'Premium Package': { price: 170, tag: 'MOBILE' },
+      'Ultra Premium': { price: 335, tag: 'MOBILE' },
+      'Engine Bay Cleaning': { price: 75, tag: 'MOBILE' },
+      'Full Vehicle Polish': { price: 250, tag: 'LOCATION ONLY' },
+      'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
+      'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
+    };
+
+    function getStoredCart() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '{"items":[]}');
+        if (stored.items && stored.items.length) return stored;
+
+        const legacyNames = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        if (Array.isArray(legacyNames) && legacyNames.length) {
+          return {
+            items: legacyNames.map(name => {
+              const service = SERVICE_CATALOG[name] || { price: 0, tag: 'MOBILE' };
+              return {
+                serviceName: name,
+                price: service.price,
+                serviceTag: service.tag,
+                quantity: 1,
+              };
+            }),
+          };
+        }
+      } catch (e) {}
+      return { items: [] };
+    }
+
+    function getCustomerFromStorage() {
+      try {
+        const raw = localStorage.getItem('user');
+        if (!raw) return {};
+        const user = JSON.parse(raw);
+        return {
+          name: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.name || '',
+          email: user.email || '',
+        };
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function money(value) {
+      return `$${Number(value || 0).toFixed(2)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char]);
+    }
+
+    let cart = getStoredCart();
+
+    function renderSummary() {
+      const summaryItems = document.getElementById('summaryItems');
+      const summaryTotal = document.getElementById('summaryTotal');
+      const payBtn = document.getElementById('payBtn');
+
+      if (!cart.items.length) {
+        summaryItems.innerHTML = '<div class="empty-cart">Your cart is empty.</div>';
+        summaryTotal.textContent = '$0.00';
+        payBtn.disabled = true;
+        return;
+      }
+
+      let total = 0;
+      summaryItems.innerHTML = cart.items.map(item => {
+        const service = SERVICE_CATALOG[item.serviceName] || {};
+        const price = service.price || Number(item.price || 0);
+        const quantity = Math.max(1, Number(item.quantity || 1));
+        const lineTotal = price * quantity;
+        total += lineTotal;
+        return `
+          <div class="summary-item">
+            <div>
+              <div class="summary-name">${escapeHtml(item.serviceName)}</div>
+              <div class="summary-meta">${escapeHtml(item.serviceTag || service.tag || 'Service')} x${quantity}</div>
+            </div>
+            <div class="summary-price">${money(lineTotal)}</div>
+          </div>
+        `;
+      }).join('');
+      summaryTotal.textContent = money(total);
+      payBtn.disabled = false;
+    }
+
+    function showMessage(text, type) {
+      const message = document.getElementById('checkoutMessage');
+      message.textContent = text;
+      message.className = `message ${type} show`;
+    }
+
+    function hydrateCustomerFields() {
+      const customer = getCustomerFromStorage();
+      if (customer.name) document.getElementById('customerName').value = customer.name;
+      if (customer.email) document.getElementById('customerEmail').value = customer.email;
+    }
+
+    document.getElementById('checkoutForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!cart.items.length) {
+        showMessage('Your cart is empty. Add a service before checkout.', 'error');
+        return;
+      }
+
+      const payBtn = document.getElementById('payBtn');
+      const form = new FormData(event.currentTarget);
+      payBtn.disabled = true;
+      payBtn.textContent = 'Starting Checkout...';
+      showMessage('Preparing secure payment...', 'success');
+
+      try {
+        const response = await fetch('/api/cart/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart.items,
+            customer: {
+              name: form.get('name'),
+              email: form.get('email'),
+              phone: form.get('phone'),
+            },
+            preferredPaymentMethod: form.get('paymentMethod'),
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.checkoutUrl) {
+          throw new Error(data.error || 'Checkout could not be started.');
+        }
+        window.location.href = data.checkoutUrl;
+      } catch (error) {
+        showMessage(error.message, 'error');
+        payBtn.disabled = false;
+        payBtn.textContent = 'Continue to Secure Payment';
+      }
+    });
+
+    hydrateCustomerFields();
+    renderSummary();
+  </script>
+</body>
+</html>

@@ -257,17 +257,17 @@
   <div class="container">
     <div class="success-icon">✓</div>
     <h1>Payment Successful!</h1>
-    <p class="subtitle">Your booking has been confirmed</p>
+    <p class="subtitle" id="successSubtitle">Your payment has been confirmed</p>
 
     <div class="message-box">
-      <h2>Booking Confirmed</h2>
-      <p>Thank you for your payment! Your booking has been confirmed and we're preparing your vehicle.</p>
-      <p>A confirmation email has been sent to your email address with all the details.</p>
+      <h2 id="successHeading">Purchase Confirmed</h2>
+      <p id="successCopy">Thank you for your payment. Your Geruso Detailing purchase has been confirmed.</p>
+      <p>A confirmation email will be sent with the details.</p>
     </div>
 
     <div class="booking-details" id="bookingDetails" style="display: none;">
       <div class="detail-row">
-        <span class="detail-label">Booking ID</span>
+        <span class="detail-label" id="primaryIdLabel">Confirmation ID</span>
         <span class="detail-value" id="bookingId">-</span>
       </div>
       <div class="detail-row">
@@ -289,7 +289,7 @@
     </div>
 
     <div id="loadingState">
-      <p style="color: var(--text-muted); margin-bottom: 20px;">Confirming your booking...</p>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Confirming your payment...</p>
       <div class="loader"></div>
     </div>
 
@@ -313,8 +313,21 @@
       }
 
       try {
-        // Get payment status from backend
-        const response = await fetch(`/api/payment-status/booking?sessionId=${sessionId}`);
+        const cartResponse = await fetch(`/api/cart/session/${encodeURIComponent(sessionId)}`);
+        if (cartResponse.ok) {
+          const cartData = await cartResponse.json();
+          if (cartData.source === 'cart_checkout') {
+            if (cartData.paymentStatus === 'paid') {
+              showSuccess(cartData);
+            } else {
+              showError();
+            }
+            return;
+          }
+        }
+
+        // Existing booking checkout fallback.
+        const response = await fetch(`/api/payment-status/booking?sessionId=${encodeURIComponent(sessionId)}`);
         const data = await response.json();
 
         if (data.paymentStatus === 'paid') {
@@ -329,9 +342,24 @@
     }
 
     function showSuccess(data) {
+      localStorage.removeItem('gerusoCart');
+      sessionStorage.removeItem('cart');
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('bookingDetails').style.display = 'block';
       document.getElementById('actionButtons').style.display = 'flex';
+
+      if (data.source === 'cart_checkout') {
+        document.getElementById('successSubtitle').textContent = 'Your purchase has been confirmed';
+        document.getElementById('successHeading').textContent = 'Purchase Confirmed';
+        document.getElementById('successCopy').textContent = 'Thank you for your payment. Your selected Geruso Detailing services are paid for.';
+        document.getElementById('primaryIdLabel').textContent = 'Order ID';
+        document.getElementById('bookingId').textContent = data.orderId || 'Confirmed';
+        document.getElementById('bookingDate').textContent = 'Confirmed';
+        document.getElementById('bookingTime').textContent = 'Confirmed';
+        document.getElementById('bookingService').textContent = 'Cart purchase';
+        document.getElementById('paymentStatus').textContent = 'Paid';
+        return;
+      }
 
       // Populate booking details if available
       if (data.bookingId) {

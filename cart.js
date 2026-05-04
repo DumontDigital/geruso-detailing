@@ -313,8 +313,8 @@ function proceedToCheckout() {
     return;
   }
 
-  // Redirect to booking page
-  window.location.href = '/booking?fromCart=true';
+  // Send the customer to the dedicated checkout screen.
+  window.location.href = '/checkout';
 }
 
 // Auto-initialize on DOMContentLoaded if not already initialized

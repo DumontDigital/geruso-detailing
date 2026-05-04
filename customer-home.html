@@ -181,7 +181,7 @@
       <div class="cart-total">
         Subtotal: <span class="cart-total-value" id="cartTotalPrice">$0.00</span>
       </div>
-      <button class="cart-btn" id="cartCheckoutBtn" onclick="checkoutCart()">Proceed to Booking</button>
+      <button class="cart-btn" id="cartCheckoutBtn" onclick="checkoutCart()">Proceed to Checkout</button>
     </div>
   </div>
 
@@ -659,11 +659,23 @@
         return;
       }
 
-      // Store cart in session and go to schedule
-      sessionStorage.setItem('cart', JSON.stringify(cart));
-      showSection('schedule');
+      const checkoutItems = cart.map(serviceName => {
+        const service = SERVICES[serviceName];
+        const serviceTag = service.isAddOn ? 'EXTRA FEE' : service.type === 'location' ? 'LOCATION ONLY' : 'MOBILE';
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          serviceName,
+          price: service.price,
+          serviceTag,
+          serviceType: service.isAddOn ? 'addon' : service.type,
+          quantity: 1,
+          addedAt: new Date().toISOString()
+        };
+      });
 
-      // Close cart modal
+      localStorage.setItem('gerusoCart', JSON.stringify({ items: checkoutItems }));
+      sessionStorage.setItem('cart', JSON.stringify(cart));
+      window.location.href = '/checkout';
       document.getElementById('cartModal').classList.remove('open');
     };
 
