@@ -38,6 +38,14 @@ function normalizeCartItems(items) {
     .filter(Boolean);
 }
 
+function validateCartItems(cartItems) {
+  const mainItems = cartItems.filter(item => item.tag === 'MOBILE' || item.tag === 'LOCATION ONLY');
+  if (mainItems.length > 1) {
+    return 'Please keep only one main package in the cart. You can add any amount of add-ons to that package.';
+  }
+  return '';
+}
+
 router.post('/checkout', async (req, res) => {
   try {
     const { items, customer = {} } = req.body;
@@ -45,6 +53,11 @@ router.post('/checkout', async (req, res) => {
 
     if (cartItems.length === 0) {
       return res.status(400).json({ error: 'Your cart is empty or contains unavailable services.' });
+    }
+
+    const validationError = validateCartItems(cartItems);
+    if (validationError) {
+      return res.status(400).json({ error: validationError });
     }
 
     if (!process.env.STRIPE_SECRET_KEY) {

@@ -1210,8 +1210,10 @@
         const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
         try {
           if (typeof addToCart === 'function') {
-            addToCart(serviceName, price, serviceTag, 'standard');
-            selectedAddOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
+            const mainAdded = addToCart(serviceName, price, serviceTag, 'standard');
+            if (mainAdded) {
+              selectedAddOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
+            }
           }
         } catch (e) { console.warn('[Booking] addToCart failed:', e); }
 

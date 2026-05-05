@@ -28,22 +28,14 @@ function canAddToCart(newServiceTag) {
 
   if (cart.items.length === 0) return true; // Empty cart, can add anything
 
-  // Get tags of existing items
-  const existingTags = new Set(cart.items.map(item => item.serviceTag));
-
-  // Add-ons can ride with either mobile or location-based main services.
+  // Add-ons can ride with one main package, and customers can add as many as needed.
   if (newServiceTag === 'EXTRA FEE') return true;
 
-  // LOCATION ONLY cannot be mixed with MOBILE main services
-  const hasLocationOnly = existingTags.has('LOCATION ONLY');
-  const hasMobile = existingTags.has('MOBILE');
-  const isNewLocationOnly = newServiceTag === 'LOCATION ONLY';
-  const isNewMobile = newServiceTag === 'MOBILE';
+  const mainPackages = cart.items.filter(item => item.serviceTag === 'MOBILE' || item.serviceTag === 'LOCATION ONLY');
+  if (mainPackages.length === 0) return true;
 
-  if (hasLocationOnly && isNewMobile) return false;
-  if (hasMobile && isNewLocationOnly) return false;
-
-  return true;
+  // Only one main mobile OR one main location package per cart.
+  return false;
 }
 
 /**
@@ -51,19 +43,15 @@ function canAddToCart(newServiceTag) {
  */
 function getCategoryConflictMessage(newServiceTag) {
   const cart = getCart();
-  const existingTags = new Set(cart.items.map(item => item.serviceTag));
-  const hasLocationOnly = existingTags.has('LOCATION ONLY');
-  const hasMobile = existingTags.has('MOBILE');
+  const existingMain = cart.items.find(item => item.serviceTag === 'MOBILE' || item.serviceTag === 'LOCATION ONLY');
 
   if (newServiceTag === 'EXTRA FEE') return '';
 
-  if (hasLocationOnly && newServiceTag === 'MOBILE') {
-    return 'Mobile services cannot be combined with location-only services. Please checkout separately.';
+  if (existingMain) {
+    const existingType = existingMain.serviceTag === 'LOCATION ONLY' ? 'location-based' : 'mobile';
+    return `Your cart already has one ${existingType} package. Please remove it before choosing another main package. Add-ons can still be added.`;
   }
-  if (hasMobile && newServiceTag === 'LOCATION ONLY') {
-    return 'Location-only services cannot be combined with mobile services. Please checkout separately.';
-  }
-  return '';
+  return 'Only one main package can be added per cart. Add-ons can still be added.';
 }
 
 /**
