@@ -932,6 +932,27 @@
   // Keep the Prev button state correct on every initial / programmatic render.
   updatePrevButtonState();
 
+  const CHECKOUT_DETAILS_STORAGE_KEY = 'gerusoCheckoutDetails';
+
+  function saveCheckoutDetails(details) {
+    try {
+      localStorage.setItem(CHECKOUT_DETAILS_STORAGE_KEY, JSON.stringify({
+        name: details.customerName || '',
+        email: details.customerEmail || '',
+        phone: details.customerPhone || '',
+        serviceAddress: details.serviceAddress || '',
+        serviceType: details.serviceType || '',
+        bookingDate: details.bookingDate || '',
+        bookingTime: details.bookingTime || '',
+        vehicleType: details.vehicleType || '',
+        notes: details.notes || '',
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch (error) {
+      console.warn('[Booking] Could not save checkout details:', error);
+    }
+  }
+
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1004,6 +1025,8 @@
       vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
     };
 
+    saveCheckoutDetails(bookingData);
+
     // Debug: Log the payload before submission
     console.log('[Booking Submission] Payload:', bookingData);
     console.log('[Booking Submission] selectedDate (local):', localDateStr);
@@ -1040,15 +1063,10 @@
           }
         } catch (e) { console.warn('[Booking] addToCart failed:', e); }
 
-        if (data.checkoutUrl) {
-          showMessage('Booking confirmed — redirecting to checkout...', 'success');
-          setTimeout(() => { window.location.href = data.checkoutUrl; }, 600);
-        } else {
-          showMessage('Booking confirmed! Review your cart to checkout.', 'success');
-          // Open the cart modal so the customer can hit "Proceed to Checkout".
-          if (typeof toggleCartModal === 'function') {
-            setTimeout(() => toggleCartModal(), 500);
-          }
+        showMessage('Booking added to cart! Review your cart to checkout.', 'success');
+        // Keep the customer in the cart flow so checkout can prefill their details.
+        if (typeof toggleCartModal === 'function') {
+          setTimeout(() => toggleCartModal(), 500);
         }
 
         // Reload calendar so the just-booked slot grays out for the next visitor.

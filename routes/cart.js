@@ -82,6 +82,7 @@ router.post('/checkout', async (req, res) => {
         order_id: orderId,
         customer_name: String(customer.name || '').trim(),
         customer_phone: String(customer.phone || '').trim(),
+        service_address: String(customer.serviceAddress || '').trim(),
         source: 'cart_checkout',
       },
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -164,6 +164,10 @@
               <label for="customerPhone">Phone</label>
               <input id="customerPhone" name="phone" type="tel" autocomplete="tel">
             </div>
+            <div class="field full">
+              <label for="serviceAddress">Service Address</label>
+              <input id="serviceAddress" name="serviceAddress" autocomplete="street-address">
+            </div>
           </div>
 
           <div class="stripe-panel" aria-label="Stripe Checkout">
@@ -197,6 +201,7 @@
   <script src="/js/customer-shell.js"></script>
   <script>
     const CART_STORAGE_KEY = 'gerusoCart';
+    const CHECKOUT_DETAILS_STORAGE_KEY = 'gerusoCheckoutDetails';
     const SERVICE_CATALOG = {
       'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
       'Interior Detailing': { price: 100, tag: 'MOBILE' },
@@ -234,16 +239,28 @@
     }
 
     function getCustomerFromStorage() {
+      const customer = {};
+
+      try {
+        const rawDetails = localStorage.getItem(CHECKOUT_DETAILS_STORAGE_KEY);
+        if (rawDetails) {
+          const details = JSON.parse(rawDetails);
+          customer.name = details.name || '';
+          customer.email = details.email || '';
+          customer.phone = details.phone || '';
+          customer.serviceAddress = details.serviceAddress || '';
+        }
+      } catch (e) {}
+
       try {
         const raw = localStorage.getItem('user');
-        if (!raw) return {};
+        if (!raw) return customer;
         const user = JSON.parse(raw);
-        return {
-          name: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.name || '',
-          email: user.email || '',
-        };
+        customer.name = customer.name || [user.first_name, user.last_name].filter(Boolean).join(' ') || user.name || '';
+        customer.email = customer.email || user.email || '';
+        return customer;
       } catch (e) {
-        return {};
+        return customer;
       }
     }
 
@@ -306,6 +323,8 @@
       const customer = getCustomerFromStorage();
       if (customer.name) document.getElementById('customerName').value = customer.name;
       if (customer.email) document.getElementById('customerEmail').value = customer.email;
+      if (customer.phone) document.getElementById('customerPhone').value = customer.phone;
+      if (customer.serviceAddress) document.getElementById('serviceAddress').value = customer.serviceAddress;
     }
 
     document.getElementById('checkoutForm').addEventListener('submit', async (event) => {
@@ -331,6 +350,7 @@
               name: form.get('name'),
               email: form.get('email'),
               phone: form.get('phone'),
+              serviceAddress: form.get('serviceAddress'),
             },
           }),
         });
