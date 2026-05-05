@@ -219,7 +219,7 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Book any detail Thursday through Sunday. Mobile service is available Thursday and Friday only; weekend appointments and longer specialty jobs are completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
+    <p class="section-sub">Mobile detailing services are available Thursday through Sunday. Location detailing services are available Saturday and Sunday at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
@@ -667,7 +667,7 @@
       return ['Sat', 'Sun'];
     }
 
-    return ['Thu', 'Fri'];
+    return ['Thu', 'Fri', 'Sat', 'Sun'];
   }
 
   function isServiceAvailableOnDay(serviceName, dayOfWeek) {
@@ -1056,13 +1056,13 @@
     const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
     const needsMobileAddress = requiresMobileAddress(serviceType, dayOfWeek);
 
-    // Only require service address for mobile appointments on Thu/Fri.
+    // Mobile appointments require the customer's address on supported mobile days.
     if (needsMobileAddress && !serviceAddress) {
       showMessage('Please enter a service address', 'error');
       return;
     }
 
-    // Weekends and specialty / longer jobs are shop appointments.
+    // Location services use the shop address.
     const finalAddress = needsMobileAddress ? serviceAddress : '313 Lynne Lane, Mapleville';
 
     // Build booking data with all required fields
@@ -1212,7 +1212,7 @@
   function requiresMobileAddress(serviceName, dayOfWeek) {
     if (!serviceName || isShopOnlyService(serviceName)) return false;
     if (!dayOfWeek) return true;
-    return dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
+    return ['Thu', 'Fri', 'Sat', 'Sun'].includes(dayOfWeek);
   }
 
   // ========================================
@@ -1244,13 +1244,13 @@
     }
 
     if (requiresMobileAddress(selectedService, dayOfWeek)) {
-      // Thu/Fri mobile services need the customer's address.
+      // Mobile services need the customer's address.
       addressFieldGroup.style.display = 'block';
       locationNoteGroup.style.display = 'none';
       serviceAddressInput.required = true;
       console.log('[Booking] Address field shown (required)');
     } else {
-      // Weekends and specialty / 6+ hour services are completed at the shop.
+      // Location services are completed at the shop.
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'block';
       serviceAddressInput.required = false;
