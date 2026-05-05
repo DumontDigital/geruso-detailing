@@ -527,7 +527,9 @@ app.post('/api/owner/schedule-day', verifyToken, requireRole(['owner', 'dev']), 
 app.get('/api/owner/blocked-dates', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM blocked_dates ORDER BY blocked_date DESC'
+      `SELECT id, to_char(blocked_date, 'YYYY-MM-DD') AS blocked_date, blocked_time, reason, created_at
+       FROM blocked_dates
+       ORDER BY blocked_date DESC, blocked_time NULLS FIRST`
     );
     res.json({ blockedDates: result.rows });
   } catch (error) {
@@ -539,12 +541,72 @@ app.get('/api/owner/blocked-dates', verifyToken, requireRole(['owner', 'dev']), 
 // Block date
 app.post('/api/owner/block-date', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
-    const { blockedDate, reason } = req.body;
-    const result = await pool.query(
-      'INSERT INTO blocked_dates (blocked_date, reason) VALUES ($1, $2) RETURNING *',
-      [blockedDate, reason || null]
+    const { blockedDate, blockedTime, startTime, endTime, reason } = req.body;
+    if (!blockedDate) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+
+    const toDisplayTime = (hour) => {
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+      return `${displayHour}:00 ${ampm}`;
+    };
+
+    const timeToHour = (value) => {
+      if (!value) return null;
+      const [hour] = String(value).split(':');
+      const parsed = parseInt(hour, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const blocks = [];
+    if (startTime && endTime) {
+      const startHour = timeToHour(startTime);
+      const endHour = timeToHour(endTime);
+      if (startHour === null || endHour === null || endHour <= startHour) {
+        return res.status(400).json({ error: 'End time must be after start time' });
+      }
+      for (let hour = startHour; hour < endHour; hour += 1) {
+        blocks.push(toDisplayTime(hour));
+      }
+    } else if (blockedTime) {
+      blocks.push(blockedTime);
+    }
+
+    if (blocks.length === 0) {
+      await pool.query(
+        `DELETE FROM blocked_dates
+         WHERE blocked_date::date = $1::date`,
+        [blockedDate]
+      );
+      const result = await pool.query(
+        `INSERT INTO blocked_dates (blocked_date, blocked_time, reason)
+         VALUES ($1, NULL, $2)
+         RETURNING *`,
+        [blockedDate, reason || null]
+      );
+      return res.json({ success: true, blockedDates: result.rows });
+    }
+
+    const inserted = [];
+    await pool.query(
+      `DELETE FROM blocked_dates
+       WHERE blocked_date::date = $1::date
+       AND blocked_time IS NULL`,
+      [blockedDate]
     );
-    res.json({ success: true, blockedDate: result.rows[0] });
+    for (const time of blocks) {
+      const result = await pool.query(
+        `INSERT INTO blocked_dates (blocked_date, blocked_time, reason)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (blocked_date, blocked_time)
+         DO UPDATE SET reason = EXCLUDED.reason
+         RETURNING *`,
+        [blockedDate, time, reason || null]
+      );
+      inserted.push(result.rows[0]);
+    }
+    res.json({ success: true, blockedDates: inserted });
   } catch (error) {
     console.error('Error blocking date:', error);
     res.status(500).json({ error: 'Failed to block date' });

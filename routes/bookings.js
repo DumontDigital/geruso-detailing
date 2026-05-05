@@ -20,6 +20,10 @@ router.get('/public/booked-slots', async (req, res) => {
        AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
       []
     );
+    const blockedResult = await pool.query(
+      `SELECT blocked_date, blocked_time FROM blocked_dates`,
+      []
+    );
 
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
@@ -30,15 +34,35 @@ router.get('/public/booked-slots', async (req, res) => {
       bookedSlots[key] = true;
       console.log('[Bookings API] Real customer booked slot:', key);
     });
+    const blockedDates = {};
+    blockedResult.rows.forEach(block => {
+      const dateStr = block.blocked_date.toString().split('T')[0];
+      if (block.blocked_time) {
+        bookedSlots[`${dateStr} ${block.blocked_time}`] = true;
+      } else {
+        blockedDates[dateStr] = true;
+      }
+    });
 
     console.log('[Bookings API] Returning', result.rows.length, 'real customer booked slots (excluding',
       result.rowCount > 0 ? 'any placeholders' : 'placeholders', ')');
-    res.json({ bookedSlots });
+    res.json({ bookedSlots, blockedDates });
   } catch (error) {
     console.error('[Bookings API] Error fetching booked slots:', error.message);
     res.status(500).json({ error: 'Failed to fetch available slots' });
   }
 });
+
+async function isSlotBlocked(bookingDate, bookingTime) {
+  const result = await pool.query(
+    `SELECT id FROM blocked_dates
+     WHERE blocked_date::date = $1::date
+     AND (blocked_time IS NULL OR blocked_time = $2)
+     LIMIT 1`,
+    [bookingDate, bookingTime]
+  );
+  return result.rows.length > 0;
+}
 
 // Create Stripe checkout session for booking (public)
 // Allows booking even without Stripe - will show message if Stripe not configured
@@ -56,6 +80,13 @@ router.post('/checkout', async (req, res) => {
     }
 
     console.log('[Bookings API] Validation passed');
+
+    if (await isSlotBlocked(bookingDate, bookingTime)) {
+      return res.status(409).json({
+        error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
+        code: 'TIME_SLOT_BLOCKED'
+      });
+    }
 
     await pool.query(
       `DELETE FROM bookings
@@ -194,6 +225,13 @@ router.post('/', async (req, res) => {
     }
 
     console.log('[Bookings API] Validation passed');
+
+    if (await isSlotBlocked(bookingDate, bookingTime)) {
+      return res.status(409).json({
+        error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
+        code: 'TIME_SLOT_BLOCKED'
+      });
+    }
 
     // Insert booking
     const bookingId = uuidv4();

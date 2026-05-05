@@ -833,16 +833,37 @@
           </div>
 
           <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; padding: 24px;">
-            <h3 style="margin-bottom: 16px;">Block Dates</h3>
-            <div style="margin-bottom: 16px;">
-              <label style="display: block; margin-bottom: 8px; font-weight: 700;">Date to Block</label>
-              <input type="date" id="blockDate" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+            <h3 style="margin-bottom: 16px;">Block Dates or Times</h3>
+            <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px;">Use this when a long job, personal appointment, or day off should stop customers from booking that time.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px;">
+              <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700;">Date to Block</label>
+                <input type="date" id="blockDate" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700;">Block Type</label>
+                <select id="blockType" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+                  <option value="day">Full Day</option>
+                  <option value="single">One Time Slot</option>
+                  <option value="range">Time Range</option>
+                </select>
+              </div>
+            </div>
+            <div id="blockTimeFields" style="display: none; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px;">
+              <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700;">Start Time</label>
+                <input type="time" id="blockStartTime" step="3600" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+              </div>
+              <div id="blockEndTimeWrap">
+                <label style="display: block; margin-bottom: 8px; font-weight: 700;">End Time</label>
+                <input type="time" id="blockEndTime" step="3600" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+              </div>
             </div>
             <div style="margin-bottom: 16px;">
               <label style="display: block; margin-bottom: 8px; font-weight: 700;">Reason (optional)</label>
               <input type="text" id="blockReason" placeholder="e.g., Holiday, Maintenance" style="width: 100%; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
             </div>
-            <button id="blockDateBtn" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Block Date</button>
+            <button id="blockDateBtn" style="padding: 12px 24px; background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Block Schedule</button>
           </div>
 
           <div style="margin-top: 24px;">
@@ -852,6 +873,7 @@
                 <thead style="background: var(--light-bg);">
                   <tr style="border-bottom: 1px solid var(--border);">
                     <th style="padding: 12px; text-align: left; font-weight: 700;">Date</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 700;">Time</th>
                     <th style="padding: 12px; text-align: left; font-weight: 700;">Reason</th>
                     <th style="padding: 12px; text-align: left; font-weight: 700;">Action</th>
                   </tr>
@@ -1370,7 +1392,9 @@
       }
       
       // Load blocked dates
-      const blockedResponse = await fetch('/api/owner/blocked-dates');
+      const blockedResponse = await fetch('/api/owner/blocked-dates', {
+        headers: ownerAuthHeaders()
+      });
       const blockedData = await blockedResponse.json();
       
       const blockedList = document.getElementById('blockedDatesList');
@@ -1380,7 +1404,8 @@
         blockedData.blockedDates.forEach(item => {
           blockedList.innerHTML += `
             <tr style="border-bottom: 1px solid var(--border);">
-              <td style="padding: 12px;">${item.blocked_date}</td>
+              <td style="padding: 12px;">${formatDateOnly(item.blocked_date)}</td>
+              <td style="padding: 12px;">${item.blocked_time || 'Full day'}</td>
               <td style="padding: 12px;">${item.reason || '-'}</td>
               <td style="padding: 12px;">
                 <button onclick="ownerUnblockDate('${item.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;">Unblock</button>
@@ -1389,7 +1414,7 @@
           `;
         });
       } else {
-        blockedList.innerHTML = '<tr><td colspan="3" style="padding: 24px; text-align: center; color: var(--text-muted);">No blocked dates</td></tr>';
+        blockedList.innerHTML = '<tr><td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">No blocked dates or times</td></tr>';
       }
       
     } catch (error) {
@@ -1544,26 +1569,61 @@
     }
   };
   
+  function updateOwnerBlockTimeFields() {
+    const type = document.getElementById('blockType').value;
+    const fields = document.getElementById('blockTimeFields');
+    const endWrap = document.getElementById('blockEndTimeWrap');
+    fields.style.display = type === 'day' ? 'none' : 'grid';
+    endWrap.style.display = type === 'range' ? 'block' : 'none';
+  }
+
+  document.getElementById('blockType').addEventListener('change', updateOwnerBlockTimeFields);
+  updateOwnerBlockTimeFields();
+
   document.getElementById('blockDateBtn').addEventListener('click', async () => {
     const date = document.getElementById('blockDate').value;
+    const blockType = document.getElementById('blockType').value;
+    const startTime = document.getElementById('blockStartTime').value;
+    const endTime = document.getElementById('blockEndTime').value;
     const reason = document.getElementById('blockReason').value;
     
     if (!date) {
       alert('Please select a date');
       return;
     }
+    if ((blockType === 'single' || blockType === 'range') && !startTime) {
+      alert('Please select a start time');
+      return;
+    }
+    if (blockType === 'range' && !endTime) {
+      alert('Please select an end time');
+      return;
+    }
     
     try {
+      const body = { blockedDate: date, reason };
+      if (blockType === 'single') {
+        body.startTime = startTime;
+        body.endTime = `${String(parseInt(startTime.split(':')[0], 10) + 1).padStart(2, '0')}:00`;
+      } else if (blockType === 'range') {
+        body.startTime = startTime;
+        body.endTime = endTime;
+      }
       const response = await fetch('/api/owner/block-date', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blockedDate: date, reason })
+        headers: ownerAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body)
       });
       
       if (response.ok) {
         document.getElementById('blockDate').value = '';
+        document.getElementById('blockStartTime').value = '';
+        document.getElementById('blockEndTime').value = '';
         document.getElementById('blockReason').value = '';
         loadSchedule();
+      } else {
+        const error = await response.json().catch(() => ({}));
+        alert('Error: ' + (error.error || 'Failed to block schedule'));
       }
     } catch (error) {
       alert('Error: ' + error.message);
@@ -1573,7 +1633,10 @@
   window.ownerUnblockDate = async (blockedDateId) => {
     if (!confirm('Unblock this date?')) return;
     try {
-      const response = await fetch(`/api/owner/blocked-date/${blockedDateId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/owner/blocked-date/${blockedDateId}`, {
+        method: 'DELETE',
+        headers: ownerAuthHeaders()
+      });
       if (response.ok) {
         loadSchedule();
       }

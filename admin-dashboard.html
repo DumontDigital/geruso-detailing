@@ -146,11 +146,11 @@
     <div class="sidebar-nav">
       <div class="sidebar-item active" onclick="showSection('overview')">📊 Overview</div>
       <div class="sidebar-item" onclick="showSection('bookings')">📅 Bookings</div>
-      <!-- Owner-only sections (Services, Add-ons, Schedule, Content)
+      <!-- Owner-only sections (Services, Add-ons, Content)
            are hidden for dev role via JS below to limit dev access. -->
       <div class="sidebar-item owner-only" onclick="showSection('services')">🔧 Services</div>
       <div class="sidebar-item owner-only" onclick="showSection('addons')">➕ Add-ons</div>
-      <div class="sidebar-item owner-only" onclick="showSection('schedule')">⏰ Schedule</div>
+      <div class="sidebar-item" onclick="showSection('schedule')">⏰ Schedule</div>
       <div class="sidebar-item owner-only" onclick="showSection('content')">📝 Content</div>
     </div>
     <!-- Sidebar footer removed — parent app.html top bar already
@@ -308,7 +308,44 @@
         <p style="color: var(--text-muted);">Monday, Tuesday, Wednesday</p>
       </div>
 
-      <p style="color: var(--text-light); margin-top: 24px; font-size: 13px;">Note: Schedule is managed in the booking.html file. To modify hours, update the businessHours configuration.</p>
+      <div class="form-section" style="margin-top: 20px;">
+        <div class="form-section-title">Block Dates or Times</div>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">Block a full day, one appointment time, or a time range for longer jobs.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="adminBlockDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Block Type</label>
+            <select class="form-input" id="adminBlockType">
+              <option value="day">Full Day</option>
+              <option value="single">One Time Slot</option>
+              <option value="range">Time Range</option>
+            </select>
+          </div>
+          <div class="form-group admin-block-time" style="display: none;">
+            <label class="form-label">Start Time</label>
+            <input type="time" class="form-input" id="adminBlockStartTime" step="3600">
+          </div>
+          <div class="form-group admin-block-time admin-block-end" style="display: none;">
+            <label class="form-label">End Time</label>
+            <input type="time" class="form-input" id="adminBlockEndTime" step="3600">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reason</label>
+          <input type="text" class="form-input" id="adminBlockReason" placeholder="Ceramic job, day off, maintenance">
+        </div>
+        <button class="btn-primary" onclick="blockAdminSchedule()">Block Schedule</button>
+      </div>
+
+      <div class="form-section" style="margin-top: 20px;">
+        <div class="form-section-title">Blocked Schedule</div>
+        <div class="items-list" id="adminBlockedDatesList">
+          <p>Loading blocked dates...</p>
+        </div>
+      </div>
     </div>
 
     <!-- CONTENT SECTION -->
@@ -587,6 +624,7 @@
     if (sectionName === 'bookings') loadBookings();
     else if (sectionName === 'services') loadServices();
     else if (sectionName === 'addons') loadAddons();
+    else if (sectionName === 'schedule') loadScheduleBlocks();
     else if (sectionName === 'content') loadContent();
     else loadDashboard();
   }
@@ -874,6 +912,96 @@
   async function saveAddon() {
     alert('✓ Add-on saved (functionality to be implemented)');
     closeAddonModal();
+  }
+
+  function updateAdminBlockTimeFields() {
+    const type = document.getElementById('adminBlockType').value;
+    document.querySelectorAll('.admin-block-time').forEach(el => {
+      el.style.display = type === 'day' ? 'none' : 'block';
+    });
+    const end = document.querySelector('.admin-block-end');
+    if (end) end.style.display = type === 'range' ? 'block' : 'none';
+  }
+
+  document.getElementById('adminBlockType').addEventListener('change', updateAdminBlockTimeFields);
+  updateAdminBlockTimeFields();
+
+  async function loadScheduleBlocks() {
+    try {
+      const res = await fetch('/api/owner/blocked-dates', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to load blocked schedule');
+      const data = await res.json();
+      const list = document.getElementById('adminBlockedDatesList');
+      const blocks = data.blockedDates || [];
+      if (!blocks.length) {
+        list.innerHTML = '<p style="color: var(--text-muted); padding: 12px;">No blocked dates or times.</p>';
+        return;
+      }
+      list.innerHTML = blocks.map(block => `
+        <div class="item-card">
+          <div class="item-card-title">${formatDateForDisplay(block.blocked_date)} ${block.blocked_time ? `at ${escapeHtml(block.blocked_time)}` : '- Full day'}</div>
+          <p style="color: var(--text-muted); margin: 8px 0;">${escapeHtml(block.reason || 'No reason provided')}</p>
+          <div class="item-card-actions">
+            <button class="action-btn error" onclick="unblockAdminSchedule('${block.id}')">Unblock</button>
+          </div>
+        </div>
+      `).join('');
+    } catch (error) {
+      document.getElementById('adminBlockedDatesList').innerHTML = `<p style="color: var(--error);">Error: ${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  async function blockAdminSchedule() {
+    const date = document.getElementById('adminBlockDate').value;
+    const type = document.getElementById('adminBlockType').value;
+    const startTime = document.getElementById('adminBlockStartTime').value;
+    const endTime = document.getElementById('adminBlockEndTime').value;
+    const reason = document.getElementById('adminBlockReason').value;
+    if (!date) { alert('Please select a date'); return; }
+    if ((type === 'single' || type === 'range') && !startTime) { alert('Please select a start time'); return; }
+    if (type === 'range' && !endTime) { alert('Please select an end time'); return; }
+
+    const body = { blockedDate: date, reason };
+    if (type === 'single') {
+      body.startTime = startTime;
+      body.endTime = `${String(parseInt(startTime.split(':')[0], 10) + 1).padStart(2, '0')}:00`;
+    } else if (type === 'range') {
+      body.startTime = startTime;
+      body.endTime = endTime;
+    }
+
+    try {
+      const res = await fetch('/api/owner/block-date', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || 'Failed to block schedule');
+      document.getElementById('adminBlockDate').value = '';
+      document.getElementById('adminBlockStartTime').value = '';
+      document.getElementById('adminBlockEndTime').value = '';
+      document.getElementById('adminBlockReason').value = '';
+      loadScheduleBlocks();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async function unblockAdminSchedule(blockId) {
+    if (!confirm('Unblock this date/time?')) return;
+    try {
+      const res = await fetch(`/api/owner/blocked-date/${encodeURIComponent(blockId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to unblock schedule');
+      loadScheduleBlocks();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
   }
 
   // Content management

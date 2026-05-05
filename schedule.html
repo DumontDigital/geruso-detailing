@@ -466,6 +466,7 @@
   let selectedDate = null;
   let selectedTime = null;
   let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
+  let blockedDates = {}; // Store fully blocked days: { 'YYYY-MM-DD': true }
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const businessHours = {
@@ -532,11 +533,15 @@
 
       // Clear previous booked slots
       bookedTimeSlots = {};
+      blockedDates = {};
 
       // Build a map of booked times
       if (data.bookedSlots) {
         bookedTimeSlots = data.bookedSlots;
         console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
+      }
+      if (data.blockedDates) {
+        blockedDates = data.blockedDates;
       }
       // Re-render so days that are now fully booked get grayed out.
       if (typeof renderCalendar === 'function') {
@@ -621,6 +626,7 @@
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
+    if (blockedDates[dateStr]) return false;
 
     for (const slot of slots) {
       const isBooked = !!bookedTimeSlots[`${dateStr} ${slot}`];
@@ -703,13 +709,16 @@
       // Disable: no service selected / past date / closed day / service not supported / all slots gone.
       const isPastDate = cellDate < todayET;
       const isClosed = !businessHours[dayOfWeek];
+      const isBlockedDate = !!blockedDates[`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`];
       const serviceUnavailable = !selectedService || !isServiceAvailableOnDay(selectedService, dayOfWeek);
       const allSlotsUnavailable = !isPastDate && !isClosed && !serviceUnavailable && !dayHasAvailability(cellDate, dayOfWeek);
-      if (isPastDate || isClosed || serviceUnavailable || allSlotsUnavailable) {
+      if (isPastDate || isClosed || isBlockedDate || serviceUnavailable || allSlotsUnavailable) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
         if (!selectedService) {
           dayCell.title = 'Select a service first';
+        } else if (isBlockedDate) {
+          dayCell.title = 'This day is blocked by Geruso Detailing';
         } else if (serviceUnavailable) {
           dayCell.title = `${selectedService} is not available on this day`;
         } else if (allSlotsUnavailable) {
@@ -797,6 +806,7 @@
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
+    const isBlockedDate = !!blockedDates[dateStr];
 
     slots.forEach(slot => {
       const slotBtn = document.createElement('button');
@@ -806,7 +816,7 @@
 
       // Check if this time slot is booked
       const bookingKey = `${dateStr} ${slot}`;
-      const isBooked = bookedTimeSlots[bookingKey];
+      const isBooked = isBlockedDate || bookedTimeSlots[bookingKey];
 
       // Check if this time slot is in the past (ET)
       const isPast = isTimeslotPast(date, slot);
@@ -819,8 +829,10 @@
         // Show reason for disabling
         if (isPast) {
           slotBtn.title = 'This time has already passed';
+        } else if (isBlockedDate) {
+          slotBtn.title = 'This day is blocked by Geruso Detailing';
         } else if (isBooked) {
-          slotBtn.title = 'This slot is already booked';
+          slotBtn.title = 'This slot is already booked or blocked';
         }
       } else {
         slotBtn.classList.add('available'); // Mark available times in light green
@@ -1003,8 +1015,8 @@
     const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
 
     const bookingKey = `${dateStr} ${selectedTime}`;
-    if (bookedTimeSlots[bookingKey]) {
-      showMessage('The selected time slot has been booked. Please choose another time.', 'error');
+    if (blockedDates[dateStr] || bookedTimeSlots[bookingKey]) {
+      showMessage('The selected time slot is no longer available. Please choose another time.', 'error');
       return;
     }
 
