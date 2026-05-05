@@ -35,12 +35,13 @@
     html, body {
       height: 100%;
       width: 100%;
+      min-width: 100vw;
       min-height: 100%;
       overflow: hidden;
-      background: var(--light-bg);
+      background: var(--light-bg) !important;
     }
     body {
-      background: var(--light-bg);
+      background: var(--light-bg) !important;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       font-size: 16px;
@@ -61,14 +62,14 @@
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       height: 100dvh;
-      width: 100%;
-      background: var(--light-bg);
+      width: 100vw;
+      background: var(--light-bg) !important;
       overflow: hidden;
     }
 
     /* Top Nav */
     .top-nav {
-      background: var(--light-bg);
+      background: var(--light-bg) !important;
       border-bottom: 1px solid var(--border);
       padding: 16px 24px;
       display: flex;
@@ -124,7 +125,7 @@
       min-height: 0;
       width: 100%;
       height: 100%;
-      background: var(--light-bg);
+      background: var(--light-bg) !important;
       overflow: hidden;
     }
 
@@ -135,7 +136,7 @@
       width: 100%;
       height: 100%;
       min-height: 0;
-      background: var(--light-bg);
+      background: var(--light-bg) !important;
       overflow: hidden;
     }
 

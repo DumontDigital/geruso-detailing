@@ -22,12 +22,12 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; background: var(--light-bg); color-scheme: dark; }
-    html, body { width: 100%; height: 100%; min-height: 100%; overflow-x: hidden; background: var(--light-bg); }
-    body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    html { scroll-behavior: smooth; background: var(--light-bg) !important; color-scheme: dark; }
+    html, body { width: 100%; min-width: 100vw; height: 100%; min-height: 100%; overflow-x: hidden; background: var(--light-bg) !important; }
+    body { background: var(--light-bg) !important; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
     body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: var(--light-bg); }
-    .dashboard-wrapper { width: 100%; min-width: 0; background: var(--light-bg); }
-    .main-content { background: var(--light-bg); }
+    .dashboard-wrapper { width: 100vw; min-width: 100vw; background: var(--light-bg) !important; }
+    .main-content { background: var(--light-bg) !important; }
 
     .dashboard-wrapper { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100dvh; }
 
@@ -563,6 +563,16 @@
     }
   }
 
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
+  }
+
   // Section navigation
   function showSection(sectionName) {
     // Hide all sections
@@ -614,13 +624,17 @@
       const data = await res.json();
       const bookings = data.bookings || [];
       const tbody = document.getElementById('bookingsTableBody');
+      if (!bookings.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        return;
+      }
       tbody.innerHTML = bookings.map(b => `
         <tr>
           <td>${formatDateForDisplay(b.booking_date)}</td>
-          <td>${b.booking_time}</td>
-          <td>${b.customer_name}</td>
-          <td>${b.service_type.split('-')[0].trim()}</td>
-          <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+          <td>${escapeHtml(b.booking_time)}</td>
+          <td>${escapeHtml(b.customer_name)}</td>
+          <td>${escapeHtml(String(b.service_type || '').split('-')[0].trim() || 'Service')}</td>
+          <td><span class="status-badge status-${escapeHtml(b.status)}">${escapeHtml(b.status)}</span></td>
           <td><div class="action-buttons">
             <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
             <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
@@ -632,6 +646,7 @@
       `).join('');
     } catch (error) {
       console.error('Load bookings error:', error);
+      document.getElementById('bookingsTableBody').innerHTML = '<tr><td colspan="6" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
     }
   }
 
@@ -880,6 +895,13 @@
 
   // Initialize on load
   loadDashboard();
+  setInterval(() => {
+    loadDashboard();
+    const bookingsSection = document.getElementById('bookings-section');
+    if (bookingsSection && bookingsSection.classList.contains('active')) {
+      loadBookings();
+    }
+  }, 30000);
 </script>
 </body>
 </html>

@@ -404,16 +404,14 @@ function getCurrentTimeInEastern() {
 app.get('/api/owner/bookings', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM bookings ORDER BY booking_date ASC, booking_time ASC"
+      `SELECT * FROM bookings
+       WHERE NOT (
+         customer_email = 'booking.test@gmail.com'
+         AND customer_name = 'Available Slot'
+       )
+       ORDER BY booking_date ASC, booking_time ASC`
     );
-
-    // Filter: Show ONLY real customer bookings - remove all fake "Available Slot" placeholder rows
-    const filteredBookings = result.rows.filter(booking => {
-      const isPlaceholder = booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot';
-      return !isPlaceholder; // Only keep real customer bookings
-    });
-
-    res.json({ bookings: filteredBookings });
+    res.json({ bookings: result.rows });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });

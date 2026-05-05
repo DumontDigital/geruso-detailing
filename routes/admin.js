@@ -5,6 +5,13 @@ const { getTodayInEasternTime } = require('../utils/availability');
 
 const router = express.Router();
 
+const REAL_BOOKING_WHERE = `
+  NOT (
+    customer_email = 'booking.test@gmail.com'
+    AND customer_name = 'Available Slot'
+  )
+`;
+
 // Get dashboard stats (admin only)
 router.get('/dashboard', verifyToken, async (req, res) => {
   try {
@@ -20,27 +27,30 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 
     // Today's bookings (active only)
     const todayResult = await pool.query(
-      "SELECT COUNT(*) as count FROM bookings WHERE booking_date = $1 AND status <> 'cancelled'",
+      `SELECT COUNT(*) as count FROM bookings
+       WHERE booking_date = $1 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}`,
       [today]
     );
 
     // This week's bookings (active only)
     const weekResult = await pool.query(
-      "SELECT COUNT(*) as count FROM bookings WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled'",
+      `SELECT COUNT(*) as count FROM bookings
+       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}`,
       [weekAgo, today]
     );
 
-    // Pending confirmations (cancelled is its own status, so this naturally excludes them)
+    // Pending confirmations for real customer bookings only.
     const pendingResult = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE status = $1',
+      `SELECT COUNT(*) as count FROM bookings
+       WHERE status = $1 AND ${REAL_BOOKING_WHERE}`,
       ['pending']
     );
 
-    // Revenue from confirmed bookings only (cancelled never count)
+    // Revenue from confirmed real bookings only (cancelled never count)
     const revenueResult = await pool.query(
       `SELECT SUM(CAST(SUBSTRING(service_type FROM '\\$(\\d+)') AS INTEGER)) as total
        FROM bookings
-       WHERE status = $1 AND booking_date >= $2`,
+       WHERE status = $1 AND booking_date >= $2 AND ${REAL_BOOKING_WHERE}`,
       ['confirmed', weekAgo]
     );
 
@@ -49,7 +59,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled'
+       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}
        ORDER BY booking_date ASC, booking_time ASC
        LIMIT 10`,
       [today, sevenDaysLaterStr]
@@ -76,7 +86,7 @@ router.get('/bookings', verifyToken, async (req, res) => {
     // Get today's date in Eastern Time to filter out past dates
     const today = getTodayInEasternTime();
 
-    let query = 'SELECT * FROM bookings WHERE booking_date::date >= $1::date';
+    let query = `SELECT * FROM bookings WHERE booking_date::date >= $1::date AND ${REAL_BOOKING_WHERE}`;
     const params = [today];
     let paramIndex = 2;
 
@@ -91,18 +101,10 @@ router.get('/bookings', verifyToken, async (req, res) => {
       params.push(search);
     }
 
-    // Sort by date ascending only - frontend will handle time sorting numerically
-    query += ' ORDER BY booking_date ASC';
+    query += ' ORDER BY booking_date ASC, booking_time ASC';
 
     const result = await pool.query(query, params);
-
-    // Mark placeholder bookings
-    const bookings = result.rows.map(booking => ({
-      ...booking,
-      is_placeholder: booking.customer_email === 'booking.test@gmail.com' && booking.customer_name === 'Available Slot'
-    }));
-
-    res.json({ bookings });
+    res.json({ bookings: result.rows });
   } catch (error) {
     console.error('Fetch admin bookings error:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
