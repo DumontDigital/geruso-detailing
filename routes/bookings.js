@@ -146,7 +146,7 @@ router.post('/checkout', async (req, res) => {
         // Update booking with Stripe session ID
         await pool.query(
           'UPDATE bookings SET stripe_session_id = $1 WHERE id = $2',
-          [stripeSession.id, bookingId]
+          [stripeSession.id, booking.id]
         );
 
         console.log('[Bookings API] Stripe session created:', stripeSession.id);

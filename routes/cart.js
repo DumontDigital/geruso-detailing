@@ -1,5 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const pool = require('../db');
 const { initializeStripe } = require('../stripe');
 
 const router = express.Router();
@@ -53,6 +54,7 @@ router.post('/checkout', async (req, res) => {
     }
 
     const customerEmail = String(customer.email || '').trim();
+    const bookingId = String(customer.bookingId || '').trim();
     const orderId = uuidv4();
     const stripeClient = initializeStripe();
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `${req.protocol}://${req.get('host')}`;
@@ -72,22 +74,34 @@ router.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
+    const metadata = {
+      order_id: orderId,
+      customer_name: String(customer.name || '').trim(),
+      customer_phone: String(customer.phone || '').trim(),
+      service_address: String(customer.serviceAddress || '').trim(),
+      source: 'cart_checkout',
+    };
+    if (bookingId) metadata.booking_id = bookingId;
+
     const session = await stripeClient.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: lineItems,
       customer_email: customerEmail || undefined,
       client_reference_id: orderId,
-      metadata: {
-        order_id: orderId,
-        customer_name: String(customer.name || '').trim(),
-        customer_phone: String(customer.phone || '').trim(),
-        service_address: String(customer.serviceAddress || '').trim(),
-        source: 'cart_checkout',
-      },
+      metadata,
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout?cancelled=true`,
     });
+
+    if (bookingId) {
+      await pool.query(
+        `UPDATE bookings
+         SET stripe_session_id = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2 AND status <> 'cancelled'`,
+        [session.id, bookingId]
+      );
+    }
 
     res.json({
       success: true,

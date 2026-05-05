@@ -1010,6 +1010,7 @@
         serviceType: details.serviceType || '',
         bookingDate: details.bookingDate || '',
         bookingTime: details.bookingTime || '',
+        bookingId: details.bookingId || '',
         vehicleType: details.vehicleType || '',
         notes: details.notes || '',
         updatedAt: new Date().toISOString(),
@@ -1115,6 +1116,10 @@
       console.log('[Booking Response] Status:', response.status, 'Data:', data);
 
       if (response.ok && data.success) {
+        if (data.bookingId) {
+          saveCheckoutDetails({ ...bookingData, bookingId: data.bookingId });
+        }
+
         // Booking was saved server-side and the confirmation email has
         // been sent. Add the booked service to the cart so the customer
         // sees what they reserved, then either send them to Stripe (if

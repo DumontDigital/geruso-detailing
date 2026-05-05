@@ -249,6 +249,7 @@
           customer.email = details.email || '';
           customer.phone = details.phone || '';
           customer.serviceAddress = details.serviceAddress || '';
+          customer.bookingId = details.bookingId || '';
         }
       } catch (e) {}
 
@@ -351,6 +352,7 @@
               email: form.get('email'),
               phone: form.get('phone'),
               serviceAddress: form.get('serviceAddress'),
+              bookingId: getCustomerFromStorage().bookingId || '',
             },
           }),
         });

@@ -204,9 +204,17 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
 
       // Update booking payment status and auto-confirm
       try {
+        const bookingIdFromMetadata = session.metadata && session.metadata.booking_id;
         const result = await pool.query(
-          'UPDATE bookings SET payment_status = $1, status = $2, stripe_payment_intent_id = $3 WHERE stripe_session_id = $4 RETURNING *',
-          ['paid', 'confirmed', session.payment_intent, session.id]
+          `UPDATE bookings
+           SET payment_status = $1,
+               status = $2,
+               stripe_payment_intent_id = $3,
+               stripe_session_id = COALESCE(stripe_session_id, $4),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE stripe_session_id = $4 OR id = $5
+           RETURNING *`,
+          ['paid', 'confirmed', session.payment_intent, session.id, bookingIdFromMetadata || null]
         );
 
         if (result.rows.length > 0) {
