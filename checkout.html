@@ -89,12 +89,36 @@
     .stripe-copy span { display: block; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
     .summary-item {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
       padding: 14px 0;
       border-bottom: 1px solid var(--border);
     }
     .summary-item:last-child { border-bottom: none; }
+    .summary-remove {
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(239,68,68,0.45);
+      border-radius: 50%;
+      background: rgba(239,68,68,0.12);
+      color: #ff5f5f;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -2px;
+      transition: all 0.2s;
+    }
+    .summary-remove:hover {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+      transform: scale(1.05);
+    }
     .summary-name { color: var(--text); font-weight: 700; }
     .summary-meta { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
     .summary-price { color: var(--text); font-weight: 800; white-space: nowrap; }
@@ -281,6 +305,17 @@
 
     let cart = getStoredCart();
 
+    function saveCart() {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      sessionStorage.removeItem('cart');
+    }
+
+    function removeCheckoutItem(index) {
+      cart.items.splice(index, 1);
+      saveCart();
+      renderSummary();
+    }
+
     function renderSummary() {
       const summaryItems = document.getElementById('summaryItems');
       const summaryTotal = document.getElementById('summaryTotal');
@@ -294,7 +329,7 @@
       }
 
       let total = 0;
-      summaryItems.innerHTML = cart.items.map(item => {
+      summaryItems.innerHTML = cart.items.map((item, index) => {
         const service = SERVICE_CATALOG[item.serviceName] || {};
         const price = service.price || Number(item.price || 0);
         const quantity = Math.max(1, Number(item.quantity || 1));
@@ -302,6 +337,7 @@
         total += lineTotal;
         return `
           <div class="summary-item">
+            <button class="summary-remove" type="button" data-remove-index="${index}" aria-label="Remove ${escapeHtml(item.serviceName)} from cart">×</button>
             <div>
               <div class="summary-name">${escapeHtml(item.serviceName)}</div>
               <div class="summary-meta">${escapeHtml(item.serviceTag || service.tag || 'Service')} x${quantity}</div>
@@ -313,6 +349,12 @@
       summaryTotal.textContent = money(total);
       payBtn.disabled = false;
     }
+
+    document.getElementById('summaryItems').addEventListener('click', (event) => {
+      const removeButton = event.target.closest('[data-remove-index]');
+      if (!removeButton) return;
+      removeCheckoutItem(Number(removeButton.dataset.removeIndex));
+    });
 
     function showMessage(text, type) {
       const message = document.getElementById('checkoutMessage');

@@ -16,6 +16,16 @@ const { verifyToken, requireRole } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function sendHtmlWithGooglePlacesKey(res, fileName) {
+  const fs = require('fs');
+  let html = fs.readFileSync(path.join(__dirname, fileName), 'utf8');
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY';
+  html = html.replace(/YOUR_API_KEY/g, apiKey);
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -96,14 +106,7 @@ app.get('/admin-dashboard.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
 });
 app.get('/services', (req, res) => {
-  const fs = require('fs');
-  let servicesHtml = fs.readFileSync(path.join(__dirname, 'services.html'), 'utf8');
-  // Inject Google Places API key if available
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'YOUR_API_KEY';
-  servicesHtml = servicesHtml.replace('YOUR_API_KEY', apiKey);
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(servicesHtml);
+  sendHtmlWithGooglePlacesKey(res, 'services.html');
 });
 app.get('/work', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -114,12 +117,10 @@ app.get('/memberships', (req, res) => {
   res.sendFile(path.join(__dirname, 'memberships.html'));
 });
 app.get('/schedule', (req, res) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.sendFile(path.join(__dirname, 'schedule.html'));
+  sendHtmlWithGooglePlacesKey(res, 'schedule.html');
 });
 app.get('/schedule.html', (req, res) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.sendFile(path.join(__dirname, 'schedule.html'));
+  sendHtmlWithGooglePlacesKey(res, 'schedule.html');
 });
 app.get('/reviews', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');

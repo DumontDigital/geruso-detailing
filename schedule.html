@@ -421,68 +421,90 @@
   let sessionToken;
   let selectedPlaceId = null;
   let selectedAddress = '';
+  let addressDebounceTimer = null;
+
+  function renderAddressSuggestions(predictions) {
+    const suggestionsContainer = document.getElementById('addressSuggestions');
+    suggestionsContainer.innerHTML = '';
+
+    if (!predictions.length) {
+      suggestionsContainer.classList.remove('show');
+      return;
+    }
+
+    predictions.slice(0, 5).forEach(prediction => {
+      const div = document.createElement('div');
+      div.className = 'address-suggestion-item';
+      div.textContent = prediction.description;
+      div.addEventListener('click', () => selectAddress(prediction));
+      suggestionsContainer.appendChild(div);
+    });
+    suggestionsContainer.classList.add('show');
+  }
+
+  async function getFallbackAddressPredictions(value) {
+    const query = encodeURIComponent(`${value}, Rhode Island, USA`);
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=us&limit=5&q=${query}`);
+    if (!response.ok) return [];
+    const results = await response.json();
+    return results
+      .filter(result => {
+        const address = result.address || {};
+        return address.state === 'Rhode Island' || address.state_code === 'RI' || String(result.display_name || '').includes('Rhode Island');
+      })
+      .map(result => ({
+        description: result.display_name,
+        place_id: result.place_id || result.osm_id || result.display_name,
+      }));
+  }
 
   function initializeAddressAutocomplete() {
     const apiKey = document.querySelector('script[src*="maps.googleapis.com"]')?.src.includes('YOUR_API_KEY') ? null : true;
-    if (!apiKey) {
-      console.warn('Google Places API key not configured. Address autocomplete disabled.');
-      return;
-    }
-
     const addressInput = document.getElementById('serviceAddressInput');
     const suggestionsContainer = document.getElementById('addressSuggestions');
 
-    if (!window.google || !window.google.maps) {
-      console.warn('Google Maps API not loaded yet');
-      return;
+    if (!addressInput || addressInput.dataset.autocompleteReady === 'true') return;
+    addressInput.dataset.autocompleteReady = 'true';
+
+    if (apiKey && window.google && window.google.maps && google.maps.places) {
+      autocompleteService = new google.maps.places.AutocompleteService();
+      sessionToken = new google.maps.places.AutocompleteSessionToken();
     }
 
-    autocompleteService = new google.maps.places.AutocompleteService();
-    sessionToken = new google.maps.places.AutocompleteSessionToken();
-
-    addressInput.addEventListener('input', async (e) => {
-      const value = e.target.value;
+    addressInput.addEventListener('input', (e) => {
+      const value = e.target.value.trim();
+      selectedAddress = '';
+      selectedPlaceId = null;
+      window.clearTimeout(addressDebounceTimer);
 
       if (value.length < 3) {
         suggestionsContainer.classList.remove('show');
         return;
       }
 
-      try {
-        const request = {
-          input: value,
-          componentRestrictions: { country: 'us' },
-          sessionToken: sessionToken,
-        };
-
-        const predictions = await autocompleteService.getPlacePredictions(request);
-
-        if (predictions.predictions && predictions.predictions.length > 0) {
-          // Filter for Rhode Island
-          const riPredictions = predictions.predictions.filter(p =>
-            p.description.includes('RI') || p.description.includes('Rhode Island')
-          );
-
-          suggestionsContainer.innerHTML = '';
-
-          if (riPredictions.length > 0) {
-            riPredictions.slice(0, 5).forEach(prediction => {
-              const div = document.createElement('div');
-              div.className = 'address-suggestion-item';
-              div.textContent = prediction.description;
-              div.addEventListener('click', () => selectAddress(prediction));
-              suggestionsContainer.appendChild(div);
-            });
-            suggestionsContainer.classList.add('show');
-          } else {
-            suggestionsContainer.classList.remove('show');
+      addressDebounceTimer = window.setTimeout(async () => {
+        try {
+          if (autocompleteService) {
+            const request = {
+              input: value,
+              componentRestrictions: { country: 'us' },
+              sessionToken: sessionToken,
+            };
+            const response = await autocompleteService.getPlacePredictions(request);
+            const predictions = (response.predictions || []).filter(p =>
+              p.description.includes('RI') || p.description.includes('Rhode Island')
+            );
+            renderAddressSuggestions(predictions);
+            return;
           }
-        } else {
+
+          const fallbackPredictions = await getFallbackAddressPredictions(value);
+          renderAddressSuggestions(fallbackPredictions);
+        } catch (error) {
+          console.error('Autocomplete error:', error);
           suggestionsContainer.classList.remove('show');
         }
-      } catch (error) {
-        console.error('Autocomplete error:', error);
-      }
+      }, 250);
     });
 
     addressInput.addEventListener('blur', () => {

@@ -248,7 +248,8 @@ function updateCartModalDisplay() {
           </div>
         </div>
         <button onclick="removeFromCart('${item.id}');"
-                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0 8px; font-size: 18px; flex-shrink: 0;">
+                aria-label="Remove ${item.serviceName} from cart"
+                style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.45); border-radius: 50%; color: #ff5f5f; cursor: pointer; padding: 0; font-size: 20px; font-weight: 900; line-height: 1; flex-shrink: 0;">
           ×
         </button>
       </div>
