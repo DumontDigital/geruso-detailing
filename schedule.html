@@ -117,6 +117,17 @@
     .add-on-option:first-of-type { border-top: none; padding-top: 0; }
     .add-on-option input { margin-top: 3px; accent-color: var(--primary); }
     .add-on-option strong { color: var(--text); }
+    .mobile-water-note {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: rgba(0,255,65,0.08);
+      border: 1px solid rgba(0,255,65,0.25);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .mobile-water-note strong { color: var(--primary); }
 
     .booking-summary { background: rgba(0,255,65,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 14px; }
     .summary-item { margin-bottom: 8px; }
@@ -319,6 +330,7 @@
             <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" autocomplete="off">
             <div id="addressSuggestions" class="address-suggestions"></div>
             <input type="hidden" id="serviceAddressValue" name="serviceAddress" value="">
+            <div class="mobile-water-note"><strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.</div>
           </div>
 
           <div class="form-group" id="locationNoteGroup" style="display: none;">
@@ -340,7 +352,7 @@
               <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
               <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Mobile Add-On)</option>
               <option value="Headlight Restoration">Headlight Restoration - $50 (Mobile Add-On)</option>
-              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
+              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile Add-On)</option>
               <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Based)</option>
             </select>
           </div>
@@ -1345,15 +1357,28 @@
     } catch (e) {}
   }
 
+  function applyAddOnFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const want = params.get('addOn');
+      if (!want) return;
+      const match = Array.from(document.querySelectorAll('input[name="addOns"]')).find(input => input.value === want);
+      if (!match) return;
+      match.checked = true;
+    } catch (e) {}
+  }
+
   // Load cart when page initializes
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       loadCartOnPageLoad();
       applyServiceFromUrl();
+      applyAddOnFromUrl();
     });
   } else {
     loadCartOnPageLoad();
     applyServiceFromUrl();
+    applyAddOnFromUrl();
   }
 
   // Auto-refresh time slots to update past times in real-time

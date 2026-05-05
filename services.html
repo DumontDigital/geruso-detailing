@@ -46,6 +46,16 @@
       transform: translateY(-4px);
       box-shadow: 0 8px 24px rgba(0,255,65,0.08);
     }
+    .service-card-media {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      background: var(--light-bg);
+    }
     .service-card-tag {
       display: inline-block;
       font-size: 10px;
@@ -105,10 +115,14 @@
     <div class="service-note">
       <strong>Add-ons:</strong> Customers can book one main detail and add extras like engine bay cleaning, pet hair/odor treatment, or headlight restoration during scheduling. Add-ons are added to the same cart and charged at checkout. For stain removal or custom requests, include a note when booking so we can confirm the final price.
     </div>
+    <div class="service-note">
+      <strong>Mobile service note:</strong> For mobile detailing appointments, please have water access available at the service address so we can provide the best possible detail.
+    </div>
 
     <div class="category-tab-bar">
       <button class="category-tab active" data-cat="all">All Services</button>
       <button class="category-tab" data-cat="mobile">Mobile</button>
+      <button class="category-tab" data-cat="addon">Add-Ons</button>
       <button class="category-tab" data-cat="location">Location Only</button>
     </div>
 
@@ -169,17 +183,45 @@
         <a href="/schedule.html?service=Ultra%20Premium" class="btn btn-primary">Book This Service</a>
       </div>
 
-      <div class="service-card" data-cat="mobile">
+      <div class="service-card" data-cat="addon">
         <span class="service-card-tag">Mobile Add-On</span>
         <h3>Engine Bay Cleaning</h3>
         <div class="price">$75</div>
-        <p>Clean and degrease your engine bay safely with professional equipment. Book it alone or add it to a main detail during scheduling.</p>
+        <p>Clean and degrease your engine bay safely with professional equipment. Add it to a mobile or location-based detail during scheduling.</p>
         <ul class="features">
           <li>Safe degreaser application</li>
           <li>Hand-detailed components</li>
           <li>Plastic &amp; rubber dressing</li>
         </ul>
-        <a href="/schedule.html?service=Engine%20Bay%20Cleaning" class="btn btn-primary">Book This Service</a>
+        <a href="/schedule.html?addOn=Engine%20Bay%20Cleaning" class="btn btn-primary">Add to Booking</a>
+      </div>
+
+      <div class="service-card" data-cat="addon">
+        <img class="service-card-media" src="/images/services/pet-hair-odor.jpeg" alt="Pet hair and odor removal service">
+        <span class="service-card-tag">Mobile Add-On</span>
+        <h3>Pet Hair / Odor Elimination</h3>
+        <div class="price">$50</div>
+        <p>Remove stubborn pet hair and lingering odors from carpets, seats, and interior surfaces.</p>
+        <ul class="features">
+          <li>Up to 2 hr service time</li>
+          <li>Interior-focused add-on</li>
+          <li>Can be added to mobile or location-based details</li>
+        </ul>
+        <a href="/schedule.html?addOn=Pet%20Hair%20%2F%20Odor%20Elimination" class="btn btn-primary">Add to Booking</a>
+      </div>
+
+      <div class="service-card" data-cat="addon">
+        <img class="service-card-media" src="/images/services/headlight-restoration.jpeg" alt="Headlight restoration service">
+        <span class="service-card-tag">Mobile Add-On</span>
+        <h3>Headlight Restoration</h3>
+        <div class="price">$50 per headlight</div>
+        <p>Restore hazy headlights to improve clarity, appearance, and nighttime visibility.</p>
+        <ul class="features">
+          <li>30 min per headlight</li>
+          <li>Restores faded lenses</li>
+          <li>Can be added to mobile or location-based details</li>
+        </ul>
+        <a href="/schedule.html?addOn=Headlight%20Restoration" class="btn btn-primary">Add to Booking</a>
       </div>
 
       <div class="service-card" data-cat="mobile">
