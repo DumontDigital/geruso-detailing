@@ -76,6 +76,18 @@
     }
     .cta-strip h2 { margin-bottom: 14px; }
     .cta-strip p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; }
+    .cta-strip .btn {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      box-shadow: none;
+    }
+    .cta-strip .btn:hover {
+      background: rgba(0,255,65,0.1);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: none;
+    }
   </style>
 </head>
 <body data-page="work">
@@ -137,7 +149,7 @@
     <h2 class="section-title">Want Results Like These?</h2>
     <p>Book your detail today and let us show you what we can do for your vehicle.</p>
     <div class="btn-row">
-      <a href="/booking.html" class="btn btn-primary">Book Now</a>
+      <a href="/booking.html" class="btn btn-outline">Book Now</a>
       <a href="/services.html" class="btn btn-outline">View Services</a>
     </div>
   </section>

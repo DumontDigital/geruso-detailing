@@ -146,6 +146,18 @@
     }
     .cta-strip h2 { font-size: clamp(28px, 3.5vw, 42px); margin-bottom: 14px; }
     .cta-strip p { color: var(--text-muted); font-size: 17px; margin-bottom: 28px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .cta-strip .btn {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      box-shadow: none;
+    }
+    .cta-strip .btn:hover {
+      background: rgba(0,255,65,0.1);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: none;
+    }
   </style>
 </head>
 <body data-page="home">
@@ -254,7 +266,7 @@
     <h2>Ready for a Showroom-Quality Clean?</h2>
     <p>Book your detail in under a minute. We'll come to you in Rhode Island or schedule at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
     <div class="btn-row">
-      <a href="/booking.html" class="btn btn-primary">Book Appointment</a>
+      <a href="/booking.html" class="btn btn-outline">Book Appointment</a>
       <a href="/contact.html" class="btn btn-outline">Get a Quote</a>
     </div>
   </section>

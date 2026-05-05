@@ -88,6 +88,18 @@
     }
     .quote-section h2 { margin-bottom: 14px; }
     .quote-section p { color: var(--text-muted); font-size: 16px; margin-bottom: 28px; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .quote-section .btn {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      box-shadow: none;
+    }
+    .quote-section .btn:hover {
+      background: rgba(0,255,65,0.1);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: none;
+    }
   </style>
 </head>
 <body data-page="services">
@@ -262,7 +274,7 @@
     <h2 class="section-title">Need Something Custom?</h2>
     <p>Have a specialty vehicle or unique request? Get in touch and we'll build a custom quote for you.</p>
     <div class="btn-row">
-      <a href="/contact.html" class="btn btn-primary">Request a Quote</a>
+      <a href="/contact.html" class="btn btn-outline">Request a Quote</a>
       <a href="/booking.html" class="btn btn-outline">Book Standard Service</a>
     </div>
   </section>

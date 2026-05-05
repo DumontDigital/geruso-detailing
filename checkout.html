@@ -61,6 +61,22 @@
       outline: none;
     }
     .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,255,65,0.12); }
+    .field input[readonly] {
+      cursor: not-allowed;
+      color: var(--text-muted);
+      border-color: rgba(0,255,65,0.35);
+      background: #050505;
+    }
+    .locked-field-note {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0,255,65,0.28);
+      border-radius: 8px;
+      background: rgba(0,255,65,0.07);
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
     .stripe-panel {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -190,7 +206,10 @@
             </div>
             <div class="field full">
               <label for="serviceAddress">Service Address</label>
-              <input id="serviceAddress" name="serviceAddress" autocomplete="street-address">
+              <input id="serviceAddress" name="serviceAddress" autocomplete="street-address" readonly>
+              <div class="locked-field-note" id="serviceAddressNote">
+                This location is locked from your booking so the appointment location stays correct.
+              </div>
             </div>
           </div>
 
@@ -367,7 +386,15 @@
       if (customer.name) document.getElementById('customerName').value = customer.name;
       if (customer.email) document.getElementById('customerEmail').value = customer.email;
       if (customer.phone) document.getElementById('customerPhone').value = customer.phone;
-      if (customer.serviceAddress) document.getElementById('serviceAddress').value = customer.serviceAddress;
+      const serviceAddressInput = document.getElementById('serviceAddress');
+      const serviceAddressNote = document.getElementById('serviceAddressNote');
+      const lockedAddress = customer.serviceAddress || '313 Lynne Lane, Mapleville';
+      serviceAddressInput.value = lockedAddress;
+      if (/313\s+Lynne\s+Lane/i.test(lockedAddress)) {
+        serviceAddressNote.textContent = 'This is an at-location appointment. Please go to 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
+      } else {
+        serviceAddressNote.textContent = 'This mobile service address is locked from your booking so the appointment location stays correct.';
+      }
     }
 
     document.getElementById('checkoutForm').addEventListener('submit', async (event) => {
