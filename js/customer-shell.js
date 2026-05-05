@@ -10,6 +10,23 @@
     { href: '/contact.html',  label: 'Contact' },
   ];
 
+  function forceCustomerViewIfRequested() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isCustomerLink = window.location.pathname === '/customer' || params.get('customer') === '1';
+      if (!isCustomerLink) return;
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', '/home.html');
+      }
+    } catch (e) {}
+  }
+
   function isLoggedIn() {
     // Treat "logged in" loosely — if there's ANY token or user record in
     // localStorage, show Logout. Avoids cases where one of the two is
@@ -148,6 +165,7 @@
 
   // Auto-mount on DOM ready
   document.addEventListener('DOMContentLoaded', () => {
+    forceCustomerViewIfRequested();
     const navMount = document.querySelector('[data-nav]');
     const footerMount = document.querySelector('[data-footer]');
     const activePage = document.body.dataset.page || '';

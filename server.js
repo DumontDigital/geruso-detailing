@@ -43,6 +43,15 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 
+// Clean customer-only entry point. This serves the public home page and
+// lets the customer shell clear any saved owner/dev session in that browser.
+app.get('/customer', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.sendFile(path.join(__dirname, 'home.html'));
+});
+
 // Login portal - standalone page
 app.get('/login', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
