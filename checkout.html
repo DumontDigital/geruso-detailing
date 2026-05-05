@@ -224,7 +224,7 @@
 
   <script src="/js/customer-shell.js"></script>
   <script>
-    const CART_STORAGE_KEY = 'gerusoCart';
+    const CHECKOUT_CART_STORAGE_KEY = 'gerusoCart';
     const CHECKOUT_DETAILS_STORAGE_KEY = 'gerusoCheckoutDetails';
     const SERVICE_CATALOG = {
       'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
@@ -241,7 +241,7 @@
 
     function getStoredCart() {
       try {
-        const stored = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '{"items":[]}');
+        const stored = JSON.parse(localStorage.getItem(CHECKOUT_CART_STORAGE_KEY) || '{"items":[]}');
         if (stored.items && stored.items.length) return stored;
 
         const legacyNames = JSON.parse(sessionStorage.getItem('cart') || '[]');
@@ -306,7 +306,7 @@
     let cart = getStoredCart();
 
     function saveCart() {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      localStorage.setItem(CHECKOUT_CART_STORAGE_KEY, JSON.stringify(cart));
       sessionStorage.removeItem('cart');
     }
 

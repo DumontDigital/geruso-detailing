@@ -163,6 +163,43 @@
     `;
   }
 
+  function renderCartModal() {
+    return `
+      <div id="cartModal" class="site-cart-modal" style="display: none;">
+        <div class="site-cart-content">
+          <button type="button" id="closeCart" class="site-cart-close" aria-label="Close cart">×</button>
+          <h2>Your Cart</h2>
+          <div id="cartItems"></div>
+          <div class="site-cart-total">Total: $<span id="cartTotal">0</span></div>
+          <div class="site-cart-actions">
+            <button type="button" id="proceedCheckout" class="btn btn-primary">Proceed to Checkout</button>
+            <button type="button" class="btn btn-outline" id="continueShopping">Keep Shopping</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function ensureCartModal() {
+    if (document.getElementById('cartModal')) return;
+    document.body.insertAdjacentHTML('beforeend', renderCartModal());
+    const keepShopping = document.getElementById('continueShopping');
+    if (keepShopping) {
+      keepShopping.addEventListener('click', () => {
+        const modal = document.getElementById('cartModal');
+        if (modal) modal.style.display = 'none';
+      });
+    }
+  }
+
+  function ensureCartScript() {
+    if (window.cartInitialized || document.querySelector('script[src*="cart.js"]')) return;
+    const script = document.createElement('script');
+    script.src = '/cart.js?v=site-cart-20260505';
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   // Auto-mount on DOM ready
   document.addEventListener('DOMContentLoaded', () => {
     forceCustomerViewIfRequested();
@@ -172,7 +209,9 @@
     if (navMount) navMount.outerHTML = renderNav(activePage);
     if (footerMount) footerMount.outerHTML = renderFooter();
     wireAuthControl();
+    ensureCartModal();
+    ensureCartScript();
   });
 
-  window.GerusoShell = { renderNav, renderFooter };
+  window.GerusoShell = { renderNav, renderFooter, renderCartModal };
 })();
