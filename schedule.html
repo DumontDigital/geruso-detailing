@@ -660,13 +660,9 @@
   function getSupportedDaysForService(serviceName) {
     if (!serviceName) return [];
 
-    const serviceTag = getServiceTagFromName(serviceName);
-    if (serviceTag === 'LOCATION ONLY') {
-      return ['Thu', 'Fri', 'Sat', 'Sun'];
-    }
-
-    // Mobile and mobile add-on services only light Thursday and Friday.
-    return ['Thu', 'Fri'];
+    // All services can be scheduled Thursday through Sunday. Thursday and
+    // Friday can be mobile; weekend appointments are completed at the shop.
+    return ['Thu', 'Fri', 'Sat', 'Sun'];
   }
 
   function isServiceAvailableOnDay(serviceName, dayOfWeek) {
