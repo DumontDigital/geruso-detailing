@@ -20,6 +20,11 @@ function saveCart(cart) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
 }
 
+function closeCartModal() {
+  const modal = document.getElementById('cartModal');
+  if (modal) modal.style.display = 'none';
+}
+
 /**
  * Check if service categories can be mixed in cart
  */
@@ -88,6 +93,7 @@ function addToCart(serviceName, price, serviceTag, serviceType) {
 
   saveCart(cart);
   updateNavCartBadge();
+  updateCartModalDisplay();
   return true;
 }
 
@@ -279,10 +285,7 @@ function initializeCart() {
   // Setup close cart modal button
   const closeCartBtn = document.getElementById('closeCart');
   if (closeCartBtn) {
-    closeCartBtn.addEventListener('click', () => {
-      const modal = document.getElementById('cartModal');
-      if (modal) modal.style.display = 'none';
-    });
+    closeCartBtn.addEventListener('click', closeCartModal);
   }
 
   // Close modal when clicking outside
@@ -295,6 +298,13 @@ function initializeCart() {
     });
   }
 }
+
+document.addEventListener('click', (event) => {
+  if (event.target && event.target.closest('#closeCart')) {
+    event.preventDefault();
+    closeCartModal();
+  }
+});
 
 /**
  * Proceed to checkout

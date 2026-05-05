@@ -189,46 +189,6 @@
     box-shadow: 0 6px 16px rgba(0,255,65,0.2);
   }
 
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 4px rgba(0,255,65,0.2);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
   #cartItems {
     margin-bottom: 16px;
     max-height: 50vh;
@@ -236,14 +196,6 @@
   }
 
   @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
-    }
-
     .nav-actions {
       flex-wrap: wrap;
       gap: 8px;
@@ -1095,6 +1047,46 @@
     }
   }
 
+  function addBookedItemsToCart(serviceName, price, serviceTag, addOns) {
+    let mainAdded = false;
+    try {
+      if (typeof addToCart === 'function') {
+        mainAdded = addToCart(serviceName, price, serviceTag, 'standard');
+        if (mainAdded) {
+          addOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
+        }
+      } else {
+        const cart = JSON.parse(localStorage.getItem('gerusoCart') || '{"items":[]}');
+        cart.items = Array.isArray(cart.items) ? cart.items : [];
+        cart.items.push({
+          id: Math.random().toString(36).slice(2, 11),
+          serviceName,
+          price: Number(price) || 0,
+          serviceTag,
+          serviceType: 'standard',
+          quantity: 1,
+          addedAt: new Date().toISOString()
+        });
+        addOns.forEach(addOn => cart.items.push({
+          id: Math.random().toString(36).slice(2, 11),
+          serviceName: addOn.serviceName,
+          price: Number(addOn.price) || 0,
+          serviceTag: 'EXTRA FEE',
+          serviceType: 'add-on',
+          quantity: 1,
+          addedAt: new Date().toISOString()
+        }));
+        localStorage.setItem('gerusoCart', JSON.stringify(cart));
+        mainAdded = true;
+      }
+      if (typeof updateNavCartBadge === 'function') updateNavCartBadge();
+      if (typeof updateCartModalDisplay === 'function') updateCartModalDisplay();
+    } catch (error) {
+      console.warn('[Booking] Could not add booked items to cart:', error);
+    }
+    return mainAdded;
+  }
+
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1208,19 +1200,24 @@
         const serviceName = bookingData.serviceType;
         const price = getServiceNumericPrice(serviceName);
         const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
-        try {
-          if (typeof addToCart === 'function') {
-            const mainAdded = addToCart(serviceName, price, serviceTag, 'standard');
-            if (mainAdded) {
-              selectedAddOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
-            }
-          }
-        } catch (e) { console.warn('[Booking] addToCart failed:', e); }
+        const cartUpdated = addBookedItemsToCart(serviceName, price, serviceTag, selectedAddOns);
+        if (!cartUpdated) {
+          showMessage('This service could not be added to the cart. Please remove the current main package and try again.', 'error');
+          return;
+        }
 
         showMessage('Booking added to cart! Review your cart to checkout.', 'success');
         // Keep the customer in the cart flow so checkout can prefill their details.
         if (typeof toggleCartModal === 'function') {
-          setTimeout(() => toggleCartModal(), 500);
+          setTimeout(() => {
+            if (typeof updateCartModalDisplay === 'function') updateCartModalDisplay();
+            const modal = document.getElementById('cartModal');
+            if (modal) {
+              modal.style.display = 'block';
+            } else {
+              toggleCartModal();
+            }
+          }, 500);
         }
 
         // Reload calendar so the just-booked slot grays out for the next visitor.
@@ -1427,17 +1424,6 @@
   };
 </script>
 
-<!-- Cart Modal (Outside tab sections) -->
-<div id="cartModal" class="cart-modal" style="display: none;">
-  <div class="cart-content">
-    <h2>Your Cart</h2>
-    <div id="cartItems"></div>
-    <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
-    <button id="proceedCheckout" class="btn-primary" onclick="proceedToCheckout()">Proceed to Checkout</button>
-    <button id="closeCart" class="btn-secondary">Close</button>
-  </div>
-</div>
-
 <script src="/js/customer-shell.js"></script>
-<script src="/cart.js?v=checkout-flow-20260504"></script></body>
+<script src="/cart.js?v=checkout-flow-20260505-fix"></script></body>
 </html>

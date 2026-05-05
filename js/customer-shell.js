@@ -181,8 +181,16 @@
   }
 
   function ensureCartModal() {
-    if (document.getElementById('cartModal')) return;
-    document.body.insertAdjacentHTML('beforeend', renderCartModal());
+    if (!document.getElementById('cartModal')) {
+      document.body.insertAdjacentHTML('beforeend', renderCartModal());
+    }
+    const closeCart = document.getElementById('closeCart');
+    if (closeCart) {
+      closeCart.addEventListener('click', () => {
+        const modal = document.getElementById('cartModal');
+        if (modal) modal.style.display = 'none';
+      });
+    }
     const keepShopping = document.getElementById('continueShopping');
     if (keepShopping) {
       keepShopping.addEventListener('click', () => {
