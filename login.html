@@ -656,13 +656,9 @@
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Customers go to the regular home page; staff go to the app shell
-        // (which loads the owner/admin dashboard in an iframe)
-        if (data.user && (data.user.role === 'owner' || data.user.role === 'dev')) {
-          window.location.href = '/app';
-        } else {
-          window.location.href = '/';
-        }
+        // Every sign-in lands on the customer site first. Staff accounts
+        // still keep their role and can open Dashboard from the nav.
+        window.location.href = '/';
       } catch (error) {
         console.error('Google sign-in error:', error);
         alert('Sign-in failed: ' + error.message);
