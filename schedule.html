@@ -128,6 +128,7 @@
       line-height: 1.5;
     }
     .mobile-water-note strong { color: var(--primary); }
+    .location-policy-line { white-space: nowrap; }
 
     .booking-step-note {
       margin-bottom: 18px;
@@ -289,13 +290,13 @@
           <div class="form-group" id="addressFieldGroup" style="display: none;">
             <label class="form-label">Service Address <span style="color: var(--error);">*</span></label>
             <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" autocomplete="street-address">
-            <div class="mobile-water-note"><strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.<br>No walk-ins.</div>
+            <div class="mobile-water-note"><strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.</div>
           </div>
 
           <div class="form-group" id="locationNoteGroup" style="display: none;">
             <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
               <strong style="color: var(--primary);" id="locationNoteTitle">Shop Service</strong><br>
-              <span id="locationNoteText">Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)</span>
+              <span id="locationNoteText"><span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)</span>
             </div>
           </div>
 
@@ -1256,16 +1257,16 @@
       serviceAddressInput.value = ''; // Clear previous address
       if (isShopOnlyService(selectedService)) {
         locationNoteTitle.textContent = 'Shop / Specialty Service';
-        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
+        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
         locationNoteTitle.textContent = 'Weekend Shop Appointment';
-        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
+        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else if (!dayOfWeek) {
         locationNoteTitle.textContent = 'Choose a Date';
-        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
+        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else {
         locationNoteTitle.textContent = 'Shop Appointment';
-        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
+        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       }
       console.log('[Booking] Address field hidden, shop note shown');
     }
