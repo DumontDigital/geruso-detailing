@@ -166,7 +166,8 @@ const sendBookingConfirmation = async (bookingData) => {
     <p>If you need to reschedule or cancel, please contact us at 401-490-1236.</p>
     <p>We look forward to detailing your vehicle!</p>
     <p><strong>Geruso Detailing</strong><br>
-    Mapleville, RI<br>
+    313 Lynne Lane, Mapleville<br>
+    By appointment only. No walk-ins.<br>
     401-490-1236</p>
   `;
 

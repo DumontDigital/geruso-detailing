@@ -223,9 +223,9 @@ INSERT INTO settings (owner_email, notification_email, business_phone, business_
     'notifications@geruso-detailing.com',
     '401-490-1236',
     'info@geruso-detailing.com',
-    'North Providence, RI',
+    '313 Lynne Lane, Mapleville',
     'Rhode Island',
-    'Mapleville, RI',
+    'By appointment only. No walk-ins.',
     'Your Vehicle, Perfected',
     'Professional car detailing services including washing, waxing, ceramic coating and more'
   )

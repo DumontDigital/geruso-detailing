@@ -268,7 +268,7 @@
   <div class="section-inner" style="max-width: 900px; margin: 0 auto; text-align: center;">
     <div class="section-label">PROFESSIONAL DETAILING</div>
     <h1 class="section-heading" style="font-size: clamp(40px, 6vw, 64px); margin: 20px 0;">Welcome to Geruso Detailing</h1>
-    <p class="section-sub" style="font-size: 18px; margin-bottom: 40px;">Expert car detailing services throughout Rhode Island. Mobile service to your location or visit our Mapleville facility for premium treatments.</p>
+    <p class="section-sub" style="font-size: 18px; margin-bottom: 40px;">Expert car detailing services throughout Rhode Island. Mobile service to your location or schedule premium treatments at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
 
     <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 60px; flex-wrap: wrap;">
       <button onclick="showSection('booking')" style="padding: 16px 40px; font-size: 16px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">Book Now</button>
@@ -331,7 +331,7 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Choose your preferred date and time below. Available slots are displayed based on our service schedule for Mapleville location and mobile services throughout Rhode Island.</p>
+    <p class="section-sub">Choose your preferred date and time below. Available slots are displayed based on our service schedule for 313 Lynne Lane, Mapleville by appointment only and mobile services throughout Rhode Island.</p>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
@@ -405,7 +405,7 @@
           <div class="form-group" id="locationNoteGroup" style="display: none;">
             <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
               <strong style="color: var(--primary);">Location Service</strong><br>
-              Saturday and Sunday appointments are at our Mapleville location only. No address needed.
+              Saturday and Sunday appointments are at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.
             </div>
           </div>
 
@@ -1028,7 +1028,7 @@
     // For location-only days (Sat/Sun), don't send address
     let finalAddress = serviceAddress;
     if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
-      finalAddress = 'Mapleville Location'; // Use location name for Sat/Sun
+      finalAddress = '313 Lynne Lane, Mapleville'; // Use location address for Sat/Sun
     }
 
     // Build booking data with all required fields

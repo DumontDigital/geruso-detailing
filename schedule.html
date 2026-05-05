@@ -244,7 +244,7 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Book any detail Thursday through Sunday. Mobile service is available Thursday and Friday only; weekend appointments and longer specialty jobs are completed at the shop.</p>
+    <p class="section-sub">Book any detail Thursday through Sunday. Mobile service is available Thursday and Friday only; weekend appointments and longer specialty jobs are completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
@@ -318,7 +318,7 @@
           <div class="form-group" id="locationNoteGroup" style="display: none;">
             <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
               <strong style="color: var(--primary);" id="locationNoteTitle">Shop Service</strong><br>
-              <span id="locationNoteText">This appointment will be completed at the shop. No service address is needed.</span>
+              <span id="locationNoteText">This appointment will be completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</span>
             </div>
           </div>
 
@@ -985,7 +985,7 @@
     }
 
     // Weekends and specialty / longer jobs are shop appointments.
-    const finalAddress = needsMobileAddress ? serviceAddress : 'Mapleville Location';
+    const finalAddress = needsMobileAddress ? serviceAddress : '313 Lynne Lane, Mapleville';
 
     // Build booking data with all required fields
     // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
@@ -1163,16 +1163,16 @@
       serviceAddressInput.value = ''; // Clear previous address
       if (isShopOnlyService(selectedService)) {
         locationNoteTitle.textContent = 'Shop / Specialty Service';
-        locationNoteText.textContent = 'Specialty and longer details are completed at the shop and can be scheduled on any open day.';
+        locationNoteText.textContent = 'Specialty and longer details are completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
       } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
         locationNoteTitle.textContent = 'Weekend Shop Appointment';
-        locationNoteText.textContent = 'Weekend appointments run from 6 AM to 11 AM at the shop. Mobile service is only available Thursday and Friday.';
+        locationNoteText.textContent = 'Weekend appointments run from 6 AM to 11 AM at 313 Lynne Lane, Mapleville by appointment only. No walk-ins. Mobile service is only available Thursday and Friday.';
       } else if (!dayOfWeek) {
         locationNoteTitle.textContent = 'Choose a Date';
-        locationNoteText.textContent = 'Mobile service is available Thursday and Friday. Weekend and specialty appointments are at the shop.';
+        locationNoteText.textContent = 'Mobile service is available Thursday and Friday. Weekend and specialty appointments are at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
       } else {
         locationNoteTitle.textContent = 'Shop Appointment';
-        locationNoteText.textContent = 'This appointment will be completed at the shop. No service address is needed.';
+        locationNoteText.textContent = 'This appointment will be completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
       }
       console.log('[Booking] Address field hidden, shop note shown');
     }
