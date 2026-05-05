@@ -203,7 +203,6 @@
   }
 </style>
   <link rel="stylesheet" href="/css/customer.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&language=en" async defer></script>
 </head>
 <body data-page="schedule">
 <!-- Shared customer nav (rendered by /js/customer-shell.js) -->
@@ -368,7 +367,7 @@
 <script>
   // Logo is handled by the <img> tag in the nav — no JS needed.
 
-  // Google Places Autocomplete for Service Address
+  // Address autocomplete for Service Address
   let autocompleteService;
   let sessionToken;
   let selectedPlaceId = null;
@@ -411,14 +410,13 @@
   }
 
   function initializeAddressAutocomplete() {
-    const apiKey = document.querySelector('script[src*="maps.googleapis.com"]')?.src.includes('YOUR_API_KEY') ? null : true;
     const addressInput = document.getElementById('serviceAddressInput');
     const suggestionsContainer = document.getElementById('addressSuggestions');
 
     if (!addressInput || addressInput.dataset.autocompleteReady === 'true') return;
     addressInput.dataset.autocompleteReady = 'true';
 
-    if (apiKey && window.google && window.google.maps && google.maps.places) {
+    if (window.google && window.google.maps && google.maps.places) {
       autocompleteService = new google.maps.places.AutocompleteService();
       sessionToken = new google.maps.places.AutocompleteSessionToken();
     }
@@ -433,6 +431,9 @@
         suggestionsContainer.classList.remove('show');
         return;
       }
+
+      suggestionsContainer.innerHTML = '<div class="address-suggestion-item">Searching addresses...</div>';
+      suggestionsContainer.classList.add('show');
 
       addressDebounceTimer = window.setTimeout(async () => {
         try {
@@ -474,12 +475,8 @@
     suggestionsContainer.classList.remove('show');
   }
 
-  // Initialize autocomplete when Google Maps is loaded
-  if (window.google && window.google.maps) {
-    initializeAddressAutocomplete();
-  } else {
-    window.addEventListener('load', initializeAddressAutocomplete);
-  }
+  initializeAddressAutocomplete();
+  window.addEventListener('load', initializeAddressAutocomplete);
 
   // Handle vehicle photo upload and preview
   let vehiclePhotoBase64 = null;

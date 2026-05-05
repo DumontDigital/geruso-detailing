@@ -9,8 +9,26 @@ const CART_STORAGE_KEY = 'gerusoCart';
  * Get the entire cart from localStorage
  */
 function getCart() {
-  const cart = localStorage.getItem(CART_STORAGE_KEY);
-  return cart ? JSON.parse(cart) : { items: [] };
+  try {
+    const cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '{"items":[]}');
+    const items = Array.isArray(cart.items) ? cart.items : [];
+    const cleanedItems = items
+      .map(item => ({
+        ...item,
+        price: Number(item.price) || 0,
+        quantity: item.quantity === undefined ? 1 : Number(item.quantity) || 0,
+      }))
+      .filter(item => item.serviceName && item.quantity > 0);
+
+    if (cleanedItems.length !== items.length) {
+      saveCart({ items: cleanedItems });
+    }
+
+    return { items: cleanedItems };
+  } catch (error) {
+    localStorage.removeItem(CART_STORAGE_KEY);
+    return { items: [] };
+  }
 }
 
 /**
