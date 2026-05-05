@@ -67,6 +67,18 @@
     .service-card .features li:before { content: '\2713  '; color: var(--primary); font-weight: 700; margin-right: 6px; }
     .service-card .features li:last-child { border-bottom: none; }
     .service-card .btn { width: 100%; text-align: center; }
+    .service-note {
+      max-width: 1240px;
+      margin: 0 auto 28px;
+      background: rgba(0,255,65,0.08);
+      border: 1px solid rgba(0,255,65,0.25);
+      border-radius: 10px;
+      padding: 18px 20px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .service-note strong { color: var(--primary); }
 
     .quote-section {
       background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
@@ -90,6 +102,10 @@
   </section>
 
   <section class="services-section">
+    <div class="service-note">
+      <strong>Add-ons:</strong> Customers can book one main detail and add extras like engine bay cleaning, pet hair/odor treatment, or headlight restoration during scheduling. Add-ons are added to the same cart and charged at checkout. For stain removal or custom requests, include a note when booking so we can confirm the final price.
+    </div>
+
     <div class="category-tab-bar">
       <button class="category-tab active" data-cat="all">All Services</button>
       <button class="category-tab" data-cat="mobile">Mobile</button>
@@ -154,10 +170,10 @@
       </div>
 
       <div class="service-card" data-cat="mobile">
-        <span class="service-card-tag">Mobile</span>
+        <span class="service-card-tag">Mobile Add-On</span>
         <h3>Engine Bay Cleaning</h3>
         <div class="price">$75</div>
-        <p>Clean and degrease your engine bay safely with professional equipment.</p>
+        <p>Clean and degrease your engine bay safely with professional equipment. Book it alone or add it to a main detail during scheduling.</p>
         <ul class="features">
           <li>Safe degreaser application</li>
           <li>Hand-detailed components</li>

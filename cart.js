@@ -31,14 +31,17 @@ function canAddToCart(newServiceTag) {
   // Get tags of existing items
   const existingTags = new Set(cart.items.map(item => item.serviceTag));
 
-  // LOCATION ONLY cannot be mixed with MOBILE or EXTRA FEE
-  const hasLocationOnly = existingTags.has('LOCATION ONLY');
-  const hasMobileOrFee = existingTags.has('MOBILE') || existingTags.has('EXTRA FEE');
-  const isNewLocationOnly = newServiceTag === 'LOCATION ONLY';
-  const isNewMobileOrFee = newServiceTag === 'MOBILE' || newServiceTag === 'EXTRA FEE';
+  // Add-ons can ride with either mobile or location-based main services.
+  if (newServiceTag === 'EXTRA FEE') return true;
 
-  if (hasLocationOnly && isNewMobileOrFee) return false;
-  if (hasMobileOrFee && isNewLocationOnly) return false;
+  // LOCATION ONLY cannot be mixed with MOBILE main services
+  const hasLocationOnly = existingTags.has('LOCATION ONLY');
+  const hasMobile = existingTags.has('MOBILE');
+  const isNewLocationOnly = newServiceTag === 'LOCATION ONLY';
+  const isNewMobile = newServiceTag === 'MOBILE';
+
+  if (hasLocationOnly && isNewMobile) return false;
+  if (hasMobile && isNewLocationOnly) return false;
 
   return true;
 }
@@ -50,12 +53,14 @@ function getCategoryConflictMessage(newServiceTag) {
   const cart = getCart();
   const existingTags = new Set(cart.items.map(item => item.serviceTag));
   const hasLocationOnly = existingTags.has('LOCATION ONLY');
-  const hasMobileOrFee = existingTags.has('MOBILE') || existingTags.has('EXTRA FEE');
+  const hasMobile = existingTags.has('MOBILE');
 
-  if (hasLocationOnly && (newServiceTag === 'MOBILE' || newServiceTag === 'EXTRA FEE')) {
+  if (newServiceTag === 'EXTRA FEE') return '';
+
+  if (hasLocationOnly && newServiceTag === 'MOBILE') {
     return 'Mobile services cannot be combined with location-only services. Please checkout separately.';
   }
-  if (hasMobileOrFee && newServiceTag === 'LOCATION ONLY') {
+  if (hasMobile && newServiceTag === 'LOCATION ONLY') {
     return 'Location-only services cannot be combined with mobile services. Please checkout separately.';
   }
   return '';
@@ -220,6 +225,7 @@ function updateCartModalDisplay() {
   }
 
   let html = '';
+  html += '<div style="color: var(--text-muted); font-size: 13px; line-height: 1.5; padding: 12px; border-bottom: 1px solid var(--border);">Add-ons are listed with your main detail and charged together at checkout.</div>';
   cart.items.forEach(item => {
     const tagColor = item.serviceTag === 'LOCATION ONLY' ? 'rgba(100,200,255,0.1)' : item.serviceTag === 'EXTRA FEE' ? 'rgba(255,150,100,0.1)' : 'rgba(0,255,65,0.1)';
     const tagTextColor = item.serviceTag === 'LOCATION ONLY' ? '#64c8ff' : item.serviceTag === 'EXTRA FEE' ? '#ff9664' : '#00FF41';

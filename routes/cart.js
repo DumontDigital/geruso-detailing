@@ -12,7 +12,7 @@ const SERVICE_CATALOG = {
   'Ceramic Coating': { price: 400, tag: 'LOCATION ONLY' },
   'Premium Package': { price: 170, tag: 'MOBILE' },
   'Ultra Premium': { price: 335, tag: 'MOBILE' },
-  'Engine Bay Cleaning': { price: 75, tag: 'MOBILE' },
+  'Engine Bay Cleaning': { price: 75, tag: 'EXTRA FEE' },
   'Full Vehicle Polish': { price: 250, tag: 'LOCATION ONLY' },
   'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
   'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },

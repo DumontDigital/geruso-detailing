@@ -111,6 +111,12 @@
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
     .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
     .form-textarea { resize: vertical; min-height: 80px; }
+    .add-on-box { background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .add-on-help { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+    .add-on-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 14px; }
+    .add-on-option:first-of-type { border-top: none; padding-top: 0; }
+    .add-on-option input { margin-top: 3px; accent-color: var(--primary); }
+    .add-on-option strong { color: var(--text); }
 
     .booking-summary { background: rgba(0,255,65,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 14px; }
     .summary-item { margin-bottom: 8px; }
@@ -340,6 +346,25 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Optional Add-Ons</label>
+            <div class="add-on-box">
+              <div class="add-on-help">Add-ons can be included with your main detail and charged together at checkout. For stain removal or custom requests, use Special Requests so we can confirm the final price.</div>
+              <label class="add-on-option">
+                <input type="checkbox" name="addOns" value="Engine Bay Cleaning" data-price="75">
+                <span><strong>Engine Bay Cleaning</strong> - $75</span>
+              </label>
+              <label class="add-on-option">
+                <input type="checkbox" name="addOns" value="Pet Hair / Odor Elimination" data-price="50">
+                <span><strong>Pet Hair / Odor Elimination</strong> - $50</span>
+              </label>
+              <label class="add-on-option">
+                <input type="checkbox" name="addOns" value="Headlight Restoration" data-price="50">
+                <span><strong>Headlight Restoration</strong> - $50 per headlight</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Vehicle Type</label>
             <select class="form-select" name="vehicleType" required>
               <option value="">Select vehicle type...</option>
@@ -528,6 +553,22 @@
       }
     }
     return 'Contact for pricing';
+  }
+
+  function getServiceNumericPrice(serviceType) {
+    for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
+      if (serviceType.includes(serviceName)) {
+        return priceData.price;
+      }
+    }
+    return 0;
+  }
+
+  function getSelectedAddOns() {
+    return Array.from(document.querySelectorAll('input[name="addOns"]:checked')).map(input => ({
+      serviceName: input.value,
+      price: Number(input.dataset.price || 0),
+    }));
   }
 
   // Get current time in Eastern Time
@@ -1092,6 +1133,12 @@
       vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
     };
 
+    const selectedAddOns = getSelectedAddOns();
+    if (selectedAddOns.length) {
+      const addOnNote = `Add-ons requested: ${selectedAddOns.map(addOn => addOn.serviceName).join(', ')}`;
+      bookingData.notes = [bookingData.notes, addOnNote].filter(Boolean).join('\n');
+    }
+
     saveCheckoutDetails(bookingData);
 
     // Debug: Log the payload before submission
@@ -1125,12 +1172,12 @@
         // sees what they reserved, then either send them to Stripe (if
         // configured) or open the cart modal for review.
         const serviceName = bookingData.serviceType;
-        const priceMatch = (serviceName || '').match(/\$(\d+)/) || (serviceName || '').match(/(\d+)/);
-        const price = priceMatch ? parseInt(priceMatch[1] || priceMatch[0], 10) : 0;
+        const price = getServiceNumericPrice(serviceName);
         const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
         try {
           if (typeof addToCart === 'function') {
             addToCart(serviceName, price, serviceTag, 'standard');
+            selectedAddOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
           }
         } catch (e) { console.warn('[Booking] addToCart failed:', e); }
 
