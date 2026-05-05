@@ -129,6 +129,18 @@
     }
     .mobile-water-note strong { color: var(--primary); }
 
+    .booking-step-note {
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      background: rgba(0,255,65,0.08);
+      border: 1px solid rgba(0,255,65,0.25);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .booking-step-note strong { color: var(--primary); }
+
     .booking-summary { background: rgba(0,255,65,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 14px; }
     .summary-item { margin-bottom: 8px; }
     .summary-item:last-child { margin-bottom: 0; }
@@ -248,6 +260,10 @@
         <div id="messageBox"></div>
 
         <form id="bookingForm">
+          <div class="booking-step-note">
+            <strong>Quick note:</strong> Fill out your information first, choose a service, then select an available day and time on the calendar.
+          </div>
+
           <div class="booking-summary" id="bookingSummary" style="display: none;">
             <div class="summary-item"><span class="summary-label">Date:</span> <span class="summary-value" id="summaryDate">Not selected</span></div>
             <div class="summary-item"><span class="summary-label">Time:</span> <span class="summary-value" id="summaryTime">Not selected</span></div>
