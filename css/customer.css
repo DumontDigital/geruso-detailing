@@ -289,8 +289,21 @@ section { padding: 80px 32px; }
   margin-bottom: 16px;
 }
 .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer-col li { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 .footer-col a { color: var(--text-muted); font-size: 14px; transition: color 0.2s; }
 .footer-col a:hover { color: var(--primary); }
+.footer-location {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-location-label {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
 .footer-bottom {
   border-top: 1px solid var(--border);
   padding-top: 20px;

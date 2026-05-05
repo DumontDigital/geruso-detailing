@@ -151,8 +151,11 @@
             <ul>
               <li><a href="tel:401-490-1236">(401) 490-1236</a></li>
               <li><a href="mailto:Gerusodetailing@gmail.com">Email Us</a></li>
-              <li>313 Lynne Lane, Mapleville</li>
-              <li>By appointment only. No walk-ins.</li>
+              <li class="footer-location">
+                <span class="footer-location-label">Geruso Location</span>
+                <span>313 Lynne Lane, Mapleville, Rhode Island</span>
+                <span>By appointment only. No walk-ins.</span>
+              </li>
             </ul>
           </div>
         </div>
