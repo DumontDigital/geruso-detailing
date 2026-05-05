@@ -925,6 +925,22 @@
     }
   }
 
+  function hydrateSavedCustomerDetails() {
+    try {
+      const details = JSON.parse(localStorage.getItem(CHECKOUT_DETAILS_STORAGE_KEY) || '{}');
+      if (details.name) document.querySelector('input[name="customerName"]').value = details.name;
+      if (details.email) document.querySelector('input[name="customerEmail"]').value = details.email;
+      if (details.phone) document.querySelector('input[name="customerPhone"]').value = details.phone;
+      if (details.serviceAddress && !/313\s+Lynne\s+Lane/i.test(details.serviceAddress)) {
+        document.getElementById('serviceAddressInput').value = details.serviceAddress;
+      }
+    } catch (error) {
+      console.warn('[Booking] Could not restore saved customer details:', error);
+    }
+  }
+
+  hydrateSavedCustomerDetails();
+
   function addBookedItemsToCart(serviceName, price, serviceTag, addOns) {
     let mainAdded = false;
     try {

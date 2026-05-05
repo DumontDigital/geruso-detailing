@@ -145,6 +145,10 @@ router.get('/session/:sessionId', async (req, res) => {
       orderId: session.client_reference_id,
       amountTotal: session.amount_total,
       customerEmail: session.customer_details && session.customer_details.email,
+      customerName: session.metadata && session.metadata.customer_name,
+      customerPhone: session.metadata && session.metadata.customer_phone,
+      serviceAddress: session.metadata && session.metadata.service_address,
+      bookingId: session.metadata && session.metadata.booking_id,
     });
   } catch (error) {
     console.error('[Cart Checkout] Session lookup error:', error.message);

@@ -77,6 +77,21 @@
       font-size: 12px;
       line-height: 1.45;
     }
+    .locked-details-note {
+      margin: -6px 0 18px;
+      padding: 11px 13px;
+      border: 1px solid rgba(0,255,65,0.28);
+      border-radius: 8px;
+      background: rgba(0,255,65,0.07);
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .locked-details-note a {
+      color: var(--primary);
+      font-weight: 800;
+      text-decoration: none;
+    }
     .stripe-panel {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -190,19 +205,22 @@
     <div class="checkout-wrap">
       <section class="checkout-panel">
         <h2>Customer Details</h2>
+        <div class="locked-details-note">
+          These details are locked for payment. Need to fix something? Go back to <a href="/schedule.html">Schedule</a>, edit the booking, then return to checkout.
+        </div>
         <form id="checkoutForm">
           <div class="field-grid">
             <div class="field full">
               <label for="customerName">Full Name</label>
-              <input id="customerName" name="name" autocomplete="name" required>
+              <input id="customerName" name="name" autocomplete="name" readonly required>
             </div>
             <div class="field">
               <label for="customerEmail">Email</label>
-              <input id="customerEmail" name="email" type="email" autocomplete="email" required>
+              <input id="customerEmail" name="email" type="email" autocomplete="email" readonly required>
             </div>
             <div class="field">
               <label for="customerPhone">Phone</label>
-              <input id="customerPhone" name="phone" type="tel" autocomplete="tel">
+              <input id="customerPhone" name="phone" type="tel" autocomplete="tel" readonly>
             </div>
             <div class="field full">
               <label for="serviceAddress">Service Address</label>
