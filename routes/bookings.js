@@ -57,43 +57,25 @@ router.post('/checkout', async (req, res) => {
 
     console.log('[Bookings API] Validation passed');
 
-    // Try to find and replace an existing placeholder at this date/time
-    const placeholderQuery = await pool.query(
-      `SELECT id FROM bookings WHERE booking_date::date = $1::date AND booking_time = $2 AND customer_email = $3 AND customer_name = $4 LIMIT 1`,
+    await pool.query(
+      `DELETE FROM bookings
+       WHERE booking_date::date = $1::date
+       AND booking_time = $2
+       AND customer_email = $3
+       AND customer_name = $4`,
       [bookingDate, bookingTime, 'booking.test@gmail.com', 'Available Slot']
     );
 
-    let booking;
+    const bookingId = uuidv4();
+    const result = await pool.query(
+      `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
+    );
 
-    if (placeholderQuery.rows.length > 0) {
-      // Update existing placeholder
-      const placeholderId = placeholderQuery.rows[0].id;
-      console.log('[Bookings API] Replacing placeholder:', placeholderId);
-
-      const result = await pool.query(
-        `UPDATE bookings SET customer_name = $1, customer_email = $2, customer_phone = $3, service_address = $4, service_type = $5, vehicle_type = $6, notes = $7, vehicle_photo = $8, status = $9, payment_status = $10, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $11
-         RETURNING *`,
-        [customerName, customerEmail, customerPhone, serviceAddress, serviceType, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid', placeholderId]
-      );
-
-      booking = result.rows[0];
-      console.log('[Bookings API] Placeholder replaced with real customer data:', booking.id);
-    } else {
-      // Create new booking if placeholder doesn't exist
-      const bookingId = uuidv4();
-      console.log('[Bookings API] No placeholder found, creating new booking');
-
-      const result = await pool.query(
-        `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-         RETURNING *`,
-        [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
-      );
-
-      booking = result.rows[0];
-      console.log('[Bookings API] Booking created (unpaid):', booking.id);
-    }
+    const booking = result.rows[0];
+    console.log('[Bookings API] Real customer booking created:', booking.id);
 
     // Send confirmation email to customer
     console.log('[Bookings API] Sending confirmation email to:', customerEmail);
@@ -379,41 +361,19 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Cancel booking (admin only) - reverts to placeholder
-// This reopens the time slot by reverting to placeholder availability
+// Cancel booking (admin only). The slot reopens because cancelled bookings
+// are ignored by the public booked-slots endpoint.
 router.post('/:id/cancel', verifyToken, async (req, res) => {
   try {
     console.log('[Bookings API] POST /:id/cancel called for booking:', req.params.id);
 
-    // Check if this is a real booking (not already a placeholder)
-    const bookingCheck = await pool.query(
-      'SELECT customer_email, customer_name FROM bookings WHERE id = $1',
-      [req.params.id]
-    );
-
-    if (bookingCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    const isPlaceholder = bookingCheck.rows[0].customer_email === 'booking.test@gmail.com' && bookingCheck.rows[0].customer_name === 'Available Slot';
-
-    // Revert to placeholder: replace customer info with placeholder data
     const result = await pool.query(
-      `UPDATE bookings SET
-        customer_name = $1,
-        customer_email = $2,
-        customer_phone = $3,
-        service_address = $4,
-        service_type = $5,
-        vehicle_type = NULL,
-        notes = NULL,
-        vehicle_photo = NULL,
-        status = $6,
-        payment_status = $7,
-        updated_at = CURRENT_TIMESTAMP
-       WHERE id = $8
+      `UPDATE bookings
+       SET status = $1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
        RETURNING *`,
-      ['Available Slot', 'booking.test@gmail.com', '401-123-4567', '123 Main St, Mapleville RI', 'Basic', 'pending', 'unpaid', req.params.id]
+      ['cancelled', req.params.id]
     );
 
     if (result.rows.length === 0) {
@@ -421,12 +381,11 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
     }
 
     const booking = result.rows[0];
-    console.log('[Bookings API] Booking cancelled and reverted to placeholder:', booking.id);
-    console.log('[Bookings API] Slot reopened:', booking.booking_date, booking.booking_time);
+    console.log('[Bookings API] Booking cancelled:', booking.id);
 
     res.json({
       success: true,
-      message: 'Booking cancelled and slot reopened',
+      message: 'Booking cancelled',
       booking
     });
   } catch (error) {

@@ -568,18 +568,23 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'geruso-detailing' });
 });
 
-// Admin: Reset system to availability slots (clears old bookings)
+// Admin: Clear placeholder/test availability rows. Real availability is
+// calculated by the schedule page; bookings table stores customer bookings only.
 app.post('/api/admin/reset-availability', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
-    console.log('[Admin Reset] Resetting system to availability slots...');
-    const { resetToAvailability } = require('./utils/clearBookings');
-
-    const result = await resetToAvailability();
+    console.log('[Admin Reset] Removing placeholder availability rows...');
+    const result = await pool.query(
+      `DELETE FROM bookings
+       WHERE customer_email = $1
+       AND customer_name = $2
+       RETURNING id`,
+      ['booking.test@gmail.com', 'Available Slot']
+    );
 
     res.json({
       success: true,
-      message: result.message,
-      details: 'All test bookings cleared. Fresh availability slots generated for next 60 days.'
+      message: `Removed ${result.rowCount} placeholder rows.`,
+      details: 'No availability slots were generated. Customer bookings are created only when someone books a day and time.'
     });
   } catch (error) {
     console.error('[Admin Reset] Error:', error.message);
@@ -683,46 +688,19 @@ async function initializeDatabase() {
 }
 
 // Start server after database initialization
-// Regenerate availability slots using correct Eastern Time logic
-async function regenerateAvailabilitySlots() {
+// Remove legacy placeholder rows. Availability is calculated in the calendar;
+// the bookings table should contain real customer bookings only.
+async function cleanupPlaceholderBookings() {
   try {
-    console.log('[Startup] Regenerating availability slots with Eastern Time...');
-
-    const { getUpcomingAvailability, createPlaceholderBooking } = require('./utils/availability');
-
-    // Clear old slots
-    await pool.query('DELETE FROM bookings WHERE customer_email = $1 AND customer_name = $2',
-      ['booking.test@gmail.com', 'Available Slot']);
-
-    // Generate fresh slots
-    const slots = getUpcomingAvailability(60);
-    let insertedCount = 0;
-
-    for (const slot of slots) {
-      try {
-        const placeholder = createPlaceholderBooking(slot.dateKey, slot.time);
-        await pool.query(
-          `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status, stripe_session_id, stripe_payment_intent_id, deposit_amount, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-          [
-            placeholder.id, placeholder.customer_name, placeholder.customer_email, placeholder.customer_phone,
-            placeholder.service_address, placeholder.service_type, placeholder.booking_date, placeholder.booking_time,
-            placeholder.vehicle_type, placeholder.notes, placeholder.vehicle_photo, placeholder.status,
-            placeholder.payment_status, placeholder.stripe_session_id, placeholder.stripe_payment_intent_id,
-            placeholder.deposit_amount, placeholder.created_at, placeholder.updated_at
-          ]
-        );
-        insertedCount++;
-      } catch (error) {
-        if (error.code !== '23505') { // Skip duplicate key errors
-          console.error('[Startup] Error inserting slot:', error.message);
-        }
-      }
-    }
-
-    console.log(`[Startup] ✓ Regenerated ${insertedCount} availability slots using Eastern Time`);
+    const result = await pool.query(
+      `DELETE FROM bookings
+       WHERE customer_email = $1
+       AND customer_name = $2`,
+      ['booking.test@gmail.com', 'Available Slot']
+    );
+    console.log(`[Startup] Removed ${result.rowCount} legacy placeholder rows`);
   } catch (error) {
-    console.error('[Startup] Warning: Failed to regenerate slots:', error.message);
+    console.error('[Startup] Warning: Failed to remove placeholder rows:', error.message);
   }
 }
 
@@ -743,8 +721,7 @@ async function startServer() {
     process.exit(1);
   }
 
-  // Regenerate availability slots with correct Eastern Time logic
-  await regenerateAvailabilitySlots();
+  await cleanupPlaceholderBookings();
 
   // Start listening for connections
   app.listen(PORT, '0.0.0.0', () => {
