@@ -12,6 +12,20 @@ const REAL_BOOKING_WHERE = `
   )
 `;
 
+const ACTIVE_BOOKING_WHERE = `
+  status NOT IN ('cancelled', 'deleted', 'failed', 'expired', 'no-show')
+`;
+
+function getCurrentWeekRange(today, addDaysToEasternDate) {
+  const [year, month, day] = today.split('-').map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const daysFromMonday = (weekday + 6) % 7;
+  return {
+    weekStart: addDaysToEasternDate(today, -daysFromMonday),
+    weekEnd: addDaysToEasternDate(today, 6 - daysFromMonday),
+  };
+}
+
 // Get dashboard stats (admin only)
 router.get('/dashboard', verifyToken, async (req, res) => {
   try {
@@ -19,8 +33,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     const { getTodayInEasternTime, addDaysToEasternDate } = require('../utils/availability');
     const today = getTodayInEasternTime();
 
-    // Calculate week ago in Eastern Time using string arithmetic
-    const weekAgo = addDaysToEasternDate(today, -7);
+    const { weekStart, weekEnd } = getCurrentWeekRange(today, addDaysToEasternDate);
 
     // All counts/totals exclude cancelled bookings — once a booking is
     // cancelled it should not show up in the tracker.
@@ -28,15 +41,15 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     // Today's bookings (active only)
     const todayResult = await pool.query(
       `SELECT COUNT(*) as count FROM bookings
-       WHERE booking_date = $1 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}`,
+       WHERE booking_date = $1 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
       [today]
     );
 
-    // This week's bookings (active only)
+    // This calendar week's bookings (Monday-Sunday, active only)
     const weekResult = await pool.query(
       `SELECT COUNT(*) as count FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}`,
-      [weekAgo, today]
+       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
+      [weekStart, weekEnd]
     );
 
     // Pending confirmations for real customer bookings only.
@@ -50,8 +63,10 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     const revenueResult = await pool.query(
       `SELECT SUM(CAST(SUBSTRING(service_type FROM '\\$(\\d+)') AS INTEGER)) as total
        FROM bookings
-       WHERE status = $1 AND booking_date >= $2 AND ${REAL_BOOKING_WHERE}`,
-      ['confirmed', weekAgo]
+       WHERE booking_date BETWEEN $1 AND $2
+       AND (payment_status = 'paid' OR status IN ('confirmed', 'completed', 'paid'))
+       AND ${REAL_BOOKING_WHERE}`,
+      [weekStart, weekEnd]
     );
 
     // Upcoming bookings next 7 days, excluding cancelled
@@ -59,7 +74,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2 AND status <> 'cancelled' AND ${REAL_BOOKING_WHERE}
+       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}
        ORDER BY booking_date ASC, booking_time ASC
        LIMIT 10`,
       [today, sevenDaysLaterStr]

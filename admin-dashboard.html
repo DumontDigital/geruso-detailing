@@ -603,7 +603,7 @@
       document.getElementById('todayCount').textContent = data.todayCount;
       document.getElementById('weekCount').textContent = data.weekCount;
       document.getElementById('pendingCount').textContent = data.pendingCount;
-      document.getElementById('revenue').textContent = '$' + data.revenue;
+      document.getElementById('revenue').textContent = '$' + Number(data.revenue || 0).toLocaleString();
     } catch (error) {
       console.error('Dashboard error:', error);
     }
