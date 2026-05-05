@@ -244,7 +244,7 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Choose your preferred date and time below. Available slots are displayed based on our service schedule for Mapleville location and mobile services throughout Rhode Island.</p>
+    <p class="section-sub">Book any detail Thursday through Sunday. Mobile service is available Thursday and Friday only; weekend appointments and longer specialty jobs are completed at the shop.</p>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
@@ -317,8 +317,8 @@
 
           <div class="form-group" id="locationNoteGroup" style="display: none;">
             <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
-              <strong style="color: var(--primary);">Location Service</strong><br>
-              Saturday and Sunday appointments are at our Mapleville location only. No address needed.
+              <strong style="color: var(--primary);" id="locationNoteTitle">Shop Service</strong><br>
+              <span id="locationNoteText">This appointment will be completed at the shop. No service address is needed.</span>
             </div>
           </div>
 
@@ -326,16 +326,16 @@
             <label class="form-label">Service Type</label>
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
-              <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
-              <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
-              <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
-              <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
-              <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
-              <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
+              <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
+              <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
+              <option value="Car Wash">Car Wash - Starting from $85</option>
+              <option value="Ceramic Coating">Ceramic Coating - $400 (Shop / Specialty)</option>
+              <option value="Premium Package">Premium Package - Starting from $170</option>
+              <option value="Ultra Premium">Ultra Premium - $335</option>
               <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
               <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
-              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
-              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
+              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75</option>
+              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Shop / Specialty)</option>
             </select>
           </div>
 
@@ -564,10 +564,10 @@
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const businessHours = {
-    'Thu': { start: 12, end: 19, type: 'mobile' }, // 12 PM - 6 PM (Mobile, includes 6 PM slot)
-    'Fri': { start: 12, end: 19, type: 'mobile' },
-    'Sat': { start: 6, end: 12, type: 'location' }, // 6 AM - 11 AM (Location only, includes 11 AM slot)
-    'Sun': { start: 6, end: 12, type: 'location' },
+    'Thu': { start: 12, end: 19, type: 'open' }, // 12 PM - 6 PM, includes 6 PM slot
+    'Fri': { start: 12, end: 19, type: 'open' },
+    'Sat': { start: 6, end: 12, type: 'open' }, // 6 AM - 11 AM, includes 11 AM slot
+    'Sun': { start: 6, end: 12, type: 'open' },
     'Mon': null,
     'Tue': null,
     'Wed': null
@@ -670,29 +670,14 @@
       locationNoteGroup.style.display = 'none';
     }
 
-    // Clear any previously selected date and time when the service changes,
-    // because mobile dates (Thu/Fri) and location dates (Sat/Sun) are mutually exclusive.
-    selectedDate = null;
-    selectedTime = null;
-    document.getElementById('summaryDate').textContent = 'Not selected';
-    document.getElementById('summaryTime').textContent = 'Not selected';
-    document.getElementById('timeSlotsGrid').innerHTML = '';
-    const timeMessage = document.getElementById('timeMessage');
-    timeMessage.style.display = 'block';
-    timeMessage.textContent = 'Select a date to view available times';
-
-    // Re-render the calendar so days that no longer match the new service get dimmed.
+    // All services are available on every open day now, so keep any selected
+    // date/time and only update the address/shop guidance.
     renderCalendar();
   });
 
-  // Returns 'mobile', 'location', or null based on the currently selected service.
-  // Per spec: "add on goes with mobile basically the same suit" → EXTRA FEE = mobile.
+  // Kept for compatibility with older schedule code. The new rule is that all
+  // services can be booked on any open day.
   function getSelectedServiceCategory() {
-    const serviceValue = document.querySelector('select[name="serviceType"]').value;
-    if (!serviceValue) return null;
-    const tag = getServiceTagFromName(serviceValue);
-    if (tag === 'MOBILE' || tag === 'EXTRA FEE') return 'mobile';
-    if (tag === 'LOCATION ONLY') return 'location';
     return null;
   }
 
@@ -763,19 +748,8 @@
       const cellDate = new Date(year, month, day);
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
 
-      // If a service is picked, only the matching day type stays highlighted.
-      // No service picked → all working days (Thu/Fri/Sat/Sun) stay highlighted.
-      const serviceCat   = getSelectedServiceCategory();
-      const isMobileDay  = dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
-      const isLocationDay= dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
-      const matchesService = serviceCat === 'mobile'   ? isMobileDay
-                           : serviceCat === 'location' ? isLocationDay
-                           : true; // no service → don't filter
-
-      // Disable: past date / closed day / wrong service category /
-      // every slot already taken or past (e.g. Sat at 11 AM when last
-      // slot was 11 AM, or all 6 booking slots booked solid)
-      const isClosed = cellDate < todayET || !businessHours[dayOfWeek] || !matchesService;
+      // Disable: past date / closed day / every slot already taken or past.
+      const isClosed = cellDate < todayET || !businessHours[dayOfWeek];
       const allSlotsUnavailable = !isClosed && !dayHasAvailability(cellDate, dayOfWeek);
       if (isClosed || allSlotsUnavailable) {
         dayCell.classList.add('disabled');
@@ -800,36 +774,18 @@
     }
   }
 
-  // Hide service options that don't match the selected day's category.
-  // Thu/Fri = Mobile day → show MOBILE + EXTRA FEE add-ons.
-  // Sat/Sun = Location day → show LOCATION ONLY only.
-  // dayOfWeek = null restores all options (e.g. before a date is picked).
+  // All services are available on every open day. Thu/Fri can be mobile
+  // unless the selected service is shop-only; Sat/Sun are shop appointments.
   function filterServicesByDay(dayOfWeek) {
     const select = document.querySelector('select[name="serviceType"]');
     if (!select) return;
-    const isMobileDay = dayOfWeek === 'Thu' || dayOfWeek === 'Fri';
-    const isLocationDay = dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
 
     Array.from(select.options).forEach(opt => {
       if (!opt.value) { opt.hidden = false; opt.disabled = false; return; } // placeholder
-      const tag = serviceTagMap[opt.value] || 'MOBILE';
-      let show = true;
-      if (isMobileDay)        show = (tag === 'MOBILE' || tag === 'EXTRA FEE');
-      else if (isLocationDay) show = (tag === 'LOCATION ONLY');
-      opt.hidden = !show;
-      opt.disabled = !show;
+      opt.hidden = false;
+      opt.disabled = false;
     });
-
-    // If the currently selected service no longer matches, reset the dropdown
-    // and clear the booking summary's service line.
-    const currentOpt = select.options[select.selectedIndex];
-    if (currentOpt && (currentOpt.hidden || currentOpt.disabled)) {
-      select.value = '';
-      const summaryService = document.getElementById('summaryService');
-      const summaryPrice = document.getElementById('summaryPrice');
-      if (summaryService) summaryService.textContent = 'Not selected';
-      if (summaryPrice) summaryPrice.textContent = 'Not selected';
-    }
+    updateAddressFieldVisibility(getServiceTagFromName(select.value));
   }
 
   function selectDate(date) {
@@ -842,31 +798,10 @@
     document.getElementById('summaryDate').textContent = dayName;
     document.getElementById('bookingSummary').style.display = 'block';
 
-    // Filter the service dropdown to only services valid for this day.
+    // Keep all services visible and update mobile/shop guidance for this day.
     filterServicesByDay(dayOfWeek);
 
-    // Show/hide Service Address field based on day of week
-    const addressFieldGroup = document.getElementById('addressFieldGroup');
-    const locationNoteGroup = document.getElementById('locationNoteGroup');
-    const serviceAddressInput = document.getElementById('serviceAddressInput');
-
-    if (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') {
-      // Mobile service days - show address field
-      addressFieldGroup.style.display = 'block';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = true;
-    } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
-      // Location-only days - hide address field and show note
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'block';
-      serviceAddressInput.required = false;
-      serviceAddressInput.value = ''; // Clear any previously entered address
-    } else {
-      // Closed days
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
-    }
+    updateAddressFieldVisibility(getServiceTagFromName(document.querySelector('select[name="serviceType"]').value));
 
     renderCalendar();
     renderTimeSlots(dayOfWeek, date);
@@ -1041,18 +976,16 @@
 
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
     const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
+    const needsMobileAddress = requiresMobileAddress(serviceType, dayOfWeek);
 
-    // Only require service address for mobile service days (Thu/Fri)
-    if ((dayOfWeek === 'Thu' || dayOfWeek === 'Fri') && !serviceAddress) {
+    // Only require service address for mobile appointments on Thu/Fri.
+    if (needsMobileAddress && !serviceAddress) {
       showMessage('Please enter a service address', 'error');
       return;
     }
 
-    // For location-only days (Sat/Sun), don't send address
-    let finalAddress = serviceAddress;
-    if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
-      finalAddress = 'Mapleville Location'; // Use location name for Sat/Sun
-    }
+    // Weekends and specialty / longer jobs are shop appointments.
+    const finalAddress = needsMobileAddress ? serviceAddress : 'Mapleville Location';
 
     // Build booking data with all required fields
     // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
@@ -1100,9 +1033,7 @@
         const serviceName = bookingData.serviceType;
         const priceMatch = (serviceName || '').match(/\$(\d+)/) || (serviceName || '').match(/(\d+)/);
         const price = priceMatch ? parseInt(priceMatch[1] || priceMatch[0], 10) : 0;
-        const serviceTag = (typeof getServiceTagFromName === 'function')
-          ? getServiceTagFromName(serviceName)
-          : 'MOBILE';
+        const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
         try {
           if (typeof addToCart === 'function') {
             addToCart(serviceName, price, serviceTag, 'standard');
@@ -1177,6 +1108,19 @@
     'Full Vehicle Polish': 'LOCATION ONLY'
   };
 
+  function isShopOnlyService(serviceName) {
+    return getServiceTagFromName(serviceName) === 'LOCATION ONLY';
+  }
+
+  function getSelectedDayOfWeek() {
+    if (!selectedDate) return null;
+    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+  }
+
+  function requiresMobileAddress(serviceName, dayOfWeek) {
+    return !!serviceName && (dayOfWeek === 'Thu' || dayOfWeek === 'Fri') && !isShopOnlyService(serviceName);
+  }
+
   // ========================================
   // GET SERVICE TAG FROM SERVICE NAME
   // ========================================
@@ -1191,28 +1135,46 @@
     const addressFieldGroup = document.getElementById('addressFieldGroup');
     const locationNoteGroup = document.getElementById('locationNoteGroup');
     const serviceAddressInput = document.getElementById('serviceAddressInput');
+    const locationNoteTitle = document.getElementById('locationNoteTitle');
+    const locationNoteText = document.getElementById('locationNoteText');
+    const selectedService = document.querySelector('select[name="serviceType"]').value;
+    const dayOfWeek = getSelectedDayOfWeek();
 
-    console.log('[Booking] Updating address field for service tag:', serviceTag);
+    console.log('[Booking] Updating address field for service tag:', serviceTag, 'day:', dayOfWeek);
 
-    if (serviceTag === 'MOBILE' || serviceTag === 'EXTRA FEE') {
-      // Show address field for mobile/extra fee services
+    if (!selectedService) {
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+      return;
+    }
+
+    if (requiresMobileAddress(selectedService, dayOfWeek)) {
+      // Thu/Fri mobile services need the customer's address.
       addressFieldGroup.style.display = 'block';
       locationNoteGroup.style.display = 'none';
       serviceAddressInput.required = true;
       console.log('[Booking] Address field shown (required)');
-    } else if (serviceTag === 'LOCATION ONLY') {
-      // Hide address field for location-only services
+    } else {
+      // Weekends and specialty / 6+ hour services are completed at the shop.
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'block';
       serviceAddressInput.required = false;
       serviceAddressInput.value = ''; // Clear previous address
-      console.log('[Booking] Address field hidden, location note shown');
-    } else {
-      // Default: hide address field
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
-      console.log('[Booking] Address field hidden (default)');
+      if (isShopOnlyService(selectedService)) {
+        locationNoteTitle.textContent = 'Shop / Specialty Service';
+        locationNoteText.textContent = 'Specialty and longer details are completed at the shop and can be scheduled on any open day.';
+      } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
+        locationNoteTitle.textContent = 'Weekend Shop Appointment';
+        locationNoteText.textContent = 'Weekend appointments run from 6 AM to 11 AM at the shop. Mobile service is only available Thursday and Friday.';
+      } else if (!dayOfWeek) {
+        locationNoteTitle.textContent = 'Choose a Date';
+        locationNoteText.textContent = 'Mobile service is available Thursday and Friday. Weekend and specialty appointments are at the shop.';
+      } else {
+        locationNoteTitle.textContent = 'Shop Appointment';
+        locationNoteText.textContent = 'This appointment will be completed at the shop. No service address is needed.';
+      }
+      console.log('[Booking] Address field hidden, shop note shown');
     }
   }
 
@@ -1245,7 +1207,7 @@
 
   // Pre-select service when arriving from /services.html?service=XYZ
   // This auto-fills the dropdown, fires the existing change handler to
-  // toggle the address field, and the calendar's service-type filter.
+  // toggle the address/shop guidance.
   function applyServiceFromUrl() {
     try {
       const params = new URLSearchParams(window.location.search);
