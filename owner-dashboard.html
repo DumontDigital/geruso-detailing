@@ -14,8 +14,8 @@
     --success: #00a854;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  html, body { height: 100%; min-height: 100%; }
+  html { scroll-behavior: smooth; background: var(--light-bg); color-scheme: dark; }
+  html, body { width: 100vw; height: 100%; min-height: 100%; background: var(--light-bg); overflow-x: hidden; }
   body {
     background: var(--light-bg);
     color: var(--text);
@@ -23,7 +23,8 @@
     font-size: 16px;
     line-height: 1.6;
   }
-  #ownerDashboard { background: var(--light-bg); min-height: 100vh; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: var(--light-bg); }
+  #ownerDashboard { width: 100vw; min-width: 100vw; background: var(--light-bg); min-height: 100dvh; }
 
   /* ── NAV ── */
   nav {
