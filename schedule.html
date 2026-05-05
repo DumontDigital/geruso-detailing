@@ -670,15 +670,26 @@
       locationNoteGroup.style.display = 'none';
     }
 
-    // All services are available on every open day now, so keep any selected
-    // date/time and only update the address/shop guidance.
+    if (!serviceValue) {
+      clearSelectedDate('Select a service to see available dates');
+    } else if (selectedDate) {
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+      if (!isServiceAvailableOnDay(serviceValue, dayOfWeek)) {
+        clearSelectedDate('Choose a date that supports this service');
+      } else {
+        selectedTime = null;
+        document.getElementById('summaryTime').textContent = 'Not selected';
+        renderTimeSlots(dayOfWeek, selectedDate);
+      }
+    }
+
+    // Recalculate green days from the selected service rules.
     renderCalendar();
   });
 
-  // Kept for compatibility with older schedule code. The new rule is that all
-  // services can be booked on any open day.
+  // Kept for compatibility with older schedule code.
   function getSelectedServiceCategory() {
-    return null;
+    return getServiceTagFromName(getSelectedServiceName());
   }
 
   function generateTimeSlots(dayOfWeek) {
@@ -714,6 +725,42 @@
     return false;
   }
 
+  function getSelectedServiceName() {
+    const select = document.querySelector('select[name="serviceType"]');
+    return select ? select.value : '';
+  }
+
+  function getSupportedDaysForService(serviceName) {
+    if (!serviceName) return [];
+
+    const serviceTag = getServiceTagFromName(serviceName);
+    if (serviceTag === 'LOCATION ONLY') {
+      return ['Thu', 'Fri', 'Sat', 'Sun'];
+    }
+
+    // Mobile-capable and add-on services are available on all open days.
+    // Thu/Fri are mobile days; Sat/Sun are shop appointments.
+    return ['Thu', 'Fri', 'Sat', 'Sun'];
+  }
+
+  function isServiceAvailableOnDay(serviceName, dayOfWeek) {
+    return getSupportedDaysForService(serviceName).includes(dayOfWeek);
+  }
+
+  function clearSelectedDate(message) {
+    selectedDate = null;
+    selectedTime = null;
+    document.getElementById('summaryDate').textContent = 'Not selected';
+    document.getElementById('summaryTime').textContent = 'Not selected';
+
+    const timeMessage = document.getElementById('timeMessage');
+    const timeSlotsGrid = document.getElementById('timeSlotsGrid');
+    timeMessage.style.display = 'block';
+    timeMessage.textContent = message || 'Select a date to view available times';
+    timeSlotsGrid.innerHTML = '';
+    updateAddressFieldVisibility(getServiceTagFromName(getSelectedServiceName()));
+  }
+
   function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -738,6 +785,7 @@
     // Days of the month
     const et = getCurrentTimeET();
     const todayET = et.date;
+    const selectedService = getSelectedServiceName();
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayCell = document.createElement('button');
@@ -748,15 +796,23 @@
       const cellDate = new Date(year, month, day);
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][cellDate.getDay()];
 
-      // Disable: past date / closed day / every slot already taken or past.
-      const isClosed = cellDate < todayET || !businessHours[dayOfWeek];
-      const allSlotsUnavailable = !isClosed && !dayHasAvailability(cellDate, dayOfWeek);
-      if (isClosed || allSlotsUnavailable) {
+      // Disable: no service selected / past date / closed day / service not supported / all slots gone.
+      const isPastDate = cellDate < todayET;
+      const isClosed = !businessHours[dayOfWeek];
+      const serviceUnavailable = !selectedService || !isServiceAvailableOnDay(selectedService, dayOfWeek);
+      const allSlotsUnavailable = !isPastDate && !isClosed && !serviceUnavailable && !dayHasAvailability(cellDate, dayOfWeek);
+      if (isPastDate || isClosed || serviceUnavailable || allSlotsUnavailable) {
         dayCell.classList.add('disabled');
         dayCell.disabled = true;
-        if (allSlotsUnavailable) dayCell.title = 'All time slots are booked or past';
+        if (!selectedService) {
+          dayCell.title = 'Select a service first';
+        } else if (serviceUnavailable) {
+          dayCell.title = `${selectedService} is not available on this day`;
+        } else if (allSlotsUnavailable) {
+          dayCell.title = 'All time slots are booked or past';
+        }
       } else {
-        dayCell.classList.add('available'); // Mark available dates in light green
+        dayCell.classList.add('available'); // Mark dates that support the selected service in light green
         dayCell.addEventListener('click', () => selectDate(cellDate));
       }
 
@@ -774,8 +830,8 @@
     }
   }
 
-  // All services are available on every open day. Thu/Fri can be mobile
-  // unless the selected service is shop-only; Sat/Sun are shop appointments.
+  // Service options should always stay usable. The selected service controls
+  // which calendar days light up green.
   function filterServicesByDay(dayOfWeek) {
     const select = document.querySelector('select[name="serviceType"]');
     if (!select) return;
@@ -785,14 +841,25 @@
       opt.hidden = false;
       opt.disabled = false;
     });
+    select.disabled = false;
     updateAddressFieldVisibility(getServiceTagFromName(select.value));
   }
 
   function selectDate(date) {
+    const selectedService = getSelectedServiceName();
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+    if (!selectedService) {
+      showMessage('Please select a service type first', 'error');
+      return;
+    }
+    if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
+      showMessage('Please choose a date that supports this service', 'error');
+      return;
+    }
+
     selectedDate = date;
     selectedTime = null;
 
-    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     const dayName = monthNames[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
 
     document.getElementById('summaryDate').textContent = dayName;
@@ -1213,9 +1280,9 @@
     const firstItem = cart.items[0];
     console.log('[Booking] Loading cart item:', firstItem.serviceName);
 
-    // Pre-fill service type with first cart item
+    // Pre-fill service type with first cart item, but keep the dropdown editable.
     serviceDropdown.value = firstItem.serviceName;
-    serviceDropdown.disabled = true; // Disable dropdown since service is from cart
+    serviceDropdown.disabled = false;
 
     // Trigger change event to update summary and address field
     const event = new Event('change');
