@@ -295,7 +295,7 @@
           <div class="form-group" id="locationNoteGroup" style="display: none;">
             <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
               <strong style="color: var(--primary);" id="locationNoteTitle">Shop Service</strong><br>
-              <span id="locationNoteText">This appointment will be completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</span>
+              <span id="locationNoteText">Mobile detailing services available Thursday and Friday.<br>Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)</span>
             </div>
           </div>
 
@@ -303,16 +303,17 @@
             <label class="form-label">Service Type</label>
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
-              <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
-              <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
-              <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
-              <option value="Ceramic Coating">Ceramic Coating - $400 (Location Based)</option>
-              <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
-              <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
-              <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Mobile Add-On)</option>
-              <option value="Headlight Restoration">Headlight Restoration - $50 (Mobile Add-On)</option>
-              <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile Add-On)</option>
-              <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Based)</option>
+              <optgroup label="Mobile Detailing">
+                <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
+                <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
+                <option value="Car Wash">Car Wash - Starting from $85</option>
+                <option value="Premium Package">Premium Package - Starting from $170</option>
+                <option value="Ultra Premium">Ultra Premium - $335</option>
+              </optgroup>
+              <optgroup label="Location / Specialty Detailing">
+                <option value="Ceramic Coating">Ceramic Coating - $400</option>
+                <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250</option>
+              </optgroup>
             </select>
           </div>
 
@@ -660,9 +661,12 @@
   function getSupportedDaysForService(serviceName) {
     if (!serviceName) return [];
 
-    // All services can be scheduled Thursday through Sunday. Thursday and
-    // Friday can be mobile; weekend appointments are completed at the shop.
-    return ['Thu', 'Fri', 'Sat', 'Sun'];
+    const serviceTag = getServiceTagFromName(serviceName);
+    if (serviceTag === 'LOCATION ONLY') {
+      return ['Sat', 'Sun'];
+    }
+
+    return ['Thu', 'Fri'];
   }
 
   function isServiceAvailableOnDay(serviceName, dayOfWeek) {
@@ -1191,7 +1195,7 @@
     'Ultra Premium': 'MOBILE',
     'Pet Hair / Odor Elimination': 'EXTRA FEE',
     'Headlight Restoration': 'EXTRA FEE',
-    'Engine Bay Cleaning': 'MOBILE',
+    'Engine Bay Cleaning': 'EXTRA FEE',
     'Full Vehicle Polish': 'LOCATION ONLY'
   };
 
@@ -1250,16 +1254,16 @@
       serviceAddressInput.value = ''; // Clear previous address
       if (isShopOnlyService(selectedService)) {
         locationNoteTitle.textContent = 'Shop / Specialty Service';
-        locationNoteText.textContent = 'Specialty and longer details are completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
+        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
         locationNoteTitle.textContent = 'Weekend Shop Appointment';
-        locationNoteText.textContent = 'Weekend appointments run from 6 AM to 11 AM at 313 Lynne Lane, Mapleville by appointment only. No walk-ins. Mobile service is only available Thursday and Friday.';
+        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else if (!dayOfWeek) {
         locationNoteTitle.textContent = 'Choose a Date';
-        locationNoteText.textContent = 'Mobile service is available Thursday and Friday. Weekend and specialty appointments are at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
+        locationNoteText.innerHTML = 'Mobile detailing services available Thursday and Friday.<br>Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       } else {
         locationNoteTitle.textContent = 'Shop Appointment';
-        locationNoteText.textContent = 'This appointment will be completed at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
+        locationNoteText.innerHTML = 'Specialty detailing appointments weekends only by appointment. No walk-ins.<br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
       }
       console.log('[Booking] Address field hidden, shop note shown');
     }
