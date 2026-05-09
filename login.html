@@ -656,9 +656,13 @@
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Every sign-in lands on the customer site first. Staff accounts
-        // still keep their role and can open Dashboard from the nav.
-        window.location.href = '/';
+        // Send each account type to its correct view.
+        const role = data.user && data.user.role;
+        if (role === 'owner' || role === 'dev') {
+          window.location.href = '/app';
+        } else {
+          window.location.href = '/';
+        }
       } catch (error) {
         console.error('Google sign-in error:', error);
         alert('Sign-in failed: ' + error.message);
