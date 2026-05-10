@@ -1026,11 +1026,13 @@
   });
 
   // Logout handler
-  logoutBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to logout?')) {
-      auth.logout();
-    }
-  });
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to logout?')) {
+        auth.logout();
+      }
+    });
+  }
   
   // Format and display current Eastern Time in debug info
   function updateEasternTimeDisplay() {
