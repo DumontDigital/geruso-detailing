@@ -144,14 +144,14 @@
       <div class="sidebar-title">Admin Dashboard</div>
     </div>
     <div class="sidebar-nav">
-      <div class="sidebar-item active" onclick="showSection('overview')">📊 Overview</div>
-      <div class="sidebar-item" onclick="showSection('bookings')">📅 Bookings</div>
+      <div class="sidebar-item active" onclick="showSection('overview', this)">📊 Overview</div>
+      <div class="sidebar-item" onclick="showSection('bookings', this)">📅 Bookings</div>
       <!-- Owner-only sections (Services, Add-ons, Content)
            are hidden for dev role via JS below to limit dev access. -->
-      <div class="sidebar-item owner-only" onclick="showSection('services')">🔧 Services</div>
-      <div class="sidebar-item owner-only" onclick="showSection('addons')">➕ Add-ons</div>
-      <div class="sidebar-item" onclick="showSection('schedule')">⏰ Schedule</div>
-      <div class="sidebar-item owner-only" onclick="showSection('content')">📝 Content</div>
+      <div class="sidebar-item owner-only" onclick="showSection('services', this)">🔧 Services</div>
+      <div class="sidebar-item owner-only" onclick="showSection('addons', this)">➕ Add-ons</div>
+      <div class="sidebar-item" onclick="showSection('schedule', this)">⏰ Schedule</div>
+      <div class="sidebar-item owner-only" onclick="showSection('content', this)">📝 Content</div>
     </div>
     <!-- Sidebar footer removed — parent app.html top bar already
          provides Customer View + Logout, no need for a stray empty strip. -->
@@ -615,14 +615,16 @@
   }
 
   // Section navigation
-  function showSection(sectionName) {
+  function showSection(sectionName, activeItem) {
     // Hide all sections
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
 
     // Show selected section
-    document.getElementById(sectionName + '-section').classList.add('active');
-    event.target.classList.add('active');
+    const section = document.getElementById(sectionName + '-section');
+    if (!section) return;
+    section.classList.add('active');
+    if (activeItem) activeItem.classList.add('active');
 
     // Load section data
     if (sectionName === 'bookings') loadBookings();
