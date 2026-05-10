@@ -563,10 +563,14 @@
 
   let currentEditingBookingId = null;
 
+  function getCurrentToken() {
+    return localStorage.getItem('token') || token;
+  }
+
   function adminAuthHeaders(extraHeaders = {}) {
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getCurrentToken()}`,
       ...extraHeaders
     };
   }
@@ -633,7 +637,7 @@
   async function loadDashboard() {
     try {
       const res = await fetch('/api/admin/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to load dashboard');
 
@@ -655,7 +659,7 @@
       const query = new URLSearchParams({ status, search }).toString();
 
       const res = await fetch(`/api/admin/bookings?${query}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to load bookings');
 
@@ -692,7 +696,7 @@
   async function editBookingModal(bookingId) {
     try {
       const res = await fetch(`/api/admin/booking/${bookingId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to load booking');
 
@@ -740,10 +744,7 @@
     try {
       const res = await fetch(`/api/admin/booking/${currentEditingBookingId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: adminAuthHeaders(),
         body: JSON.stringify(data)
       });
 
@@ -822,7 +823,7 @@
     try {
       const res = await fetch(`/api/admin/booking/${bookingId}/mark-confirmed`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
 
       if (!res.ok) throw new Error('Failed to confirm booking');
@@ -842,7 +843,7 @@
     try {
       const res = await fetch(`/api/admin/booking/${bookingId}/cancel`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
 
       if (!res.ok) throw new Error('Failed to cancel booking');
@@ -929,7 +930,7 @@
   async function loadScheduleBlocks() {
     try {
       const res = await fetch('/api/owner/blocked-dates', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to load blocked schedule');
       const data = await res.json();
@@ -975,7 +976,7 @@
     try {
       const res = await fetch('/api/owner/block-date', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: adminAuthHeaders(),
         body: JSON.stringify(body)
       });
       const payload = await res.json().catch(() => ({}));
@@ -995,7 +996,7 @@
     try {
       const res = await fetch(`/api/owner/blocked-date/${encodeURIComponent(blockId)}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: adminAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to unblock schedule');
       loadScheduleBlocks();
@@ -1006,12 +1007,56 @@
 
   // Content management
   async function loadContent() {
-    // Load current content values
-    document.getElementById('businessPhone').value = '401-490-1236';
+    try {
+      const res = await fetch('/api/admin/settings', {
+        headers: adminAuthHeaders()
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
+
+      document.getElementById('businessPhone').value = data.business_phone || '401-490-1236';
+      document.getElementById('businessEmail').value = data.business_email || '';
+      document.getElementById('businessAddress').value = data.business_address || '313 Lynne Lane, Mapleville';
+      document.getElementById('heroText').value = data.homepage_headline || '';
+      document.getElementById('servicesText').value = data.homepage_subheadline || '';
+    } catch (error) {
+      alert('Failed to load content: ' + error.message);
+    }
   }
 
   async function saveContent() {
-    alert('✓ Content saved (functionality to be implemented)');
+    try {
+      const existingRes = await fetch('/api/admin/settings', {
+        headers: adminAuthHeaders()
+      });
+      const existing = existingRes.ok ? await existingRes.json().catch(() => ({})) : {};
+
+      const content = {
+        business_phone: document.getElementById('businessPhone').value,
+        business_email: document.getElementById('businessEmail').value,
+        business_address: document.getElementById('businessAddress').value,
+        homepage_headline: document.getElementById('heroText').value,
+        homepage_subheadline: document.getElementById('servicesText').value,
+        owner_email: existing.owner_email || '',
+        notification_email: existing.notification_email || '',
+        service_area: existing.service_area || '',
+        location_description: existing.location_description || '',
+        faq_text: existing.faq_text || ''
+      };
+
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: adminAuthHeaders(),
+        body: JSON.stringify(content)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
+
+      alert('✓ Content saved');
+      loadContent();
+    } catch (error) {
+      alert('Failed to save content: ' + error.message);
+    }
   }
 
   // Logout
