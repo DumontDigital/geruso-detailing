@@ -100,12 +100,9 @@ router.get('/bookings', staffOnly, async (req, res) => {
   try {
     const { status, search } = req.query;
 
-    // Get today's date in Eastern Time to filter out past dates
-    const today = getTodayInEasternTime();
-
-    let query = `SELECT * FROM bookings WHERE booking_date::date >= $1::date AND ${REAL_BOOKING_WHERE}`;
-    const params = [today];
-    let paramIndex = 2;
+    let query = `SELECT * FROM bookings WHERE ${REAL_BOOKING_WHERE}`;
+    const params = [];
+    let paramIndex = 1;
 
     if (status) {
       query += ` AND status = $${paramIndex}`;
