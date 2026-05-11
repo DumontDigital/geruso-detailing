@@ -74,6 +74,12 @@
     tbody tr { background: var(--light-bg2); }
     tbody tr:hover { background: rgba(0,255,65,0.05); }
 
+    .booking-primary { font-weight: 700; color: var(--text); line-height: 1.35; }
+    .booking-secondary { color: var(--text-muted); font-size: 12px; line-height: 1.4; margin-top: 4px; }
+    .location-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; border: 1px solid rgba(0,255,65,0.45); color: var(--primary); background: rgba(0,255,65,0.1); }
+    .location-pill.location { color: var(--text); border-color: var(--border); background: rgba(255,255,255,0.04); }
+    .location-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }
+
     .status-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-pending { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.4); }
     .status-confirmed { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
@@ -228,12 +234,13 @@
               <th>Time</th>
               <th>Customer</th>
               <th>Service</th>
+              <th>Location</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="bookingsTableBody">
-            <tr><td colspan="6">Loading...</td></tr>
+            <tr><td colspan="7">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -615,6 +622,33 @@
     })[char]);
   }
 
+  const locationOnlyServices = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
+
+  function getCleanServiceName(serviceType) {
+    return String(serviceType || '').split('-')[0].trim() || 'Service';
+  }
+
+  function getBookingLocationDetails(booking) {
+    const serviceName = getCleanServiceName(booking.service_type);
+    const address = String(booking.service_address || '').trim();
+    const isGerusoAddress = /313\s+lynne|mapleville/i.test(address);
+    const isLocationOnly = locationOnlyServices.has(serviceName) || isGerusoAddress;
+
+    if (isLocationOnly) {
+      return {
+        label: 'Geruso Location',
+        typeClass: 'location',
+        detail: ''
+      };
+    }
+
+    return {
+      label: 'Mobile',
+      typeClass: 'mobile',
+      detail: address || 'Address not provided'
+    };
+  }
+
   // Section navigation
   function showSection(sectionName, activeItem) {
     // Hide all sections
@@ -670,28 +704,42 @@
       const bookings = data.bookings || [];
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
-      tbody.innerHTML = bookings.map(b => `
-        <tr>
-          <td>${formatDateForDisplay(b.booking_date)}</td>
-          <td>${escapeHtml(b.booking_time)}</td>
-          <td>${escapeHtml(b.customer_name)}</td>
-          <td>${escapeHtml(String(b.service_type || '').split('-')[0].trim() || 'Service')}</td>
-          <td><span class="status-badge status-${escapeHtml(b.status)}">${escapeHtml(b.status)}</span></td>
-          <td><div class="action-buttons">
-            <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
-            <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
-            <button class="action-btn success" onclick="markCompletedRow('${b.id}')">Complete</button>
-            <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
-            <button class="action-btn error" onclick="deleteBookingRow('${b.id}')">Delete</button>
-          </div></td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = bookings.map(b => {
+        const serviceName = getCleanServiceName(b.service_type);
+        const location = getBookingLocationDetails(b);
+        return `
+          <tr>
+            <td>${formatDateForDisplay(b.booking_date)}</td>
+            <td>${escapeHtml(b.booking_time)}</td>
+            <td>
+              <div class="booking-primary">${escapeHtml(b.customer_name)}</div>
+              <div class="booking-secondary">${escapeHtml(b.customer_phone || 'No phone number')}</div>
+            </td>
+            <td>
+              <div class="booking-primary">${escapeHtml(serviceName)}</div>
+              <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')}</div>
+            </td>
+            <td>
+              <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
+              ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
+            </td>
+            <td><span class="status-badge status-${escapeHtml(b.status)}">${escapeHtml(b.status)}</span></td>
+            <td><div class="action-buttons">
+              <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
+              <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
+              <button class="action-btn success" onclick="markCompletedRow('${b.id}')">Complete</button>
+              <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
+              <button class="action-btn error" onclick="deleteBookingRow('${b.id}')">Delete</button>
+            </div></td>
+          </tr>
+        `;
+      }).join('');
     } catch (error) {
       console.error('Load bookings error:', error);
-      document.getElementById('bookingsTableBody').innerHTML = '<tr><td colspan="6" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
+      document.getElementById('bookingsTableBody').innerHTML = '<tr><td colspan="7" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
     }
   }
 
