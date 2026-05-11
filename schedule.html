@@ -311,6 +311,17 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Vehicle Type</label>
+            <select class="form-select" name="vehicleType" required>
+              <option value="">Select vehicle type...</option>
+              <option value="Car">Car</option>
+              <option value="Motorcycle">Motorcycle</option>
+              <option value="SUV">SUV</option>
+              <option value="Truck">Truck</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Service Type</label>
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
@@ -365,17 +376,6 @@
                 <span><strong>Headlight Restoration</strong> - $50 per headlight</span>
               </label>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Vehicle Type</label>
-            <select class="form-select" name="vehicleType" required>
-              <option value="">Select vehicle type...</option>
-              <option value="Car">Car</option>
-              <option value="Motorcycle">Motorcycle</option>
-              <option value="SUV">SUV</option>
-              <option value="Truck">Truck</option>
-            </select>
           </div>
 
           <div class="form-group">
@@ -503,6 +503,27 @@
     const priceElement = document.getElementById('summaryPrice');
     if (!priceElement) return;
     priceElement.textContent = serviceValue ? getServicePrice(serviceValue) : 'Not selected';
+  }
+
+  function getServiceOptionLabel(serviceName, vehicleType = getSelectedVehicleType()) {
+    const priceData = servicePriceMap[serviceName];
+    if (!priceData) return serviceName;
+
+    if (isTruckVehicle(vehicleType) && priceData.truckPrice) {
+      return `${serviceName} - ${priceData.truckDisplay || `$${priceData.truckPrice}`}`;
+    }
+
+    return `${serviceName} - ${priceData.display}`;
+  }
+
+  function updateServiceOptionPrices() {
+    const serviceSelect = document.querySelector('select[name="serviceType"]');
+    if (!serviceSelect) return;
+
+    ['Full Motorcycle Service', 'Interior Detailing', 'Car Wash', 'Premium Package', 'Ultra Premium', 'Ceramic Coating', 'Full Vehicle Polish'].forEach((serviceName) => {
+      const option = serviceSelect.querySelector(`option[value="${serviceName}"]`);
+      if (option) option.textContent = getServiceOptionLabel(serviceName);
+    });
   }
 
   // Get current time in Eastern Time
@@ -668,7 +689,11 @@
     renderCalendar();
   });
 
-  document.querySelector('select[name="vehicleType"]').addEventListener('change', updateSelectedServicePrice);
+  document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
+    updateServiceOptionPrices();
+    updateSelectedServicePrice();
+  });
+  updateServiceOptionPrices();
 
   // Kept for compatibility with older schedule code.
   function getSelectedServiceCategory() {
