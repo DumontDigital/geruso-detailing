@@ -266,10 +266,10 @@
     const SERVICE_CATALOG = {
       'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
       'Interior Detailing': { price: 100, tag: 'MOBILE' },
-      'Car Wash': { price: 85, tag: 'MOBILE' },
+      'Car Wash': { price: 85, truckPrice: 120, tag: 'MOBILE' },
       'Ceramic Coating': { price: 400, tag: 'LOCATION ONLY' },
-      'Premium Package': { price: 170, tag: 'MOBILE' },
-      'Ultra Premium': { price: 335, tag: 'MOBILE' },
+      'Premium Package': { price: 175, truckPrice: 215, tag: 'MOBILE' },
+      'Ultra Premium': { price: 335, truckPrice: 375, tag: 'MOBILE' },
       'Engine Bay Cleaning': { price: 75, tag: 'EXTRA FEE' },
       'Full Vehicle Polish': { price: 250, tag: 'LOCATION ONLY' },
       'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
@@ -368,7 +368,7 @@
       let total = 0;
       summaryItems.innerHTML = cart.items.map((item, index) => {
         const service = SERVICE_CATALOG[item.serviceName] || {};
-        const price = service.price || Number(item.price || 0);
+        const price = Number(item.price || 0) || service.price || 0;
         const quantity = Math.max(1, Number(item.quantity || 1));
         const lineTotal = price * quantity;
         total += lineTotal;

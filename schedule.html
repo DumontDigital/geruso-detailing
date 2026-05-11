@@ -318,7 +318,7 @@
                 <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
                 <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
                 <option value="Car Wash">Car Wash - Starting from $85</option>
-                <option value="Premium Package">Premium Package - Starting from $170</option>
+                <option value="Premium Package">Premium Package - Starting from $175</option>
                 <option value="Ultra Premium">Ultra Premium - $335</option>
               </optgroup>
               <optgroup label="Geruso Location Only">
@@ -447,10 +447,10 @@
   const servicePriceMap = {
     'Full Motorcycle Service': { price: 70, display: '$70' },
     'Interior Detailing': { price: 100, display: 'Starting from $100' },
-    'Car Wash': { price: 85, display: 'Starting from $85' },
+    'Car Wash': { price: 85, truckPrice: 120, display: 'Starting from $85', truckDisplay: '$120 for trucks' },
     'Ceramic Coating': { price: 400, display: '$400' },
-    'Premium Package': { price: 170, display: 'Starting from $170' },
-    'Ultra Premium': { price: 335, display: '$335' },
+    'Premium Package': { price: 175, truckPrice: 215, display: 'Starting from $175', truckDisplay: '$215 for trucks' },
+    'Ultra Premium': { price: 335, truckPrice: 375, display: '$335', truckDisplay: '$375 for trucks' },
     'Pet Hair / Odor Elimination': { price: 50, display: '$50 Extra Fee' },
     'Headlight Restoration': { price: 50, display: '$50 per Headlight' },
     'Engine Bay Cleaning': { price: 75, display: '$75' },
@@ -458,18 +458,33 @@
   };
 
   // Extract price display from service type
-  function getServicePrice(serviceType) {
+  function isTruckVehicle(vehicleType) {
+    return String(vehicleType || '').toLowerCase() === 'truck';
+  }
+
+  function getSelectedVehicleType() {
+    const select = document.querySelector('select[name="vehicleType"]');
+    return select ? select.value : '';
+  }
+
+  function getServicePrice(serviceType, vehicleType = getSelectedVehicleType()) {
     for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
       if (serviceType.includes(serviceName)) {
+        if (isTruckVehicle(vehicleType) && priceData.truckPrice) {
+          return priceData.truckDisplay || `$${priceData.truckPrice}`;
+        }
         return priceData.display;
       }
     }
     return 'Contact for pricing';
   }
 
-  function getServiceNumericPrice(serviceType) {
+  function getServiceNumericPrice(serviceType, vehicleType = getSelectedVehicleType()) {
     for (const [serviceName, priceData] of Object.entries(servicePriceMap)) {
       if (serviceType.includes(serviceName)) {
+        if (isTruckVehicle(vehicleType) && priceData.truckPrice) {
+          return priceData.truckPrice;
+        }
         return priceData.price;
       }
     }
@@ -481,6 +496,13 @@
       serviceName: input.value,
       price: Number(input.dataset.price || 0),
     }));
+  }
+
+  function updateSelectedServicePrice() {
+    const serviceValue = document.querySelector('select[name="serviceType"]').value;
+    const priceElement = document.getElementById('summaryPrice');
+    if (!priceElement) return;
+    priceElement.textContent = serviceValue ? getServicePrice(serviceValue) : 'Not selected';
   }
 
   // Get current time in Eastern Time
@@ -645,6 +667,8 @@
     // Recalculate green days from the selected service rules.
     renderCalendar();
   });
+
+  document.querySelector('select[name="vehicleType"]').addEventListener('change', updateSelectedServicePrice);
 
   // Kept for compatibility with older schedule code.
   function getSelectedServiceCategory() {
@@ -1152,7 +1176,7 @@
         // sees what they reserved, then either send them to Stripe (if
         // configured) or open the cart modal for review.
         const serviceName = bookingData.serviceType;
-        const price = getServiceNumericPrice(serviceName);
+        const price = getServiceNumericPrice(serviceName, bookingData.vehicleType);
         const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
         const cartUpdated = addBookedItemsToCart(serviceName, price, serviceTag, selectedAddOns);
         if (!cartUpdated) {

@@ -11,24 +11,30 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const servicePrice = {
   'Full Motorcycle Service': { price: 70, startingFrom: false },
   'Interior Detailing': { price: 100, startingFrom: true },
-  'Car Wash': { price: 85, startingFrom: true },
+  'Car Wash': { price: 85, truckPrice: 120, startingFrom: true },
   'Ceramic Coating': { price: 400, startingFrom: false },
-  'Premium Package': { price: 170, startingFrom: true },
-  'Ultra Premium': { price: 335, startingFrom: false },
+  'Premium Package': { price: 175, truckPrice: 215, startingFrom: true },
+  'Ultra Premium': { price: 335, truckPrice: 375, startingFrom: false },
   'Pet Hair / Odor Elimination': { price: 50, startingFrom: false, label: '$50 Extra Fee' },
   'Headlight Restoration': { price: 50, startingFrom: false, label: '$50 per Headlight' },
   'Engine Bay Cleaning': { price: 75, startingFrom: false },
   'Full Vehicle Polish': { price: 250, startingFrom: true }
 };
 
+function isTruckVehicle(vehicleType) {
+  return String(vehicleType || '').trim().toLowerCase() === 'truck';
+}
+
 // Extract price from service type string and return formatted price display
-function extractPrice(serviceType) {
+function extractPrice(serviceType, vehicleType) {
   console.log('[Price Extraction] Extracting price from:', serviceType);
 
   // Try exact match first
   for (const [serviceName, priceData] of Object.entries(servicePrice)) {
     if (serviceType.includes(serviceName)) {
-      const { price, startingFrom, label } = priceData;
+      const truckSelected = isTruckVehicle(vehicleType) && priceData.truckPrice;
+      const price = truckSelected ? priceData.truckPrice : priceData.price;
+      const { startingFrom, label } = priceData;
 
       if (label) {
         console.log('[Price Extraction] Found label:', label);
@@ -53,9 +59,12 @@ function extractPrice(serviceType) {
 }
 
 // Extract just the numeric price for database storage
-function extractNumericPrice(serviceType) {
+function extractNumericPrice(serviceType, vehicleType) {
   for (const [serviceName, priceData] of Object.entries(servicePrice)) {
     if (serviceType.includes(serviceName)) {
+      if (isTruckVehicle(vehicleType) && priceData.truckPrice) {
+        return priceData.truckPrice;
+      }
       return priceData.price;
     }
   }
@@ -146,10 +155,10 @@ const sendQuoteEmail = async (quoteData) => {
 };
 
 const sendBookingConfirmation = async (bookingData) => {
-  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, hasPhoto } = bookingData;
+  const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, vehicleType, hasPhoto } = bookingData;
 
   // Extract price from service type
-  const priceDisplay = extractPrice(serviceType);
+  const priceDisplay = extractPrice(serviceType, vehicleType);
 
   const htmlContent = `
     <h2>Booking Confirmation - Geruso Detailing</h2>
@@ -195,7 +204,7 @@ const sendOwnerNotification = async (bookingData) => {
   const { customerName, customerEmail, customerPhone, bookingDate, bookingTime, serviceType, serviceAddress, vehicleType, notes, hasPhoto } = bookingData;
 
   // Extract price from service type
-  const priceDisplay = extractPrice(serviceType);
+  const priceDisplay = extractPrice(serviceType, vehicleType);
 
   console.log('[Owner Notification] Sending owner notification for booking:', { customerName, bookingDate, bookingTime });
 

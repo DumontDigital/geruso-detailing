@@ -823,18 +823,25 @@
   // Mark booking as confirmed
   async function markConfirmed(bookingId) {
     try {
-      const res = await fetch(`/api/admin/booking/${bookingId}/mark-confirmed`, {
+      let res = await fetch(`/api/admin/booking/${encodeURIComponent(bookingId)}/mark-confirmed`, {
         method: 'POST',
         headers: adminAuthHeaders()
       });
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        res = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/confirm`, {
+          method: 'POST',
+          headers: adminAuthHeaders()
+        });
+      }
+      const body = await res.json().catch(() => ({}));
 
-      if (!res.ok) throw new Error('Failed to confirm booking');
+      if (!res.ok) throw new Error(body.error || `Server returned ${res.status}`);
 
       alert('✓ Booking confirmed');
       loadDashboard();
       loadBookings();
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Failed to confirm: ' + error.message);
     }
   }
 
