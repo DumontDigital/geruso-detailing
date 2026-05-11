@@ -803,8 +803,8 @@
         method: 'POST',
         headers: adminAuthHeaders()
       });
-      if (res.status === 401 || res.status === 403 || res.status === 404) {
-        // /mark-completed may not exist on admin route — fall back to owner endpoint
+      if (res.status === 401 || res.status === 403) {
+        // Fall back to the owner endpoint with the same authenticated token.
         res = await fetch(`/api/owner/booking/${encodeURIComponent(bookingId)}/complete`, {
           method: 'POST',
           headers: adminAuthHeaders()

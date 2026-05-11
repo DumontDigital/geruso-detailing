@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../db');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, requireRole } = require('../middleware/auth');
 const { getTodayInEasternTime } = require('../utils/availability');
 
 const router = express.Router();
@@ -15,6 +15,8 @@ const REAL_BOOKING_WHERE = `
 const ACTIVE_BOOKING_WHERE = `
   status NOT IN ('cancelled', 'deleted', 'failed', 'expired', 'no-show')
 `;
+
+const staffOnly = [verifyToken, requireRole(['owner', 'dev'])];
 
 function getCurrentWeekRange(today, addDaysToEasternDate) {
   const [year, month, day] = today.split('-').map(Number);
@@ -94,7 +96,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 });
 
 // Get all bookings (admin only)
-router.get('/bookings', verifyToken, async (req, res) => {
+router.get('/bookings', staffOnly, async (req, res) => {
   try {
     const { status, search } = req.query;
 
@@ -193,7 +195,7 @@ router.post('/reset-complete-schedule', verifyToken, async (req, res) => {
 // ===== BOOKING MANAGEMENT ENDPOINTS =====
 
 // Get a single booking (admin only)
-router.get('/booking/:id', verifyToken, async (req, res) => {
+router.get('/booking/:id', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -213,7 +215,7 @@ router.get('/booking/:id', verifyToken, async (req, res) => {
 });
 
 // Update a booking (admin only)
-router.put('/booking/:id', verifyToken, async (req, res) => {
+router.put('/booking/:id', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const { customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, status } = req.body;
@@ -242,13 +244,18 @@ router.put('/booking/:id', verifyToken, async (req, res) => {
 });
 
 // Delete a booking (admin only)
-router.delete('/booking/:id', verifyToken, async (req, res) => {
+router.delete('/booking/:id', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
+    const today = getTodayInEasternTime();
 
     const result = await pool.query(
-      'DELETE FROM bookings WHERE id = $1 RETURNING *',
-      [id]
+      `DELETE FROM bookings
+       WHERE id = $1
+       AND booking_date::date >= $2::date
+       AND ${REAL_BOOKING_WHERE}
+       RETURNING *`,
+      [id, today]
     );
 
     if (result.rows.length === 0) {
@@ -266,7 +273,7 @@ router.delete('/booking/:id', verifyToken, async (req, res) => {
 });
 
 // Mark booking as confirmed (admin only)
-router.post('/booking/:id/mark-confirmed', verifyToken, async (req, res) => {
+router.post('/booking/:id/mark-confirmed', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -291,7 +298,7 @@ router.post('/booking/:id/mark-confirmed', verifyToken, async (req, res) => {
 });
 
 // Cancel a booking (admin only)
-router.post('/booking/:id/cancel', verifyToken, async (req, res) => {
+router.post('/booking/:id/cancel', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -316,13 +323,19 @@ router.post('/booking/:id/cancel', verifyToken, async (req, res) => {
 });
 
 // Mark booking as completed (admin only)
-router.post('/booking/:id/mark-completed', verifyToken, async (req, res) => {
+router.post('/booking/:id/mark-completed', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
+    const today = getTodayInEasternTime();
 
     const result = await pool.query(
-      'UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
-      ['completed', id]
+      `UPDATE bookings
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       AND booking_date::date >= $3::date
+       AND ${REAL_BOOKING_WHERE}
+       RETURNING *`,
+      ['completed', id, today]
     );
 
     if (result.rows.length === 0) {
