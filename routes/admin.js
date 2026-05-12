@@ -244,15 +244,13 @@ router.put('/booking/:id', staffOnly, async (req, res) => {
 router.delete('/booking/:id', staffOnly, async (req, res) => {
   try {
     const { id } = req.params;
-    const today = getTodayInEasternTime();
 
     const result = await pool.query(
       `DELETE FROM bookings
        WHERE id = $1
-       AND booking_date::date >= $2::date
        AND ${REAL_BOOKING_WHERE}
        RETURNING *`,
-      [id, today]
+      [id]
     );
 
     if (result.rows.length === 0) {
