@@ -25,6 +25,62 @@ function isTruckVehicle(vehicleType) {
   return String(vehicleType || '').trim().toLowerCase() === 'truck';
 }
 
+function toPlainDateString(dateValue) {
+  if (!dateValue) return '';
+  if (dateValue instanceof Date) return dateValue.toISOString().split('T')[0];
+  return String(dateValue).split('T')[0];
+}
+
+function parseBookingTime(timeValue) {
+  const match = String(timeValue || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2] || '0', 10);
+  const meridiem = match[3].toUpperCase();
+
+  if (meridiem === 'PM' && hour !== 12) hour += 12;
+  if (meridiem === 'AM' && hour === 12) hour = 0;
+
+  return { hour, minute };
+}
+
+function toGoogleCalendarDateTime(dateValue, timeValue, addMinutes = 0) {
+  const date = toPlainDateString(dateValue);
+  const time = parseBookingTime(timeValue);
+  if (!date || !time) return null;
+
+  const [year, month, day] = date.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day, time.hour, time.minute + addMinutes, 0);
+  const pad = value => String(value).padStart(2, '0');
+
+  return `${localDate.getFullYear()}${pad(localDate.getMonth() + 1)}${pad(localDate.getDate())}T${pad(localDate.getHours())}${pad(localDate.getMinutes())}00`;
+}
+
+function buildCalendarLink(bookingData) {
+  const start = toGoogleCalendarDateTime(bookingData.bookingDate, bookingData.bookingTime);
+  const end = toGoogleCalendarDateTime(bookingData.bookingDate, bookingData.bookingTime, 120);
+  if (!start || !end) return '';
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Geruso Detailing - ${bookingData.serviceType || 'Detailing Appointment'}`,
+    dates: `${start}/${end}`,
+    ctz: 'America/New_York',
+    details: [
+      `Customer: ${bookingData.customerName || ''}`,
+      `Phone: ${bookingData.customerPhone || ''}`,
+      `Email: ${bookingData.customerEmail || ''}`,
+      `Service: ${bookingData.serviceType || ''}`,
+      `Vehicle: ${bookingData.vehicleType || 'Not specified'}`,
+      bookingData.notes ? `Notes: ${bookingData.notes}` : ''
+    ].filter(Boolean).join('\n'),
+    location: bookingData.serviceAddress || ''
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 // Extract price from service type string and return formatted price display
 function extractPrice(serviceType, vehicleType) {
   console.log('[Price Extraction] Extracting price from:', serviceType);
@@ -76,8 +132,9 @@ function extractNumericPrice(serviceType, vehicleType) {
 // Format date string (YYYY-MM-DD) to readable format WITHOUT UTC conversion
 function formatBookingDateForEmail(dateStr) {
   try {
+    const plainDate = toPlainDateString(dateStr);
     // Parse YYYY-MM-DD string directly (no UTC conversion)
-    const [year, month, day] = dateStr.split('-');
+    const [year, month, day] = plainDate.split('-');
 
     // Create date object using local timezone components ONLY
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -201,10 +258,11 @@ const sendBookingConfirmation = async (bookingData) => {
 };
 
 const sendOwnerNotification = async (bookingData) => {
-  const { customerName, customerEmail, customerPhone, bookingDate, bookingTime, serviceType, serviceAddress, vehicleType, notes, hasPhoto } = bookingData;
+  const { customerName, customerEmail, customerPhone, bookingDate, bookingTime, serviceType, serviceAddress, vehicleType, notes, hasPhoto, paymentConfirmed } = bookingData;
 
   // Extract price from service type
   const priceDisplay = extractPrice(serviceType, vehicleType);
+  const calendarLink = buildCalendarLink(bookingData);
 
   console.log('[Owner Notification] Sending owner notification for booking:', { customerName, bookingDate, bookingTime });
 
@@ -220,8 +278,9 @@ const sendOwnerNotification = async (bookingData) => {
   }
 
   const htmlContent = `
-    <h2>New Booking Received - Geruso Detailing</h2>
-    <p>A new booking has been submitted. Here are the complete details:</p>
+    <h2>${paymentConfirmed ? 'Paid Booking Confirmed' : 'New Booking Received'} - Geruso Detailing</h2>
+    <p>${paymentConfirmed ? 'A customer completed payment through Stripe. Here are the complete appointment details:' : 'A new booking has been submitted. Here are the complete details:'}</p>
+    ${calendarLink ? `<p><a href="${calendarLink}" style="display:inline-block;padding:12px 18px;background:#00ff41;color:#000;font-weight:700;text-decoration:none;border-radius:8px;">Add to Google Calendar</a></p>` : ''}
     <hr>
     <p><strong>Customer Name:</strong> ${customerName}</p>
     <p><strong>Email:</strong> <a href="mailto:${customerEmail}">${customerEmail}</a></p>
@@ -243,7 +302,7 @@ const sendOwnerNotification = async (bookingData) => {
     const result = await resend.emails.send({
       from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: process.env.OWNER_EMAIL,
-      subject: `New Booking Received - ${customerName} - ${bookingDate}`,
+      subject: `${paymentConfirmed ? 'Paid Booking Confirmed' : 'New Booking Received'} - ${customerName} - ${formatBookingDateForEmail(bookingDate)}`,
       html: htmlContent,
     });
 

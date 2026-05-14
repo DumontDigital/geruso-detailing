@@ -47,34 +47,14 @@ function closeCartModal() {
  * Check if service categories can be mixed in cart
  */
 function canAddToCart(newServiceTag) {
-  const cart = getCart();
-
-  if (cart.items.length === 0) return true; // Empty cart, can add anything
-
-  // Add-ons can ride with one main package, and customers can add as many as needed.
-  if (newServiceTag === 'EXTRA FEE') return true;
-
-  const mainPackages = cart.items.filter(item => item.serviceTag === 'MOBILE' || item.serviceTag === 'LOCATION ONLY');
-  if (mainPackages.length === 0) return true;
-
-  // Only one main mobile OR one main location package per cart.
-  return false;
+  return true;
 }
 
 /**
  * Get category conflict message
  */
 function getCategoryConflictMessage(newServiceTag) {
-  const cart = getCart();
-  const existingMain = cart.items.find(item => item.serviceTag === 'MOBILE' || item.serviceTag === 'LOCATION ONLY');
-
-  if (newServiceTag === 'EXTRA FEE') return '';
-
-  if (existingMain) {
-    const existingType = existingMain.serviceTag === 'LOCATION ONLY' ? 'location-based' : 'mobile';
-    return `Your cart already has one ${existingType} package. Please remove it before choosing another main package. Add-ons can still be added.`;
-  }
-  return 'Only one main package can be added per cart. Add-ons can still be added.';
+  return '';
 }
 
 /**
@@ -239,8 +219,9 @@ function updateCartModalDisplay() {
   let html = '';
   html += '<div style="color: var(--text-muted); font-size: 13px; line-height: 1.5; padding: 12px; border-bottom: 1px solid var(--border);">Add-ons are listed with your main detail and charged together at checkout.</div>';
   cart.items.forEach(item => {
-    const tagColor = item.serviceTag === 'LOCATION ONLY' ? 'rgba(100,200,255,0.1)' : item.serviceTag === 'EXTRA FEE' ? 'rgba(255,150,100,0.1)' : 'rgba(0,255,65,0.1)';
-    const tagTextColor = item.serviceTag === 'LOCATION ONLY' ? '#64c8ff' : item.serviceTag === 'EXTRA FEE' ? '#ff9664' : '#00FF41';
+    const tagColor = item.serviceTag === 'LOCATION ONLY' ? 'rgba(0,255,65,0.1)' : item.serviceTag === 'EXTRA FEE' ? 'rgba(255,150,100,0.1)' : 'rgba(0,255,65,0.1)';
+    const tagTextColor = item.serviceTag === 'LOCATION ONLY' ? '#00FF41' : item.serviceTag === 'EXTRA FEE' ? '#ff9664' : '#00FF41';
+    const displayTag = item.serviceTag === 'LOCATION ONLY' ? 'GERUSO LOCATION' : item.serviceTag;
     const quantity = item.quantity || 1;
     const itemTotal = (item.price * quantity).toFixed(2);
 
@@ -248,7 +229,7 @@ function updateCartModalDisplay() {
       <div class="cart-item" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid var(--border);">
         <div style="flex: 1;">
           <div style="font-weight: 600; color: var(--text);">${item.serviceName} <span style="color: var(--text-muted); font-size: 13px;">x${quantity}</span></div>
-          <div style="font-size: 12px; padding: 4px 8px; background: ${tagColor}; color: ${tagTextColor}; border-radius: 4px; display: inline-block; margin-bottom: 6px; margin-top: 4px;">${item.serviceTag}</div>
+          <div style="font-size: 12px; padding: 4px 8px; background: ${tagColor}; color: ${tagTextColor}; border-radius: 4px; display: inline-block; margin-bottom: 6px; margin-top: 4px;">${displayTag}</div>
           <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">$${item.price.toFixed(2)} each</div>
           <div style="display: flex; gap: 6px; align-items: center;">
             <button onclick="decreaseQuantity('${item.id}');"

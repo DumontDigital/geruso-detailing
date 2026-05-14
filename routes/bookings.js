@@ -15,7 +15,7 @@ router.get('/public/booked-slots', async (req, res) => {
     console.log('[Bookings API] GET /public/booked-slots called');
 
     const result = await pool.query(
-      `SELECT booking_date, booking_time FROM bookings
+      `SELECT booking_date, booking_time, service_type, service_address FROM bookings
        WHERE status IN ('pending', 'confirmed', 'paid', 'completed')
        AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
       []
@@ -27,14 +27,21 @@ router.get('/public/booked-slots', async (req, res) => {
 
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
+    const blockedDates = {};
     result.rows.forEach(booking => {
       // booking_date is already in YYYY-MM-DD format from database, don't convert
       const dateStr = booking.booking_date.toString().split('T')[0]; // Handle both string and date types from DB
       const key = `${dateStr} ${booking.booking_time}`;
       bookedSlots[key] = true;
+      const serviceType = String(booking.service_type || '');
+      const serviceAddress = String(booking.service_address || '');
+      const isLongMobileBooking = /(Ceramic Coating|Full Vehicle Polish)/i.test(serviceType)
+        && !/313\s+Lynne\s+Lane|Mapleville/i.test(serviceAddress);
+      if (isLongMobileBooking) {
+        blockedDates[dateStr] = true;
+      }
       console.log('[Bookings API] Real customer booked slot:', key);
     });
-    const blockedDates = {};
     blockedResult.rows.forEach(block => {
       const dateStr = block.blocked_date.toString().split('T')[0];
       if (block.blocked_time) {
@@ -64,6 +71,55 @@ async function isSlotBlocked(bookingDate, bookingTime) {
   return result.rows.length > 0;
 }
 
+function isLongMobileService(serviceType, serviceAddress) {
+  return /(Ceramic Coating|Full Vehicle Polish)/i.test(String(serviceType || ''))
+    && !/313\s+Lynne\s+Lane|Mapleville/i.test(String(serviceAddress || ''));
+}
+
+async function hasActiveBookingOnDate(bookingDate) {
+  const result = await pool.query(
+    `SELECT id FROM bookings
+     WHERE booking_date::date = $1::date
+     AND status IN ('pending', 'confirmed', 'paid', 'completed')
+     AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')
+     LIMIT 1`,
+    [bookingDate]
+  );
+  return result.rows.length > 0;
+}
+
+async function hasLongMobileBookingOnDate(bookingDate) {
+  const result = await pool.query(
+    `SELECT id FROM bookings
+     WHERE booking_date::date = $1::date
+     AND status IN ('pending', 'confirmed', 'paid', 'completed')
+     AND service_type ~* '(Ceramic Coating|Full Vehicle Polish)'
+     AND service_address !~* '(313\\s+Lynne\\s+Lane|Mapleville)'
+     AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')
+     LIMIT 1`,
+    [bookingDate]
+  );
+  return result.rows.length > 0;
+}
+
+async function enforceLongMobileDayRules({ bookingDate, bookingTime, serviceType, serviceAddress }) {
+  const isLongMobile = isLongMobileService(serviceType, serviceAddress);
+
+  if (isLongMobile && !['12:00 PM', '1:00 PM'].includes(bookingTime)) {
+    return 'Ceramic Coating and Full Vehicle Polish mobile appointments can only start at 12:00 PM or 1:00 PM.';
+  }
+
+  if (isLongMobile && await hasActiveBookingOnDate(bookingDate)) {
+    return 'This mobile day already has a booking. Please choose another date for Ceramic Coating or Full Vehicle Polish.';
+  }
+
+  if (!isLongMobile && await hasLongMobileBookingOnDate(bookingDate)) {
+    return 'This mobile day is reserved for a 6+ hour Ceramic Coating or Full Vehicle Polish appointment.';
+  }
+
+  return '';
+}
+
 // Create Stripe checkout session for booking (public)
 // Allows booking even without Stripe - will show message if Stripe not configured
 router.post('/checkout', async (req, res) => {
@@ -85,6 +141,14 @@ router.post('/checkout', async (req, res) => {
       return res.status(409).json({
         error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
         code: 'TIME_SLOT_BLOCKED'
+      });
+    }
+
+    const longMobileRuleError = await enforceLongMobileDayRules({ bookingDate, bookingTime, serviceType, serviceAddress });
+    if (longMobileRuleError) {
+      return res.status(409).json({
+        error: longMobileRuleError,
+        code: 'LONG_MOBILE_DAY_BLOCKED'
       });
     }
 
@@ -230,6 +294,14 @@ router.post('/', async (req, res) => {
       return res.status(409).json({
         error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
         code: 'TIME_SLOT_BLOCKED'
+      });
+    }
+
+    const longMobileRuleError = await enforceLongMobileDayRules({ bookingDate, bookingTime, serviceType, serviceAddress });
+    if (longMobileRuleError) {
+      return res.status(409).json({
+        error: longMobileRuleError,
+        code: 'LONG_MOBILE_DAY_BLOCKED'
       });
     }
 

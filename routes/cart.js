@@ -9,11 +9,11 @@ const SERVICE_CATALOG = {
   'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
   'Interior Detailing': { price: 100, tag: 'MOBILE' },
   'Car Wash': { price: 85, truckPrice: 120, tag: 'MOBILE' },
-  'Ceramic Coating': { price: 400, tag: 'LOCATION ONLY' },
+  'Ceramic Coating': { price: 400, tag: 'MOBILE' },
   'Premium Package': { price: 175, truckPrice: 215, tag: 'MOBILE' },
   'Ultra Premium': { price: 335, truckPrice: 375, tag: 'MOBILE' },
   'Engine Bay Cleaning': { price: 75, tag: 'EXTRA FEE' },
-  'Full Vehicle Polish': { price: 250, tag: 'LOCATION ONLY' },
+  'Full Vehicle Polish': { price: 250, tag: 'MOBILE' },
   'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
   'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
 };
@@ -31,21 +31,21 @@ function normalizeCartItems(items) {
       const requestedPrice = Number(item.price || 0);
       const allowedPrices = [catalogItem.price, catalogItem.truckPrice].filter(Boolean);
       const price = allowedPrices.includes(requestedPrice) ? requestedPrice : catalogItem.price;
+      const requestedTag = String(item.serviceTag || item.tag || '').trim().toUpperCase();
+      const tag = ['MOBILE', 'LOCATION ONLY', 'EXTRA FEE'].includes(requestedTag)
+        ? requestedTag
+        : catalogItem.tag;
       return {
         name,
         quantity,
         price,
-        tag: catalogItem.tag,
+        tag,
       };
     })
     .filter(Boolean);
 }
 
 function validateCartItems(cartItems) {
-  const mainItems = cartItems.filter(item => item.tag === 'MOBILE' || item.tag === 'LOCATION ONLY');
-  if (mainItems.length > 1) {
-    return 'Please keep only one main package in the cart. You can add any amount of add-ons to that package.';
-  }
   return '';
 }
 

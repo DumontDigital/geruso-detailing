@@ -111,8 +111,10 @@
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
     .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
     .form-textarea { resize: vertical; min-height: 80px; }
-    .service-mode-lock { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; pointer-events: none; }
-    .service-mode-option { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px 14px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: 0.55; }
+    .service-mode-lock { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .service-mode-option { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px 14px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: 0.75; cursor: pointer; transition: all 0.2s; }
+    .service-mode-option:hover { border-color: var(--primary); color: var(--text); opacity: 1; }
+    .service-mode-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .service-mode-option.active { border-color: var(--primary); background: rgba(0,255,65,0.1); color: var(--text); opacity: 1; }
     .service-mode-dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--border); background: transparent; flex: 0 0 auto; }
     .service-mode-option.active .service-mode-dot { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 10px rgba(0,255,65,0.45); }
@@ -229,7 +231,7 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Mobile detailing services are available only Thursday and Friday. Location detailing services are available Saturday and Sunday at 313 Lynne Lane, Mapleville by appointment only. No walk-ins.</p>
+    <p class="section-sub">Choose Mobile if you want Geruso Detailing to come to you, or choose Geruso Location for 313 Lynne Lane, Mapleville, Rhode Island 02938. Mobile appointments are available Thursday and Friday. Geruso Location appointments are available Saturday and Sunday by appointment only. No walk-ins.</p>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
@@ -325,37 +327,43 @@
             <label class="form-label">Service Type</label>
             <select class="form-select" name="serviceType" required>
               <option value="">Select a service...</option>
-              <optgroup label="Mobile and Location">
+              <optgroup label="Services">
                 <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
                 <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
                 <option value="Car Wash">Car Wash - Starting from $85</option>
                 <option value="Premium Package">Premium Package - Starting from $175</option>
                 <option value="Ultra Premium">Ultra Premium - $335</option>
-              </optgroup>
-              <optgroup label="Geruso Location Only">
                 <option value="Ceramic Coating">Ceramic Coating - $400</option>
                 <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250</option>
               </optgroup>
             </select>
           </div>
 
-          <div class="form-group" id="serviceModeGroup" style="display: none;">
+          <div class="form-group" id="serviceModeGroup">
             <label class="form-label">Service Location</label>
-            <div class="service-mode-lock" aria-label="Service location is automatically set by the selected service">
-              <div class="service-mode-option" id="mobileModeOption">
+            <div class="service-mode-lock" aria-label="Choose service location">
+              <div class="service-mode-option active" id="mobileModeOption" role="button" tabindex="0" data-service-mode="mobile">
                 <span class="service-mode-dot"></span>
                 <div>
                   <strong>Mobile</strong>
                   <span>We come to you</span>
                 </div>
               </div>
-              <div class="service-mode-option" id="locationModeOption">
+              <div class="service-mode-option" id="locationModeOption" role="button" tabindex="0" data-service-mode="location">
                 <span class="service-mode-dot"></span>
                 <div>
                   <strong>Geruso Location</strong>
                   <span>313 Lynne Lane, Mapleville, Rhode Island</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="additionalServicesGroup" style="display: none;">
+            <label class="form-label">Additional Packages (Optional)</label>
+            <div class="add-on-box">
+              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish booked mobile only show 12:00 PM and 1:00 PM because they take 6+ hours.</div>
+              <div id="additionalServicesList"></div>
             </div>
           </div>
 
@@ -556,8 +564,23 @@
   let currentDate = new Date();
   let selectedDate = null;
   let selectedTime = null;
+  let selectedServiceMode = 'mobile';
   let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
   let blockedDates = {}; // Store fully blocked days: { 'YYYY-MM-DD': true }
+
+  const SHOP_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
+  const MOBILE_SERVICE_DAYS = ['Thu', 'Fri'];
+  const LOCATION_SERVICE_DAYS = ['Sat', 'Sun'];
+  const LONG_MOBILE_SERVICE_NAMES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
+  const COMBINABLE_SERVICE_NAMES = [
+    'Full Motorcycle Service',
+    'Interior Detailing',
+    'Car Wash',
+    'Premium Package',
+    'Ultra Premium',
+    'Ceramic Coating',
+    'Full Vehicle Polish'
+  ];
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const businessHours = {
@@ -652,15 +675,14 @@
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
     updateServiceModeIndicator(serviceValue);
+    updateAdditionalServicesList();
 
     if (serviceValue) {
       summaryElement.textContent = serviceValue;
       const priceDisplay = getServicePrice(serviceValue);
       priceElement.textContent = priceDisplay;
 
-      // Get the service tag and update address field visibility
-      const serviceTag = getServiceTagFromName(serviceValue);
-      updateAddressFieldVisibility(serviceTag);
+      updateAddressFieldVisibility();
     } else {
       summaryElement.textContent = 'Not selected';
       priceElement.textContent = 'Not selected';
@@ -668,8 +690,10 @@
       // Hide address field if no service selected
       const addressFieldGroup = document.getElementById('addressFieldGroup');
       const locationNoteGroup = document.getElementById('locationNoteGroup');
+      const additionalServicesGroup = document.getElementById('additionalServicesGroup');
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
+      if (additionalServicesGroup) additionalServicesGroup.style.display = 'none';
     }
 
     if (!serviceValue) {
@@ -692,6 +716,8 @@
   document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
     updateServiceOptionPrices();
     updateSelectedServicePrice();
+    updateAdditionalServicesList();
+    if (selectedDate) renderTimeSlots(getSelectedDayOfWeek(), selectedDate);
   });
   updateServiceOptionPrices();
 
@@ -703,6 +729,10 @@
   function generateTimeSlots(dayOfWeek) {
     const hours = businessHours[dayOfWeek];
     if (!hours) return [];
+
+    if (selectedServiceMode === 'mobile' && MOBILE_SERVICE_DAYS.includes(dayOfWeek) && hasLongMobileServiceSelected()) {
+      return ['12:00 PM', '1:00 PM'];
+    }
 
     const slots = [];
     for (let hour = hours.start; hour < hours.end; hour++) {
@@ -739,15 +769,65 @@
     return select ? select.value : '';
   }
 
+  function getSelectedAdditionalServices() {
+    return Array.from(document.querySelectorAll('input[name="additionalServices"]:checked')).map(input => ({
+      serviceName: input.value,
+      price: getServiceNumericPrice(input.value, getSelectedVehicleType()),
+      serviceTag: getCurrentServiceTag(),
+      serviceType: 'standard',
+      display: getServicePrice(input.value),
+    }));
+  }
+
+  function hasLongMobileServiceSelected() {
+    if (selectedServiceMode !== 'mobile') return false;
+    const selectedNames = [getSelectedServiceName(), ...getSelectedAdditionalServices().map(item => item.serviceName)];
+    return selectedNames.some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
+  }
+
+  function updateAdditionalServicesList() {
+    const group = document.getElementById('additionalServicesGroup');
+    const list = document.getElementById('additionalServicesList');
+    const selectedService = getSelectedServiceName();
+    if (!group || !list) return;
+
+    if (!selectedService) {
+      group.style.display = 'none';
+      list.innerHTML = '';
+      return;
+    }
+
+    group.style.display = 'block';
+    const selectedValues = new Set(getSelectedAdditionalServices().map(item => item.serviceName));
+    list.innerHTML = COMBINABLE_SERVICE_NAMES
+      .filter(serviceName => serviceName !== selectedService)
+      .map(serviceName => {
+        const checked = selectedValues.has(serviceName) ? 'checked' : '';
+        return `
+          <label class="add-on-option">
+            <input type="checkbox" name="additionalServices" value="${serviceName}" ${checked}>
+            <span><strong>${serviceName}</strong> - ${getServicePrice(serviceName)}</span>
+          </label>
+        `;
+      }).join('');
+
+    list.querySelectorAll('input[name="additionalServices"]').forEach(input => {
+      input.addEventListener('change', () => {
+        selectedTime = null;
+        document.getElementById('summaryTime').textContent = 'Not selected';
+        if (selectedDate) {
+          const dayOfWeek = getSelectedDayOfWeek();
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
+        renderCalendar();
+      });
+    });
+  }
+
   function getSupportedDaysForService(serviceName) {
     if (!serviceName) return [];
 
-    const serviceTag = getServiceTagFromName(serviceName);
-    if (serviceTag === 'LOCATION ONLY') {
-      return ['Sat', 'Sun'];
-    }
-
-    return ['Thu', 'Fri', 'Sat', 'Sun'];
+    return selectedServiceMode === 'location' ? LOCATION_SERVICE_DAYS : MOBILE_SERVICE_DAYS;
   }
 
   function isServiceAvailableOnDay(serviceName, dayOfWeek) {
@@ -765,7 +845,7 @@
     timeMessage.style.display = 'block';
     timeMessage.textContent = message || 'Select a date to view available times';
     timeSlotsGrid.innerHTML = '';
-    updateAddressFieldVisibility(getServiceTagFromName(getSelectedServiceName()));
+    updateAddressFieldVisibility();
   }
 
   function renderCalendar() {
@@ -852,7 +932,7 @@
       opt.disabled = false;
     });
     select.disabled = false;
-    updateAddressFieldVisibility(getServiceTagFromName(select.value));
+    updateAddressFieldVisibility();
   }
 
   function selectDate(date) {
@@ -878,7 +958,7 @@
     // Keep all services visible and update mobile/shop guidance for this day.
     filterServicesByDay(dayOfWeek);
 
-    updateAddressFieldVisibility(getServiceTagFromName(document.querySelector('select[name="serviceType"]').value));
+    updateAddressFieldVisibility();
 
     renderCalendar();
     renderTimeSlots(dayOfWeek, date);
@@ -1056,7 +1136,12 @@
       if (typeof addToCart === 'function') {
         mainAdded = addToCart(serviceName, price, serviceTag, 'standard');
         if (mainAdded) {
-          addOns.forEach(addOn => addToCart(addOn.serviceName, addOn.price, 'EXTRA FEE', 'add-on'));
+          addOns.forEach(addOn => addToCart(
+            addOn.serviceName,
+            addOn.price,
+            addOn.serviceTag || 'EXTRA FEE',
+            addOn.serviceType || 'add-on'
+          ));
         }
       } else {
         const cart = JSON.parse(localStorage.getItem('gerusoCart') || '{"items":[]}');
@@ -1074,8 +1159,8 @@
           id: Math.random().toString(36).slice(2, 11),
           serviceName: addOn.serviceName,
           price: Number(addOn.price) || 0,
-          serviceTag: 'EXTRA FEE',
-          serviceType: 'add-on',
+          serviceTag: addOn.serviceTag || 'EXTRA FEE',
+          serviceType: addOn.serviceType || 'add-on',
           quantity: 1,
           addedAt: new Date().toISOString()
         }));
@@ -1142,27 +1227,36 @@
       return;
     }
 
-    // Location services use the shop address.
-    const finalAddress = needsMobileAddress ? serviceAddress : '313 Lynne Lane, Mapleville';
+    // Geruso Location appointments use the shop address.
+    const finalAddress = needsMobileAddress ? serviceAddress : SHOP_ADDRESS;
 
     // Build booking data with all required fields
     // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
     const localDateStr = dateStr;
+
+    const selectedAdditionalServices = getSelectedAdditionalServices();
+    const combinedServiceNames = [serviceType, ...selectedAdditionalServices.map(item => item.serviceName)];
 
     const bookingData = {
       customerName,
       customerEmail,
       customerPhone,
       serviceAddress: finalAddress,
-      serviceType,
+      serviceType: combinedServiceNames.join(' + '),
       bookingDate: localDateStr, // Plain string: YYYY-MM-DD (NO UTC conversion)
       bookingTime: selectedTime,
       vehicleType: document.querySelector('select[name="vehicleType"]').value,
+      serviceTag: getCurrentServiceTag(),
+      serviceLocation: selectedServiceMode === 'location' ? 'Geruso Location' : 'Mobile',
       notes: document.querySelector('textarea[name="notes"]').value,
       vehiclePhoto: vehiclePhotoBase64, // Include base64 photo if uploaded
     };
 
     const selectedAddOns = getSelectedAddOns();
+    if (selectedAdditionalServices.length) {
+      const additionalServiceNote = `Combined packages: ${selectedAdditionalServices.map(item => item.serviceName).join(', ')}`;
+      bookingData.notes = [bookingData.notes, additionalServiceNote].filter(Boolean).join('\n');
+    }
     if (selectedAddOns.length) {
       const addOnNote = `Add-ons requested: ${selectedAddOns.map(addOn => addOn.serviceName).join(', ')}`;
       bookingData.notes = [bookingData.notes, addOnNote].filter(Boolean).join('\n');
@@ -1200,10 +1294,10 @@
         // been sent. Add the booked service to the cart so the customer
         // sees what they reserved, then either send them to Stripe (if
         // configured) or open the cart modal for review.
-        const serviceName = bookingData.serviceType;
+        const serviceName = serviceType;
         const price = getServiceNumericPrice(serviceName, bookingData.vehicleType);
-        const serviceTag = requiresMobileAddress(serviceName, dayOfWeek) ? 'MOBILE' : 'LOCATION ONLY';
-        const cartUpdated = addBookedItemsToCart(serviceName, price, serviceTag, selectedAddOns);
+        const serviceTag = getCurrentServiceTag();
+        const cartUpdated = addBookedItemsToCart(serviceName, price, serviceTag, [...selectedAdditionalServices, ...selectedAddOns]);
         if (!cartUpdated) {
           showMessage('This service could not be added to the cart. Please remove the current main package and try again.', 'error');
           return;
@@ -1267,21 +1361,24 @@
   // ========================================
   // SERVICE TAG MAP FOR ADDRESS FIELD LOGIC
   // ========================================
+  const mainServiceNames = new Set([
+    'Full Motorcycle Service',
+    'Interior Detailing',
+    'Car Wash',
+    'Ceramic Coating',
+    'Premium Package',
+    'Ultra Premium',
+    'Full Vehicle Polish'
+  ]);
+
   const serviceTagMap = {
-    'Full Motorcycle Service': 'MOBILE',
-    'Interior Detailing': 'MOBILE',
-    'Car Wash': 'MOBILE',
-    'Ceramic Coating': 'LOCATION ONLY',
-    'Premium Package': 'MOBILE',
-    'Ultra Premium': 'MOBILE',
     'Pet Hair / Odor Elimination': 'EXTRA FEE',
     'Headlight Restoration': 'EXTRA FEE',
-    'Engine Bay Cleaning': 'EXTRA FEE',
-    'Full Vehicle Polish': 'LOCATION ONLY'
+    'Engine Bay Cleaning': 'EXTRA FEE'
   };
 
-  function isShopOnlyService(serviceName) {
-    return getServiceTagFromName(serviceName) === 'LOCATION ONLY';
+  function isShopOnlyService() {
+    return false;
   }
 
   function getSelectedDayOfWeek() {
@@ -1289,16 +1386,20 @@
     return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
   }
 
-  function requiresMobileAddress(serviceName, dayOfWeek) {
-    if (!serviceName || isShopOnlyService(serviceName)) return false;
-    if (!dayOfWeek) return true;
-    return ['Thu', 'Fri', 'Sat', 'Sun'].includes(dayOfWeek);
+  function requiresMobileAddress(serviceName) {
+    if (!serviceName) return false;
+    return selectedServiceMode === 'mobile';
+  }
+
+  function getCurrentServiceTag() {
+    return selectedServiceMode === 'location' ? 'LOCATION ONLY' : 'MOBILE';
   }
 
   // ========================================
   // GET SERVICE TAG FROM SERVICE NAME
   // ========================================
   function getServiceTagFromName(serviceName) {
+    if (mainServiceNames.has(serviceName)) return getCurrentServiceTag();
     return serviceTagMap[serviceName] || 'MOBILE';
   }
 
@@ -1308,23 +1409,53 @@
     const locationModeOption = document.getElementById('locationModeOption');
     if (!serviceModeGroup || !mobileModeOption || !locationModeOption) return;
 
-    if (!serviceName) {
-      serviceModeGroup.style.display = 'none';
-      mobileModeOption.classList.remove('active');
-      locationModeOption.classList.remove('active');
-      return;
+    serviceModeGroup.style.display = 'block';
+    mobileModeOption.classList.toggle('active', selectedServiceMode === 'mobile');
+    locationModeOption.classList.toggle('active', selectedServiceMode === 'location');
+  }
+
+  function setServiceMode(mode) {
+    if (mode !== 'mobile' && mode !== 'location') return;
+    if (selectedServiceMode === mode) return;
+
+    selectedServiceMode = mode;
+    updateServiceModeIndicator(getSelectedServiceName());
+    updateAddressFieldVisibility();
+
+    const selectedService = getSelectedServiceName();
+    if (selectedService && selectedDate) {
+      const dayOfWeek = getSelectedDayOfWeek();
+      if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
+        clearSelectedDate(selectedServiceMode === 'mobile'
+          ? 'Mobile appointments are available Thursday and Friday'
+          : 'Geruso Location appointments are available Saturday and Sunday');
+      } else {
+        selectedTime = null;
+        document.getElementById('summaryTime').textContent = 'Not selected';
+        renderTimeSlots(dayOfWeek, selectedDate);
+      }
     }
 
-    const isLocationService = isShopOnlyService(serviceName);
-    serviceModeGroup.style.display = 'block';
-    mobileModeOption.classList.toggle('active', !isLocationService);
-    locationModeOption.classList.toggle('active', isLocationService);
+    renderCalendar();
+  }
+
+  function setupServiceModeControls() {
+    document.querySelectorAll('.service-mode-option[data-service-mode]').forEach(option => {
+      const mode = option.dataset.serviceMode;
+      option.addEventListener('click', () => setServiceMode(mode));
+      option.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setServiceMode(mode);
+        }
+      });
+    });
   }
 
   // ========================================
   // UPDATE ADDRESS FIELD VISIBILITY
   // ========================================
-  function updateAddressFieldVisibility(serviceTag) {
+  function updateAddressFieldVisibility() {
     const addressFieldGroup = document.getElementById('addressFieldGroup');
     const locationNoteGroup = document.getElementById('locationNoteGroup');
     const serviceAddressInput = document.getElementById('serviceAddressInput');
@@ -1333,7 +1464,7 @@
     const selectedService = document.querySelector('select[name="serviceType"]').value;
     const dayOfWeek = getSelectedDayOfWeek();
 
-    console.log('[Booking] Updating address field for service tag:', serviceTag, 'day:', dayOfWeek);
+    console.log('[Booking] Updating address field for service mode:', selectedServiceMode, 'day:', dayOfWeek);
 
     if (!selectedService) {
       addressFieldGroup.style.display = 'none';
@@ -1352,24 +1483,13 @@
       serviceAddressInput.required = true;
       console.log('[Booking] Address field shown (required)');
     } else {
-      // Location services are completed at the shop.
+      // Geruso Location appointments use the shop address.
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'block';
       serviceAddressInput.required = false;
       serviceAddressInput.value = ''; // Clear previous address
-      if (isShopOnlyService(selectedService)) {
-        locationNoteTitle.textContent = 'Shop / Specialty Service';
-        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
-      } else if (dayOfWeek === 'Sat' || dayOfWeek === 'Sun') {
-        locationNoteTitle.textContent = 'Weekend Shop Appointment';
-        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
-      } else if (!dayOfWeek) {
-        locationNoteTitle.textContent = 'Choose a Date';
-        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
-      } else {
-        locationNoteTitle.textContent = 'Shop Appointment';
-        locationNoteText.innerHTML = '<span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)';
-      }
+      locationNoteTitle.textContent = 'Geruso Location';
+      locationNoteText.innerHTML = `Service at ${SHOP_ADDRESS}<br><span class="location-policy-line">By appointment only. No&nbsp;walk-ins.</span>`;
       console.log('[Booking] Address field hidden, shop note shown');
     }
   }
@@ -1419,11 +1539,15 @@
   // Load cart when page initializes
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+      setupServiceModeControls();
+      updateAddressFieldVisibility();
       loadCartOnPageLoad();
       applyServiceFromUrl();
       applyAddOnFromUrl();
     });
   } else {
+    setupServiceModeControls();
+    updateAddressFieldVisibility();
     loadCartOnPageLoad();
     applyServiceFromUrl();
     applyAddOnFromUrl();

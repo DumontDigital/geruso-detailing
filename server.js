@@ -231,19 +231,26 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
           const booking = result.rows[0];
           console.log('[Stripe Webhook] Booking paid and auto-confirmed:', booking.id);
 
-          // Send confirmation email now that payment is confirmed
-          const { sendBookingConfirmation } = require('./email');
-          await sendBookingConfirmation({
+          // Send emails now that payment is confirmed.
+          const { sendBookingConfirmation, sendOwnerNotification } = require('./email');
+          const paidBookingEmailData = {
             customerName: booking.customer_name,
             customerEmail: booking.customer_email,
+            customerPhone: booking.customer_phone,
             bookingDate: booking.booking_date,
             bookingTime: booking.booking_time,
             serviceType: booking.service_type,
             serviceAddress: booking.service_address,
-            hasPhoto: !!booking.vehicle_photo
-          });
+            vehicleType: booking.vehicle_type,
+            notes: booking.notes,
+            hasPhoto: !!booking.vehicle_photo,
+            paymentConfirmed: true
+          };
 
-          console.log('[Stripe Webhook] Confirmation email sent');
+          await sendBookingConfirmation(paidBookingEmailData);
+          await sendOwnerNotification(paidBookingEmailData);
+
+          console.log('[Stripe Webhook] Customer confirmation and owner notification emails sent');
         }
       } catch (dbError) {
         console.error('[Stripe Webhook] Error updating booking:', dbError.message);

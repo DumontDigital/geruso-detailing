@@ -267,11 +267,11 @@
       'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
       'Interior Detailing': { price: 100, tag: 'MOBILE' },
       'Car Wash': { price: 85, truckPrice: 120, tag: 'MOBILE' },
-      'Ceramic Coating': { price: 400, tag: 'LOCATION ONLY' },
+      'Ceramic Coating': { price: 400, tag: 'Mobile or Geruso Location' },
       'Premium Package': { price: 175, truckPrice: 215, tag: 'MOBILE' },
       'Ultra Premium': { price: 335, truckPrice: 375, tag: 'MOBILE' },
       'Engine Bay Cleaning': { price: 75, tag: 'EXTRA FEE' },
-      'Full Vehicle Polish': { price: 250, tag: 'LOCATION ONLY' },
+      'Full Vehicle Polish': { price: 250, tag: 'Mobile or Geruso Location' },
       'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
       'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
     };
@@ -371,13 +371,15 @@
         const price = Number(item.price || 0) || service.price || 0;
         const quantity = Math.max(1, Number(item.quantity || 1));
         const lineTotal = price * quantity;
+        const rawTag = item.serviceTag || service.tag || 'Service';
+        const displayTag = rawTag === 'LOCATION ONLY' ? 'GERUSO LOCATION' : rawTag;
         total += lineTotal;
         return `
           <div class="summary-item">
             <button class="summary-remove" type="button" data-remove-index="${index}" aria-label="Remove ${escapeHtml(item.serviceName)} from cart">×</button>
             <div>
               <div class="summary-name">${escapeHtml(item.serviceName)}</div>
-              <div class="summary-meta">${escapeHtml(item.serviceTag || service.tag || 'Service')} x${quantity}</div>
+              <div class="summary-meta">${escapeHtml(displayTag)} x${quantity}</div>
             </div>
             <div class="summary-price">${money(lineTotal)}</div>
           </div>
@@ -406,10 +408,10 @@
       if (customer.phone) document.getElementById('customerPhone').value = customer.phone;
       const serviceAddressInput = document.getElementById('serviceAddress');
       const serviceAddressNote = document.getElementById('serviceAddressNote');
-      const lockedAddress = customer.serviceAddress || '313 Lynne Lane, Mapleville';
+      const lockedAddress = customer.serviceAddress || '313 Lynne Lane, Mapleville, Rhode Island 02938';
       serviceAddressInput.value = lockedAddress;
       if (/313\s+Lynne\s+Lane/i.test(lockedAddress)) {
-        serviceAddressNote.textContent = 'This is an at-location appointment. Please go to 313 Lynne Lane, Mapleville by appointment only. No walk-ins.';
+        serviceAddressNote.textContent = 'This is a Geruso Location appointment. Please go to 313 Lynne Lane, Mapleville, Rhode Island 02938 by appointment only. No walk-ins.';
       } else {
         serviceAddressNote.textContent = 'This mobile service address is locked from your booking so the appointment location stays correct.';
       }

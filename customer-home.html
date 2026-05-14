@@ -434,14 +434,14 @@
               <label class="form-label">Service Type</label>
               <select class="form-select" name="serviceType" id="scheduleServiceSelect" required>
                 <option value="">Select a service...</option>
-                <option value="Car Wash">Car Wash - Starting from $85 (Mobile)</option>
-                <option value="Interior Detailing">Interior Detailing - Starting from $100 (Mobile)</option>
-                <option value="Ceramic Coating">Ceramic Coating - $400 (Location Only)</option>
-                <option value="Premium Package">Premium Package - Starting from $170 (Mobile)</option>
-                <option value="Ultra Premium">Ultra Premium - $335 (Mobile)</option>
-                <option value="Full Motorcycle Service">Full Motorcycle Service - $70 (Mobile)</option>
-                <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Mobile)</option>
-                <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250 (Location Only)</option>
+                <option value="Car Wash">Car Wash - Starting from $85</option>
+                <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
+                <option value="Ceramic Coating">Ceramic Coating - $400</option>
+                <option value="Premium Package">Premium Package - Starting from $175</option>
+                <option value="Ultra Premium">Ultra Premium - $335</option>
+                <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
+                <option value="Engine Bay Cleaning">Engine Bay Cleaning - $75 (Extra Fee)</option>
+                <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $250</option>
                 <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination - $50 (Extra Fee)</option>
                 <option value="Headlight Restoration">Headlight Restoration - $50 (Extra Fee)</option>
               </select>
@@ -640,14 +640,8 @@
       const warning = document.getElementById('cartWarning');
       const nonAddOns = cart.filter(s => !SERVICES[s].isAddOn);
       if (nonAddOns.length > 0) {
-        const serviceType = SERVICES[nonAddOns[0]].type;
-        if (serviceType === 'location') {
-          warning.innerHTML = '⚠️ <strong>313 Lynne Lane Services:</strong> These must be done at 313 Lynne Lane, Mapleville by appointment only out of direct sunlight. No walk-ins.';
-          warning.style.display = 'block';
-        } else {
-          warning.innerHTML = '📍 <strong>Mobile Service:</strong> We will come to your location. Please provide an address in the Schedule section.';
-          warning.style.display = 'block';
-        }
+        warning.innerHTML = '<strong>Service location:</strong> Choose Mobile or Geruso Location on the Schedule page.';
+        warning.style.display = 'block';
       } else {
         warning.style.display = 'none';
       }
@@ -661,7 +655,7 @@
 
       const checkoutItems = cart.map(serviceName => {
         const service = SERVICES[serviceName];
-        const serviceTag = service.isAddOn ? 'EXTRA FEE' : service.type === 'location' ? 'LOCATION ONLY' : 'MOBILE';
+        const serviceTag = service.isAddOn ? 'EXTRA FEE' : 'MOBILE';
         return {
           id: Math.random().toString(36).substr(2, 9),
           serviceName,
