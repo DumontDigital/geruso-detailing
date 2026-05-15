@@ -175,7 +175,7 @@
           <div id="cartItems"></div>
           <div class="site-cart-total">Total: $<span id="cartTotal">0</span></div>
           <div class="site-cart-actions">
-            <button type="button" id="proceedCheckout" class="btn btn-primary">Proceed to Checkout</button>
+            <button type="button" id="proceedCheckout" class="btn btn-primary">Continue to Payment</button>
             <button type="button" class="btn btn-outline" id="continueShopping">Keep Shopping</button>
           </div>
         </div>

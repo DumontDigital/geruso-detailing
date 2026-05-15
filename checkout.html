@@ -241,7 +241,7 @@
 
           <div id="checkoutMessage" class="message"></div>
           <div class="checkout-actions">
-            <button class="btn btn-primary" id="payBtn" type="submit">Continue to Secure Payment</button>
+            <button class="btn btn-primary" id="payBtn" type="submit">Pay Now with Stripe</button>
             <a class="btn btn-outline" href="/services.html">Keep Shopping</a>
             <div class="checkout-note">Payments are processed securely by Stripe.</div>
           </div>
@@ -453,7 +453,7 @@
       } catch (error) {
         showMessage(error.message, 'error');
         payBtn.disabled = false;
-        payBtn.textContent = 'Continue to Secure Payment';
+        payBtn.textContent = 'Pay Now with Stripe';
       }
     });
 

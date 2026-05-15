@@ -404,7 +404,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" id="submitBtn">Book and Add to Cart</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Book and Continue to Payment</button>
         </form>
       </div>
     </div>
@@ -1425,9 +1425,8 @@
         }
 
         // Booking was saved server-side and the confirmation email has
-        // been sent. Add the booked service to the cart so the customer
-        // sees what they reserved, then either send them to Stripe (if
-        // configured) or open the cart modal for review.
+        // been sent. Add the booked service to the cart, then send the
+        // customer straight to the secure checkout page.
         const serviceName = serviceType;
         const price = getServiceNumericPrice(serviceName, bookingData.vehicleType);
         const serviceTag = getCurrentServiceTag();
@@ -1437,23 +1436,14 @@
           return;
         }
 
-        showMessage('Booking added to cart! Review your cart to checkout.', 'success');
-        // Keep the customer in the cart flow so checkout can prefill their details.
-        if (typeof toggleCartModal === 'function') {
-          setTimeout(() => {
-            if (typeof updateCartModalDisplay === 'function') updateCartModalDisplay();
-            const modal = document.getElementById('cartModal');
-            if (modal) {
-              modal.style.display = 'block';
-            } else {
-              toggleCartModal();
-            }
-          }, 500);
-        }
+        showMessage('Booking saved. Sending you to secure payment...', 'success');
 
         // Reload calendar so the just-booked slot grays out for the next visitor.
         await loadBookedTimeSlots();
         renderCalendar();
+        setTimeout(() => {
+          window.location.href = '/checkout';
+        }, 400);
       } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
         // Handle double booking - time slot was just taken
         showMessage('This time was just booked. Please choose another slot.', 'error');
@@ -1481,7 +1471,7 @@
       console.error('[Booking Error] Network/Fetch error:', error);
     } finally {
       document.getElementById('submitBtn').disabled = false;
-      document.getElementById('submitBtn').innerHTML = 'Book and Add to Cart';
+      document.getElementById('submitBtn').innerHTML = 'Book and Continue to Payment';
     }
   });
 
