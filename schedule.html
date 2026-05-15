@@ -869,11 +869,23 @@
   function getSupportedDaysForService(serviceName) {
     if (!serviceName) return [];
 
-    return selectedServiceMode === 'location' ? LOCATION_SERVICE_DAYS : MOBILE_SERVICE_DAYS;
+    return [...new Set([...MOBILE_SERVICE_DAYS, ...LOCATION_SERVICE_DAYS])];
   }
 
   function isServiceAvailableOnDay(serviceName, dayOfWeek) {
     return getSupportedDaysForService(serviceName).includes(dayOfWeek);
+  }
+
+  function getServiceModeForDay(dayOfWeek) {
+    if (MOBILE_SERVICE_DAYS.includes(dayOfWeek)) return 'mobile';
+    if (LOCATION_SERVICE_DAYS.includes(dayOfWeek)) return 'location';
+    return '';
+  }
+
+  function isDayAvailableForMode(mode, dayOfWeek) {
+    if (mode === 'mobile') return MOBILE_SERVICE_DAYS.includes(dayOfWeek);
+    if (mode === 'location') return LOCATION_SERVICE_DAYS.includes(dayOfWeek);
+    return false;
   }
 
   function clearSelectedDate(message) {
@@ -987,6 +999,12 @@
     if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
       showMessage('Please choose a date that supports this service', 'error');
       return;
+    }
+
+    const modeForDay = getServiceModeForDay(dayOfWeek);
+    if (modeForDay) {
+      selectedServiceMode = modeForDay;
+      updateServiceModeIndicator(selectedService);
     }
 
     selectedDate = date;
@@ -1467,7 +1485,7 @@
     const selectedService = getSelectedServiceName();
     if (selectedService && selectedDate) {
       const dayOfWeek = getSelectedDayOfWeek();
-      if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
+      if (!isDayAvailableForMode(selectedServiceMode, dayOfWeek)) {
         clearSelectedDate(selectedServiceMode === 'mobile'
           ? 'Mobile appointments are available Thursday and Friday'
           : 'Geruso Location appointments are available Saturday and Sunday');
