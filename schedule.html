@@ -112,8 +112,7 @@
     .form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaaaaa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: var(--light-bg); padding-right: 38px; }
     .form-textarea { resize: vertical; min-height: 80px; }
     .service-mode-lock { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .service-mode-option { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px 14px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: 0.75; cursor: pointer; transition: all 0.2s; }
-    .service-mode-option:hover { border-color: var(--primary); color: var(--text); opacity: 1; }
+    .service-mode-option { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px 14px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); opacity: 0.75; cursor: default; transition: all 0.2s; pointer-events: none; }
     .service-mode-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .service-mode-option.active { border-color: var(--primary); background: rgba(0,255,65,0.1); color: var(--text); opacity: 1; }
     .service-mode-dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--border); background: transparent; flex: 0 0 auto; }
@@ -342,14 +341,14 @@
           <div class="form-group" id="serviceModeGroup">
             <label class="form-label">Service Location</label>
             <div class="service-mode-lock" aria-label="Choose service location">
-              <div class="service-mode-option active" id="mobileModeOption" role="button" tabindex="0" data-service-mode="mobile">
+              <div class="service-mode-option" id="mobileModeOption" data-service-mode="mobile">
                 <span class="service-mode-dot"></span>
                 <div>
                   <strong>Mobile</strong>
                   <span>We come to you</span>
                 </div>
               </div>
-              <div class="service-mode-option" id="locationModeOption" role="button" tabindex="0" data-service-mode="location">
+              <div class="service-mode-option" id="locationModeOption" data-service-mode="location">
                 <span class="service-mode-dot"></span>
                 <div>
                   <strong>Geruso Location</strong>
@@ -594,7 +593,7 @@
   let currentDate = new Date();
   let selectedDate = null;
   let selectedTime = null;
-  let selectedServiceMode = 'mobile';
+  let selectedServiceMode = '';
   let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
   let blockedDates = {}; // Store fully blocked days: { 'YYYY-MM-DD': true }
 
@@ -1001,14 +1000,14 @@
       return;
     }
 
+    selectedDate = date;
+    selectedTime = null;
+
     const modeForDay = getServiceModeForDay(dayOfWeek);
     if (modeForDay) {
       selectedServiceMode = modeForDay;
       updateServiceModeIndicator(selectedService);
     }
-
-    selectedDate = date;
-    selectedTime = null;
 
     const dayName = monthNames[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
 
@@ -1500,16 +1499,7 @@
   }
 
   function setupServiceModeControls() {
-    document.querySelectorAll('.service-mode-option[data-service-mode]').forEach(option => {
-      const mode = option.dataset.serviceMode;
-      option.addEventListener('click', () => setServiceMode(mode));
-      option.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          setServiceMode(mode);
-        }
-      });
-    });
+    updateServiceModeIndicator(getSelectedServiceName());
   }
 
   // ========================================
