@@ -731,6 +731,9 @@
       if (!isServiceAvailableOnDay(serviceValue, dayOfWeek)) {
         clearSelectedDate('Choose a date that supports this service');
       } else {
+        syncServiceModeFromDay(dayOfWeek);
+        updateServiceModeIndicator(serviceValue);
+        updateAddressFieldVisibility();
         selectedTime = null;
         document.getElementById('summaryTime').textContent = 'Not selected';
         renderTimeSlots(dayOfWeek, selectedDate);
@@ -887,6 +890,13 @@
     return false;
   }
 
+  function syncServiceModeFromDay(dayOfWeek) {
+    const modeForDay = getServiceModeForDay(dayOfWeek);
+    if (!modeForDay) return '';
+    selectedServiceMode = modeForDay;
+    return modeForDay;
+  }
+
   function clearSelectedDate(message) {
     selectedDate = null;
     selectedTime = null;
@@ -1003,9 +1013,8 @@
     selectedDate = date;
     selectedTime = null;
 
-    const modeForDay = getServiceModeForDay(dayOfWeek);
+    const modeForDay = syncServiceModeFromDay(dayOfWeek);
     if (modeForDay) {
-      selectedServiceMode = modeForDay;
       updateServiceModeIndicator(selectedService);
     }
 
@@ -1467,6 +1476,10 @@
     const mobileModeOption = document.getElementById('mobileModeOption');
     const locationModeOption = document.getElementById('locationModeOption');
     if (!serviceModeGroup || !mobileModeOption || !locationModeOption) return;
+
+    if (selectedDate) {
+      syncServiceModeFromDay(getSelectedDayOfWeek());
+    }
 
     serviceModeGroup.style.display = 'block';
     mobileModeOption.classList.toggle('active', selectedServiceMode === 'mobile');
