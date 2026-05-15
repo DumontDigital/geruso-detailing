@@ -362,7 +362,7 @@
           <div class="form-group" id="additionalServicesGroup" style="display: none;">
             <label class="form-label">Additional Packages (Optional)</label>
             <div class="add-on-box">
-              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish booked mobile only show 12:00 PM and 1:00 PM because they take 6+ hours.</div>
+              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM because they take 6+ hours.</div>
               <div id="additionalServicesList"></div>
             </div>
           </div>
@@ -506,11 +506,41 @@
     }));
   }
 
+  function formatBookingTotal(amount) {
+    return `$${Number(amount || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })}`;
+  }
+
+  function getSelectedBookingItems() {
+    const serviceValue = getSelectedServiceName();
+    if (!serviceValue) return [];
+
+    return [
+      {
+        serviceName: serviceValue,
+        price: getServiceNumericPrice(serviceValue, getSelectedVehicleType()),
+      },
+      ...getSelectedAdditionalServices(),
+      ...getSelectedAddOns(),
+    ];
+  }
+
   function updateSelectedServicePrice() {
-    const serviceValue = document.querySelector('select[name="serviceType"]').value;
     const priceElement = document.getElementById('summaryPrice');
     if (!priceElement) return;
-    priceElement.textContent = serviceValue ? getServicePrice(serviceValue) : 'Not selected';
+
+    const items = getSelectedBookingItems();
+    if (!items.length) {
+      priceElement.textContent = 'Not selected';
+      return;
+    }
+
+    const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    priceElement.textContent = items.length > 1
+      ? `${formatBookingTotal(total)} total`
+      : getServicePrice(items[0].serviceName);
   }
 
   function getServiceOptionLabel(serviceName, vehicleType = getSelectedVehicleType()) {
@@ -679,8 +709,7 @@
 
     if (serviceValue) {
       summaryElement.textContent = serviceValue;
-      const priceDisplay = getServicePrice(serviceValue);
-      priceElement.textContent = priceDisplay;
+      updateSelectedServicePrice();
 
       updateAddressFieldVisibility();
     } else {
@@ -721,6 +750,18 @@
   });
   updateServiceOptionPrices();
 
+  document.querySelectorAll('input[name="addOns"]').forEach(input => {
+    input.addEventListener('change', () => {
+      updateSelectedServicePrice();
+    });
+  });
+
+  document.getElementById('bookingForm').addEventListener('change', (event) => {
+    if (event.target && event.target.matches('input[name="addOns"], input[name="additionalServices"]')) {
+      updateSelectedServicePrice();
+    }
+  });
+
   // Kept for compatibility with older schedule code.
   function getSelectedServiceCategory() {
     return getServiceTagFromName(getSelectedServiceName());
@@ -730,7 +771,7 @@
     const hours = businessHours[dayOfWeek];
     if (!hours) return [];
 
-    if (selectedServiceMode === 'mobile' && MOBILE_SERVICE_DAYS.includes(dayOfWeek) && hasLongMobileServiceSelected()) {
+    if (hasLongDetailServiceSelected()) {
       return ['12:00 PM', '1:00 PM'];
     }
 
@@ -740,6 +781,7 @@
       const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
       slots.push(`${displayHour}:00 ${ampm}`);
     }
+
     return slots;
   }
 
@@ -779,8 +821,7 @@
     }));
   }
 
-  function hasLongMobileServiceSelected() {
-    if (selectedServiceMode !== 'mobile') return false;
+  function hasLongDetailServiceSelected() {
     const selectedNames = [getSelectedServiceName(), ...getSelectedAdditionalServices().map(item => item.serviceName)];
     return selectedNames.some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
   }
@@ -819,6 +860,7 @@
           const dayOfWeek = getSelectedDayOfWeek();
           renderTimeSlots(dayOfWeek, selectedDate);
         }
+        updateSelectedServicePrice();
         renderCalendar();
       });
     });
@@ -1533,6 +1575,7 @@
       const match = Array.from(document.querySelectorAll('input[name="addOns"]')).find(input => input.value === want);
       if (!match) return;
       match.checked = true;
+      updateSelectedServicePrice();
     } catch (e) {}
   }
 
