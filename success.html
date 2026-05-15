@@ -305,6 +305,17 @@
     async function confirmBooking() {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get('session_id');
+      const payLater = params.get('pay_later') === 'true';
+
+      if (payLater) {
+        showSuccess({
+          source: 'pay_later',
+          bookingId: params.get('booking_id'),
+          orderId: params.get('order_id'),
+          paymentStatus: 'pay_later',
+        });
+        return;
+      }
 
       if (!sessionId) {
         console.error('No session ID provided');
@@ -341,12 +352,35 @@
       }
     }
 
+    function getStoredCheckoutDetails() {
+      try {
+        return JSON.parse(localStorage.getItem('gerusoCheckoutDetails') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
     function showSuccess(data) {
+      const checkoutDetails = getStoredCheckoutDetails();
       localStorage.removeItem('gerusoCart');
+      localStorage.removeItem('gerusoCheckoutDetails');
       sessionStorage.removeItem('cart');
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('bookingDetails').style.display = 'block';
       document.getElementById('actionButtons').style.display = 'flex';
+
+      if (data.source === 'pay_later') {
+        document.getElementById('successSubtitle').textContent = 'Your booking has been confirmed';
+        document.getElementById('successHeading').textContent = 'Booking Confirmed';
+        document.getElementById('successCopy').textContent = 'Your appointment is saved. Payment will be collected after the work is complete.';
+        document.getElementById('primaryIdLabel').textContent = 'Booking ID';
+        document.getElementById('bookingId').textContent = data.bookingId || checkoutDetails.bookingId || 'Confirmed';
+        document.getElementById('bookingDate').textContent = checkoutDetails.date || checkoutDetails.bookingDate || 'Confirmed';
+        document.getElementById('bookingTime').textContent = checkoutDetails.time || checkoutDetails.bookingTime || 'Confirmed';
+        document.getElementById('bookingService').textContent = checkoutDetails.serviceType || checkoutDetails.serviceName || checkoutDetails.service || 'Confirmed';
+        document.getElementById('paymentStatus').textContent = 'Pay after service';
+        return;
+      }
 
       if (data.source === 'cart_checkout') {
         document.getElementById('successSubtitle').textContent = 'Your purchase has been confirmed';

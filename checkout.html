@@ -118,6 +118,11 @@
     }
     .stripe-copy strong { display: block; color: var(--text); margin-bottom: 5px; font-size: 15px; line-height: 1.25; }
     .stripe-copy span { display: block; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+    .pay-later-panel {
+      border-color: rgba(0,255,65,0.28);
+      background: rgba(0,255,65,0.05);
+      margin-top: 12px;
+    }
     .summary-item {
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -199,7 +204,7 @@
     <div class="checkout-header">
       <span class="section-eyebrow">Checkout</span>
       <h1>Complete Your Purchase</h1>
-      <p>Review your cart and continue to Stripe Checkout for secure payment.</p>
+      <p>Review your cart, then pay now with Stripe or choose to pay after the work is complete.</p>
     </div>
 
     <div class="checkout-wrap">
@@ -239,11 +244,20 @@
             </div>
           </div>
 
+          <div class="stripe-panel pay-later-panel" aria-label="Pay after service">
+            <div class="stripe-mark">$</div>
+            <div class="stripe-copy">
+              <strong>Pay After Service</strong>
+              <span>Your booking will be saved now, and payment can be collected after the work is complete.</span>
+            </div>
+          </div>
+
           <div id="checkoutMessage" class="message"></div>
           <div class="checkout-actions">
             <button class="btn btn-primary" id="payBtn" type="submit">Pay Now with Stripe</button>
+            <button class="btn btn-outline" id="payLaterBtn" type="button">Pay After Service</button>
             <a class="btn btn-outline" href="/services.html">Keep Shopping</a>
-            <div class="checkout-note">Payments are processed securely by Stripe.</div>
+            <div class="checkout-note">Stripe payments are processed securely. Pay-after-service bookings are paid after the appointment.</div>
           </div>
         </form>
       </section>
@@ -357,11 +371,13 @@
       const summaryItems = document.getElementById('summaryItems');
       const summaryTotal = document.getElementById('summaryTotal');
       const payBtn = document.getElementById('payBtn');
+      const payLaterBtn = document.getElementById('payLaterBtn');
 
       if (!cart.items.length) {
         summaryItems.innerHTML = '<div class="empty-cart">Your cart is empty.</div>';
         summaryTotal.textContent = '$0.00';
         payBtn.disabled = true;
+        payLaterBtn.disabled = true;
         return;
       }
 
@@ -387,6 +403,7 @@
       }).join('');
       summaryTotal.textContent = money(total);
       payBtn.disabled = false;
+      payLaterBtn.disabled = false;
     }
 
     document.getElementById('summaryItems').addEventListener('click', (event) => {
@@ -417,6 +434,16 @@
       }
     }
 
+    function getCheckoutCustomerPayload(form) {
+      return {
+        name: form.get('name'),
+        email: form.get('email'),
+        phone: form.get('phone'),
+        serviceAddress: form.get('serviceAddress'),
+        bookingId: getCustomerFromStorage().bookingId || '',
+      };
+    }
+
     document.getElementById('checkoutForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!cart.items.length) {
@@ -425,8 +452,10 @@
       }
 
       const payBtn = document.getElementById('payBtn');
+      const payLaterBtn = document.getElementById('payLaterBtn');
       const form = new FormData(event.currentTarget);
       payBtn.disabled = true;
+      payLaterBtn.disabled = true;
       payBtn.textContent = 'Starting Checkout...';
       showMessage('Preparing secure payment...', 'success');
 
@@ -436,13 +465,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             items: cart.items,
-            customer: {
-              name: form.get('name'),
-              email: form.get('email'),
-              phone: form.get('phone'),
-              serviceAddress: form.get('serviceAddress'),
-              bookingId: getCustomerFromStorage().bookingId || '',
-            },
+            customer: getCheckoutCustomerPayload(form),
           }),
         });
         const data = await response.json();
@@ -453,7 +476,47 @@
       } catch (error) {
         showMessage(error.message, 'error');
         payBtn.disabled = false;
+        payLaterBtn.disabled = false;
         payBtn.textContent = 'Pay Now with Stripe';
+      }
+    });
+
+    document.getElementById('payLaterBtn').addEventListener('click', async () => {
+      if (!cart.items.length) {
+        showMessage('Your cart is empty. Add a service before checkout.', 'error');
+        return;
+      }
+
+      const checkoutForm = document.getElementById('checkoutForm');
+      if (!checkoutForm.reportValidity()) return;
+
+      const payBtn = document.getElementById('payBtn');
+      const payLaterBtn = document.getElementById('payLaterBtn');
+      const form = new FormData(checkoutForm);
+      payBtn.disabled = true;
+      payLaterBtn.disabled = true;
+      payLaterBtn.textContent = 'Confirming Booking...';
+      showMessage('Saving your booking for pay after service...', 'success');
+
+      try {
+        const response = await fetch('/api/cart/pay-later', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart.items,
+            customer: getCheckoutCustomerPayload(form),
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.successUrl) {
+          throw new Error(data.error || 'Pay after service could not be confirmed.');
+        }
+        window.location.href = data.successUrl;
+      } catch (error) {
+        showMessage(error.message, 'error');
+        payBtn.disabled = false;
+        payLaterBtn.disabled = false;
+        payLaterBtn.textContent = 'Pay After Service';
       }
     });
 

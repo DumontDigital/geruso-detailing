@@ -49,6 +49,51 @@ function validateCartItems(cartItems) {
   return '';
 }
 
+router.post('/pay-later', async (req, res) => {
+  try {
+    const { items, customer = {} } = req.body;
+    const cartItems = normalizeCartItems(items);
+
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: 'Your cart is empty or contains unavailable services.' });
+    }
+
+    const validationError = validateCartItems(cartItems);
+    if (validationError) {
+      return res.status(400).json({ error: validationError });
+    }
+
+    const bookingId = String(customer.bookingId || '').trim();
+    if (!bookingId) {
+      return res.status(400).json({ error: 'A scheduled booking is required before choosing pay after service.' });
+    }
+
+    const bookingResult = await pool.query(
+      `UPDATE bookings
+       SET payment_status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND status <> 'cancelled'
+       RETURNING id`,
+      ['pay_later', bookingId]
+    );
+
+    if (bookingResult.rowCount === 0) {
+      return res.status(404).json({ error: 'This booking could not be found. Please schedule again.' });
+    }
+
+    const orderId = uuidv4();
+    res.json({
+      success: true,
+      paymentStatus: 'pay_later',
+      bookingId,
+      orderId,
+      successUrl: `/success?pay_later=true&booking_id=${encodeURIComponent(bookingId)}&order_id=${encodeURIComponent(orderId)}`,
+    });
+  } catch (error) {
+    console.error('[Cart Pay Later] Error:', error.message);
+    res.status(500).json({ error: 'Unable to confirm pay after service. Please try again.' });
+  }
+});
+
 router.post('/checkout', async (req, res) => {
   try {
     const { items, customer = {} } = req.body;
