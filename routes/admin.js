@@ -66,7 +66,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
       `SELECT SUM(CAST(SUBSTRING(service_type FROM '\\$(\\d+)') AS INTEGER)) as total
        FROM bookings
        WHERE booking_date BETWEEN $1 AND $2
-       AND (payment_status = 'paid' OR status IN ('confirmed', 'completed', 'paid'))
+       AND (payment_status = 'paid' OR status IN ('completed', 'paid'))
        AND ${REAL_BOOKING_WHERE}`,
       [weekStart, weekEnd]
     );

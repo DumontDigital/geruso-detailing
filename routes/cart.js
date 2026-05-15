@@ -70,10 +70,10 @@ router.post('/pay-later', async (req, res) => {
 
     const bookingResult = await pool.query(
       `UPDATE bookings
-       SET payment_status = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND status <> 'cancelled'
+       SET payment_status = $1, status = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3 AND status <> 'cancelled'
        RETURNING id`,
-      ['pay_later', bookingId]
+      ['pay_later', 'confirmed', bookingId]
     );
 
     if (bookingResult.rowCount === 0) {

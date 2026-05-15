@@ -1064,7 +1064,7 @@
     updateAddressFieldVisibility();
   }
 
-  function selectDate(date) {
+  async function selectDate(date) {
     const selectedService = getSelectedServiceName();
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     if (!selectedService) {
@@ -1094,6 +1094,7 @@
 
     updateAddressFieldVisibility();
 
+    await loadBookedTimeSlots();
     renderCalendar();
     renderTimeSlots(dayOfWeek, date);
   }
@@ -1329,10 +1330,14 @@
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const day = String(selectedDate.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
 
     const bookingKey = `${dateStr} ${selectedTime}`;
+    await loadBookedTimeSlots();
     if (blockedDates[dateStr] || bookedTimeSlots[bookingKey]) {
       showMessage('The selected time slot is no longer available. Please choose another time.', 'error');
+      renderCalendar();
+      renderTimeSlots(dayOfWeek, selectedDate);
       return;
     }
 
@@ -1351,7 +1356,6 @@
       return;
     }
 
-    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
     const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
     const needsMobileAddress = requiresMobileAddress(serviceType, dayOfWeek);
 
@@ -1444,9 +1448,9 @@
         setTimeout(() => {
           window.location.href = '/checkout';
         }, 400);
-      } else if (response.status === 409 && data.code === 'TIME_SLOT_TAKEN') {
+      } else if (response.status === 409 && ['TIME_SLOT_TAKEN', 'TIME_SLOT_BLOCKED', 'LONG_DETAIL_TIME_BLOCKED'].includes(data.code)) {
         // Handle double booking - time slot was just taken
-        showMessage('This time was just booked. Please choose another slot.', 'error');
+        showMessage(data.error || 'This time was just booked or blocked. Please choose another slot.', 'error');
         console.warn('[Booking Error] Time slot taken - reloading available slots');
 
         // Reload booked time slots immediately to reflect the competing booking

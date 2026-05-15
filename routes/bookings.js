@@ -31,11 +31,13 @@ router.get('/public/booked-slots', async (req, res) => {
     result.rows.forEach(booking => {
       // booking_date is already in YYYY-MM-DD format from database, don't convert
       const dateStr = booking.booking_date.toString().split('T')[0]; // Handle both string and date types from DB
-      const key = `${dateStr} ${booking.booking_time}`;
+      const bookingTime = normalizeBookingTime(booking.booking_time);
+      if (!bookingTime) return;
+      const key = `${dateStr} ${bookingTime}`;
       bookedSlots[key] = true;
       const serviceType = String(booking.service_type || '');
       if (isLongDetailService(serviceType)) {
-        getBlockedSlotsForLongDetail(booking.booking_time).forEach(time => {
+        getBlockedSlotsForLongDetail(bookingTime).forEach(time => {
           bookedSlots[`${dateStr} ${time}`] = true;
         });
       }
@@ -44,7 +46,8 @@ router.get('/public/booked-slots', async (req, res) => {
     blockedResult.rows.forEach(block => {
       const dateStr = block.blocked_date.toString().split('T')[0];
       if (block.blocked_time) {
-        bookedSlots[`${dateStr} ${block.blocked_time}`] = true;
+        const blockedTime = normalizeBookingTime(block.blocked_time);
+        if (blockedTime) bookedSlots[`${dateStr} ${blockedTime}`] = true;
       } else {
         blockedDates[dateStr] = true;
       }
@@ -60,14 +63,14 @@ router.get('/public/booked-slots', async (req, res) => {
 });
 
 async function isSlotBlocked(bookingDate, bookingTime) {
+  const normalizedBookingTime = normalizeBookingTime(bookingTime);
   const result = await pool.query(
-    `SELECT id FROM blocked_dates
+    `SELECT id, blocked_time FROM blocked_dates
      WHERE blocked_date::date = $1::date
-     AND (blocked_time IS NULL OR blocked_time = $2)
-     LIMIT 1`,
-    [bookingDate, bookingTime]
+     AND (blocked_time IS NULL OR blocked_time = $2 OR blocked_time = $3)`,
+    [bookingDate, bookingTime, normalizedBookingTime]
   );
-  return result.rows.length > 0;
+  return result.rows.some(row => !row.blocked_time || normalizeBookingTime(row.blocked_time) === normalizedBookingTime);
 }
 
 function isLongDetailService(serviceType) {
@@ -112,7 +115,17 @@ function enforceServiceDayRules({ bookingDate, serviceLocation, serviceAddress }
 }
 
 function parseBookingMinutes(timeString) {
-  const match = String(timeString || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  const raw = String(timeString || '').trim();
+  const twentyFourHourMatch = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (twentyFourHourMatch) {
+    const hour = Number.parseInt(twentyFourHourMatch[1], 10);
+    const minute = Number.parseInt(twentyFourHourMatch[2], 10);
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+      return (hour * 60) + minute;
+    }
+  }
+
+  const match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
   if (!match) return null;
 
   let hour = Number.parseInt(match[1], 10);
@@ -129,6 +142,11 @@ function formatBookingMinutes(totalMinutes) {
   const period = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
   return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+}
+
+function normalizeBookingTime(timeString) {
+  const minutes = parseBookingMinutes(timeString);
+  return minutes === null ? String(timeString || '').trim() : formatBookingMinutes(minutes);
 }
 
 function getSixHourBlockFromTime(timeString) {
@@ -192,19 +210,20 @@ async function enforceLongDetailRules({ bookingDate, bookingTime, serviceType })
   const isLongDetail = isLongDetailService(serviceType);
   const dayOfWeek = getBookingDayOfWeek(bookingDate);
   const allowedLongStarts = getLongDetailStartTimesForDay(dayOfWeek);
+  const normalizedBookingTime = normalizeBookingTime(bookingTime);
 
-  if (isLongDetail && !allowedLongStarts.includes(bookingTime)) {
+  if (isLongDetail && !allowedLongStarts.includes(normalizedBookingTime)) {
     return ['Sat', 'Sun'].includes(dayOfWeek)
       ? 'Ceramic Coating and Full Vehicle Polish weekend appointments can only start at 6:30 AM or 7:30 AM.'
       : 'Ceramic Coating and Full Vehicle Polish weekday appointments can only start at 12:00 PM or 1:00 PM.';
   }
 
-  const requestedInterval = getAppointmentInterval(bookingTime, isLongDetail ? 360 : 60);
+  const requestedInterval = getAppointmentInterval(normalizedBookingTime, isLongDetail ? 360 : 60);
   const activeBookings = await getActiveBookingsForDate(bookingDate);
 
   for (const booking of activeBookings) {
     const existingIsLongDetail = isLongDetailService(booking.service_type);
-    const existingInterval = getAppointmentInterval(booking.booking_time, existingIsLongDetail ? 360 : 60);
+    const existingInterval = getAppointmentInterval(normalizeBookingTime(booking.booking_time), existingIsLongDetail ? 360 : 60);
 
     if (timeIntervalsOverlap(requestedInterval, existingInterval)) {
       return isLongDetail || existingIsLongDetail
@@ -232,6 +251,7 @@ router.post('/checkout', async (req, res) => {
     }
 
     console.log('[Bookings API] Validation passed');
+    const normalizedBookingTime = normalizeBookingTime(bookingTime);
 
     const serviceDayError = enforceServiceDayRules({ bookingDate, serviceLocation, serviceAddress });
     if (serviceDayError) {
@@ -241,14 +261,14 @@ router.post('/checkout', async (req, res) => {
       });
     }
 
-    if (await isSlotBlocked(bookingDate, bookingTime)) {
+    if (await isSlotBlocked(bookingDate, normalizedBookingTime)) {
       return res.status(409).json({
         error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
         code: 'TIME_SLOT_BLOCKED'
       });
     }
 
-    const longDetailRuleError = await enforceLongDetailRules({ bookingDate, bookingTime, serviceType });
+    const longDetailRuleError = await enforceLongDetailRules({ bookingDate, bookingTime: normalizedBookingTime, serviceType });
     if (longDetailRuleError) {
       return res.status(409).json({
         error: longDetailRuleError,
@@ -262,7 +282,7 @@ router.post('/checkout', async (req, res) => {
        AND booking_time = $2
        AND customer_email = $3
        AND customer_name = $4`,
-      [bookingDate, bookingTime, 'booking.test@gmail.com', 'Available Slot']
+      [bookingDate, normalizedBookingTime, 'booking.test@gmail.com', 'Available Slot']
     );
 
     const bookingId = uuidv4();
@@ -270,7 +290,7 @@ router.post('/checkout', async (req, res) => {
       `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
-      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, normalizedBookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
     );
 
     const booking = result.rows[0];
@@ -282,7 +302,7 @@ router.post('/checkout', async (req, res) => {
       customerName,
       customerEmail,
       bookingDate,
-      bookingTime,
+      bookingTime: normalizedBookingTime,
       serviceType,
       serviceAddress,
       hasPhoto: !!vehiclePhoto
@@ -301,7 +321,7 @@ router.post('/checkout', async (req, res) => {
       customerEmail,
       customerPhone,
       bookingDate,
-      bookingTime,
+      bookingTime: normalizedBookingTime,
       serviceType,
       serviceAddress,
       vehicleType,
@@ -393,6 +413,7 @@ router.post('/', async (req, res) => {
     }
 
     console.log('[Bookings API] Validation passed');
+    const normalizedBookingTime = normalizeBookingTime(bookingTime);
 
     const serviceDayError = enforceServiceDayRules({ bookingDate, serviceLocation, serviceAddress });
     if (serviceDayError) {
@@ -402,14 +423,14 @@ router.post('/', async (req, res) => {
       });
     }
 
-    if (await isSlotBlocked(bookingDate, bookingTime)) {
+    if (await isSlotBlocked(bookingDate, normalizedBookingTime)) {
       return res.status(409).json({
         error: 'This time is blocked by Geruso Detailing. Please choose another slot.',
         code: 'TIME_SLOT_BLOCKED'
       });
     }
 
-    const longDetailRuleError = await enforceLongDetailRules({ bookingDate, bookingTime, serviceType });
+    const longDetailRuleError = await enforceLongDetailRules({ bookingDate, bookingTime: normalizedBookingTime, serviceType });
     if (longDetailRuleError) {
       return res.status(409).json({
         error: longDetailRuleError,
@@ -423,7 +444,7 @@ router.post('/', async (req, res) => {
       `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto || null, 'pending']
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, normalizedBookingTime, vehicleType, notes, vehiclePhoto || null, 'pending']
     );
 
     const booking = result.rows[0];
