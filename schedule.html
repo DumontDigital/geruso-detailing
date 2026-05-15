@@ -361,7 +361,7 @@
           <div class="form-group" id="additionalServicesGroup" style="display: none;">
             <label class="form-label">Additional Packages (Optional)</label>
             <div class="add-on-box">
-              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM because they take 6+ hours.</div>
+              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
               <div id="additionalServicesList"></div>
             </div>
           </div>
@@ -774,7 +774,13 @@
     if (!hours) return [];
 
     if (hasLongDetailServiceSelected()) {
-      return ['12:00 PM', '1:00 PM'];
+      if (MOBILE_SERVICE_DAYS.includes(dayOfWeek)) {
+        return ['12:00 PM', '1:00 PM'];
+      }
+      if (LOCATION_SERVICE_DAYS.includes(dayOfWeek)) {
+        return ['6:30 AM', '7:30 AM'];
+      }
+      return [];
     }
 
     const slots = [];

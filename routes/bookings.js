@@ -35,7 +35,7 @@ router.get('/public/booked-slots', async (req, res) => {
       bookedSlots[key] = true;
       const serviceType = String(booking.service_type || '');
       if (isLongDetailService(serviceType)) {
-        getSixHourBlockFromTime(booking.booking_time).forEach(time => {
+        getBlockedSlotsForLongDetail(booking.booking_time).forEach(time => {
           bookedSlots[`${dateStr} ${time}`] = true;
         });
       }
@@ -74,6 +74,12 @@ function isLongDetailService(serviceType) {
   return /(Ceramic Coating|Full Vehicle Polish)/i.test(String(serviceType || ''));
 }
 
+function getLongDetailStartTimesForDay(dayOfWeek) {
+  if (['Thu', 'Fri'].includes(dayOfWeek)) return ['12:00 PM', '1:00 PM'];
+  if (['Sat', 'Sun'].includes(dayOfWeek)) return ['6:30 AM', '7:30 AM'];
+  return [];
+}
+
 function getBookingDayOfWeek(bookingDate) {
   const [year, month, day] = String(bookingDate || '').split('-').map(Number);
   if (!year || !month || !day) return '';
@@ -105,31 +111,70 @@ function enforceServiceDayRules({ bookingDate, serviceLocation, serviceAddress }
   return '';
 }
 
-function parseBookingHour(timeString) {
-  const match = String(timeString || '').trim().match(/^(\d{1,2})(?::\d{2})?\s*(AM|PM)$/i);
+function parseBookingMinutes(timeString) {
+  const match = String(timeString || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
   if (!match) return null;
 
   let hour = Number.parseInt(match[1], 10);
-  const period = match[2].toUpperCase();
+  const minute = Number.parseInt(match[2] || '0', 10);
+  const period = match[3].toUpperCase();
   if (period === 'PM' && hour !== 12) hour += 12;
   if (period === 'AM' && hour === 12) hour = 0;
-  return hour;
+  return (hour * 60) + minute;
 }
 
-function formatBookingHour(hour) {
+function formatBookingMinutes(totalMinutes) {
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
   const period = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-  return `${displayHour}:00 ${period}`;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
 }
 
 function getSixHourBlockFromTime(timeString) {
-  const startHour = parseBookingHour(timeString);
-  if (startHour === null) return [];
-  return Array.from({ length: 6 }, (_, index) => formatBookingHour(startHour + index));
+  const startMinutes = parseBookingMinutes(timeString);
+  if (startMinutes === null) return [];
+  return Array.from({ length: 6 }, (_, index) => formatBookingMinutes(startMinutes + (index * 60)));
 }
 
-function timeBlocksOverlap(firstBlock, secondBlock) {
-  return firstBlock.some(time => secondBlock.includes(time));
+function getAppointmentInterval(timeString, durationMinutes) {
+  const startMinutes = parseBookingMinutes(timeString);
+  if (startMinutes === null) return null;
+  return {
+    start: startMinutes,
+    end: startMinutes + durationMinutes
+  };
+}
+
+function timeIntervalsOverlap(firstInterval, secondInterval) {
+  if (!firstInterval || !secondInterval) return false;
+  return firstInterval.start < secondInterval.end && secondInterval.start < firstInterval.end;
+}
+
+function getBlockedSlotsForLongDetail(timeString) {
+  const longInterval = getAppointmentInterval(timeString, 360);
+  const candidateSlots = [
+    '6:00 AM',
+    '6:30 AM',
+    '7:00 AM',
+    '7:30 AM',
+    '8:00 AM',
+    '9:00 AM',
+    '10:00 AM',
+    '11:00 AM',
+    '12:00 PM',
+    '1:00 PM',
+    '2:00 PM',
+    '3:00 PM',
+    '4:00 PM',
+    '5:00 PM',
+    '6:00 PM',
+  ];
+
+  return candidateSlots.filter(slot => timeIntervalsOverlap(
+    longInterval,
+    getAppointmentInterval(slot, 60)
+  ));
 }
 
 async function getActiveBookingsForDate(bookingDate) {
@@ -145,21 +190,23 @@ async function getActiveBookingsForDate(bookingDate) {
 
 async function enforceLongDetailRules({ bookingDate, bookingTime, serviceType }) {
   const isLongDetail = isLongDetailService(serviceType);
+  const dayOfWeek = getBookingDayOfWeek(bookingDate);
+  const allowedLongStarts = getLongDetailStartTimesForDay(dayOfWeek);
 
-  if (isLongDetail && !['12:00 PM', '1:00 PM'].includes(bookingTime)) {
-    return 'Ceramic Coating and Full Vehicle Polish appointments can only start at 12:00 PM or 1:00 PM.';
+  if (isLongDetail && !allowedLongStarts.includes(bookingTime)) {
+    return ['Sat', 'Sun'].includes(dayOfWeek)
+      ? 'Ceramic Coating and Full Vehicle Polish weekend appointments can only start at 6:30 AM or 7:30 AM.'
+      : 'Ceramic Coating and Full Vehicle Polish weekday appointments can only start at 12:00 PM or 1:00 PM.';
   }
 
-  const requestedBlock = isLongDetail ? getSixHourBlockFromTime(bookingTime) : [bookingTime];
+  const requestedInterval = getAppointmentInterval(bookingTime, isLongDetail ? 360 : 60);
   const activeBookings = await getActiveBookingsForDate(bookingDate);
 
   for (const booking of activeBookings) {
     const existingIsLongDetail = isLongDetailService(booking.service_type);
-    const existingBlock = existingIsLongDetail
-      ? getSixHourBlockFromTime(booking.booking_time)
-      : [booking.booking_time];
+    const existingInterval = getAppointmentInterval(booking.booking_time, existingIsLongDetail ? 360 : 60);
 
-    if (timeBlocksOverlap(requestedBlock, existingBlock)) {
+    if (timeIntervalsOverlap(requestedInterval, existingInterval)) {
       return isLongDetail || existingIsLongDetail
         ? 'This time overlaps a 6-hour Ceramic Coating or Full Vehicle Polish appointment. Please choose another time.'
         : 'This time was just booked. Please choose another slot.';
