@@ -821,6 +821,12 @@
   document.getElementById('bookingForm').addEventListener('change', (event) => {
     if (event.target && event.target.matches('input[name="addOns"], input[name="additionalServices"]')) {
       updateSelectedServicePrice();
+      if (event.target.matches('input[name="additionalServices"]') && selectedDate) {
+        const dayOfWeek = getSelectedDayOfWeek();
+        clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
+        renderCalendar();
+        renderTimeSlots(dayOfWeek, selectedDate);
+      }
     }
   });
 
@@ -889,9 +895,33 @@
     }));
   }
 
+  function getSelectedPackageNames() {
+    return [
+      getSelectedServiceName(),
+      ...Array.from(document.querySelectorAll('input[name="additionalServices"]:checked')).map(input => input.value)
+    ].filter(Boolean);
+  }
+
   function hasLongDetailServiceSelected() {
-    const selectedNames = [getSelectedServiceName(), ...getSelectedAdditionalServices().map(item => item.serviceName)];
-    return selectedNames.some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
+    return getSelectedPackageNames().some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
+  }
+
+  function getLongDetailTimeMessage(dayOfWeek) {
+    if (MOBILE_SERVICE_DAYS.includes(dayOfWeek)) {
+      return 'Ceramic Coating and Full Vehicle Polish appointments can only start at 12:00 PM or 1:00 PM on Thursday and Friday.';
+    }
+    if (LOCATION_SERVICE_DAYS.includes(dayOfWeek)) {
+      return 'Ceramic Coating and Full Vehicle Polish appointments can only start at 6:30 AM or 7:30 AM on Saturday and Sunday.';
+    }
+    return 'Ceramic Coating and Full Vehicle Polish require a 6-hour appointment window.';
+  }
+
+  function clearSelectedTime(message) {
+    if (selectedTime) {
+      selectedTime = null;
+      document.getElementById('summaryTime').textContent = 'Not selected';
+      if (message) showMessage(message, 'error');
+    }
   }
 
   function updateAdditionalServicesList() {
@@ -922,10 +952,9 @@
 
     list.querySelectorAll('input[name="additionalServices"]').forEach(input => {
       input.addEventListener('change', () => {
-        selectedTime = null;
-        document.getElementById('summaryTime').textContent = 'Not selected';
         if (selectedDate) {
           const dayOfWeek = getSelectedDayOfWeek();
+          clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
           renderTimeSlots(dayOfWeek, selectedDate);
         }
         updateSelectedServicePrice();
@@ -1103,6 +1132,10 @@
     const slots = generateTimeSlots(dayOfWeek);
     const timeSlotsGrid = document.getElementById('timeSlotsGrid');
     const timeMessage = document.getElementById('timeMessage');
+
+    if (selectedTime && !slots.includes(selectedTime)) {
+      clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
+    }
 
     if (slots.length === 0) {
       timeMessage.textContent = 'No availability on this day';
@@ -1331,6 +1364,16 @@
     const day = String(selectedDate.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`; // Format: YYYY-MM-DD (local timezone)
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
+
+    if (!generateTimeSlots(dayOfWeek).includes(selectedTime)) {
+      showMessage(hasLongDetailServiceSelected()
+        ? getLongDetailTimeMessage(dayOfWeek)
+        : 'The selected time is no longer available for this service. Please choose another time.', 'error');
+      clearSelectedTime('');
+      renderCalendar();
+      renderTimeSlots(dayOfWeek, selectedDate);
+      return;
+    }
 
     const bookingKey = `${dateStr} ${selectedTime}`;
     await loadBookedTimeSlots();
