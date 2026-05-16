@@ -1315,8 +1315,9 @@
     tbody.innerHTML = '';
 
     bookings.forEach(booking => {
-      const statusColor = booking.status === 'confirmed' ? 'var(--success)' :
-                        booking.status === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
+      const status = getOwnerStatusDetails(booking);
+      const statusColor = status.label === 'confirmed' ? 'var(--success)' :
+                        status.label === 'cancelled' ? 'var(--accent)' : 'var(--primary)';
 
       const formattedDate = formatDateOnly(booking.booking_date);
 
@@ -1333,7 +1334,7 @@
           <td style="padding: 12px;">${formattedDate}</td>
           <td style="padding: 12px;">${booking.booking_time || '—'}</td>
           <td style="padding: 12px;">
-            <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${booking.status}</span>
+            <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${status.label}</span>
           </td>
           <td style="padding: 12px;">
             <div style="display: flex; gap: 4px; flex-wrap: wrap;">
@@ -1352,6 +1353,18 @@
     return String(booking.payment_status || '').toLowerCase() === 'pay_later'
       ? 'Pay After Service'
       : 'Stripe';
+  }
+
+  function getOwnerStatusDetails(booking) {
+    const savedStatus = String(booking.status || '').toLowerCase();
+    const paymentStatus = String(booking.payment_status || '').toLowerCase();
+    if (['cancelled', 'completed', 'deleted'].includes(savedStatus)) {
+      return { label: savedStatus };
+    }
+    if (paymentStatus === 'paid' || paymentStatus === 'pay_later') {
+      return { label: 'confirmed' };
+    }
+    return { label: savedStatus || 'pending' };
   }
 
   function getOwnerPaymentStyle(booking) {

@@ -18,6 +18,16 @@ const ACTIVE_BOOKING_WHERE = `
 
 const staffOnly = [verifyToken, requireRole(['owner', 'dev'])];
 
+async function reconcileAutoConfirmedBookings() {
+  await pool.query(
+    `UPDATE bookings
+     SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP
+     WHERE status = 'pending'
+     AND payment_status IN ('paid', 'pay_later')
+     AND ${REAL_BOOKING_WHERE}`
+  );
+}
+
 function getCurrentWeekRange(today, addDaysToEasternDate) {
   const [year, month, day] = today.split('-').map(Number);
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
@@ -31,6 +41,8 @@ function getCurrentWeekRange(today, addDaysToEasternDate) {
 // Get dashboard stats (admin only)
 router.get('/dashboard', verifyToken, async (req, res) => {
   try {
+    await reconcileAutoConfirmedBookings();
+
     // Use Eastern Time for dashboard stats
     const { getTodayInEasternTime, addDaysToEasternDate } = require('../utils/availability');
     const today = getTodayInEasternTime();
@@ -57,7 +69,9 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     // Pending confirmations for real customer bookings only.
     const pendingResult = await pool.query(
       `SELECT COUNT(*) as count FROM bookings
-       WHERE status = $1 AND ${REAL_BOOKING_WHERE}`,
+       WHERE status = $1
+       AND COALESCE(payment_status, 'unpaid') NOT IN ('paid', 'pay_later')
+       AND ${REAL_BOOKING_WHERE}`,
       ['pending']
     );
 
@@ -98,6 +112,8 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 // Get all bookings (admin only)
 router.get('/bookings', staffOnly, async (req, res) => {
   try {
+    await reconcileAutoConfirmedBookings();
+
     const { status, search } = req.query;
 
     let query = `SELECT * FROM bookings WHERE ${REAL_BOOKING_WHERE}`;

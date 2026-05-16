@@ -419,6 +419,17 @@ function getCurrentTimeInEastern() {
 // Get all bookings for owner (shows ONLY real customer bookings, not placeholder slots)
 app.get('/api/owner/bookings', verifyToken, requireRole(['owner', 'dev']), async (req, res) => {
   try {
+    await pool.query(
+      `UPDATE bookings
+       SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP
+       WHERE status = 'pending'
+       AND payment_status IN ('paid', 'pay_later')
+       AND NOT (
+         customer_email = 'booking.test@gmail.com'
+         AND customer_name = 'Available Slot'
+       )`
+    );
+
     const result = await pool.query(
       `SELECT * FROM bookings
        WHERE NOT (

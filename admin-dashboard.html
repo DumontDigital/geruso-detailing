@@ -660,6 +660,18 @@
     return { label: 'Stripe', typeClass: 'stripe' };
   }
 
+  function getBookingStatusDetails(booking) {
+    const savedStatus = String(booking.status || '').toLowerCase();
+    const paymentStatus = String(booking.payment_status || '').toLowerCase();
+    if (['cancelled', 'completed', 'deleted'].includes(savedStatus)) {
+      return { label: savedStatus, typeClass: savedStatus };
+    }
+    if (paymentStatus === 'paid' || paymentStatus === 'pay_later') {
+      return { label: 'confirmed', typeClass: 'confirmed' };
+    }
+    return { label: savedStatus || 'pending', typeClass: savedStatus || 'pending' };
+  }
+
   // Section navigation
   function showSection(sectionName, activeItem) {
     // Hide all sections
@@ -722,6 +734,7 @@
         const serviceName = getCleanServiceName(b.service_type);
         const location = getBookingLocationDetails(b);
         const payment = getPaymentMethodDetails(b);
+        const status = getBookingStatusDetails(b);
         return `
           <tr>
             <td>${formatDateForDisplay(b.booking_date)}</td>
@@ -739,7 +752,7 @@
               ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
             </td>
             <td><span class="payment-pill ${escapeHtml(payment.typeClass)}">${escapeHtml(payment.label)}</span></td>
-            <td><span class="status-badge status-${escapeHtml(b.status)}">${escapeHtml(b.status)}</span></td>
+            <td><span class="status-badge status-${escapeHtml(status.typeClass)}">${escapeHtml(status.label)}</span></td>
             <td><div class="action-buttons">
               <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
               <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
