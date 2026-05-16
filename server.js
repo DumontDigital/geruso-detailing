@@ -798,12 +798,12 @@ async function cleanupPlaceholderBookings() {
 }
 
 async function restoreKnownPaidBookings() {
-  const restoreId = 'restore-paid-bookings-2026-05-16-erik-nick';
+  const restoreId = 'restore-paid-bookings-2026-05-16-erik-nick-v2-email-preserve';
   const paidBookings = [
     {
       id: '11111111-0516-2026-0000-000000000001',
       customerName: 'Erik Colon',
-      customerEmail: 'erik.colon.restored@gerusodetailing.com',
+      fallbackEmail: 'erik.colon.restored@gerusodetailing.com',
       customerPhone: '6176378044',
       serviceAddress: '313 Lynne Lane, Mapleville, Rhode Island 02938',
       serviceType: 'Ultra Premium + Full Vehicle Polish',
@@ -816,7 +816,7 @@ async function restoreKnownPaidBookings() {
     {
       id: '11111111-0517-2026-0000-000000000002',
       customerName: 'Erik Colon',
-      customerEmail: 'erik.colon.restored@gerusodetailing.com',
+      fallbackEmail: 'erik.colon.restored@gerusodetailing.com',
       customerPhone: '6176378044',
       serviceAddress: '313 Lynne Lane, Mapleville, Rhode Island 02938',
       serviceType: 'Full Vehicle Polish + Ultra Premium',
@@ -829,7 +829,7 @@ async function restoreKnownPaidBookings() {
     {
       id: '11111111-0529-2026-0000-000000000003',
       customerName: 'Nick Winn',
-      customerEmail: 'nick.winn.restored@gerusodetailing.com',
+      fallbackEmail: 'nick.winn.restored@gerusodetailing.com',
       customerPhone: '4014811943',
       serviceAddress: '33 Briar Hill Dr',
       serviceType: 'Premium Package + Ultra Premium',
@@ -859,6 +859,31 @@ async function restoreKnownPaidBookings() {
 
     for (const booking of paidBookings) {
       const compactTime = booking.bookingTime.replace(':00 ', ' ');
+      const emailLookup = await pool.query(
+        `SELECT customer_email
+         FROM bookings
+         WHERE (
+           (booking_date::date = $1::date AND (booking_time = $2 OR booking_time = $3))
+           OR regexp_replace(COALESCE(customer_phone, ''), '\\D', '', 'g') = $4
+           OR lower(customer_name) = lower($5)
+         )
+         AND customer_email IS NOT NULL
+         AND customer_email <> ''
+         AND customer_email NOT ILIKE '%restored@gerusodetailing.com'
+         ORDER BY
+           CASE WHEN booking_date::date = $1::date AND (booking_time = $2 OR booking_time = $3) THEN 0 ELSE 1 END,
+           updated_at DESC
+         LIMIT 1`,
+        [
+          booking.bookingDate,
+          booking.bookingTime,
+          compactTime,
+          String(booking.customerPhone || '').replace(/\D/g, ''),
+          booking.customerName
+        ]
+      );
+      const customerEmail = emailLookup.rows[0]?.customer_email || booking.fallbackEmail;
+
       await pool.query(
         `DELETE FROM bookings
          WHERE booking_date::date = $1::date
@@ -905,7 +930,7 @@ async function restoreKnownPaidBookings() {
         [
           booking.id,
           booking.customerName,
-          booking.customerEmail,
+          customerEmail,
           booking.customerPhone,
           booking.serviceAddress,
           booking.serviceType,

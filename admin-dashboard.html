@@ -815,6 +815,7 @@
             <td>${escapeHtml(b.booking_time)}</td>
             <td>
               <div class="booking-primary">${escapeHtml(b.customer_name)}</div>
+              <div class="booking-secondary">${escapeHtml(b.customer_email || 'No email on file')}</div>
               <div class="booking-secondary">${escapeHtml(b.customer_phone || 'No phone number')}</div>
             </td>
             <td>
