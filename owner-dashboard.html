@@ -724,6 +724,7 @@
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Payment</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Status</th>
@@ -748,6 +749,7 @@
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Payment</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Status</th>
@@ -1325,6 +1327,9 @@
           <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
           <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
           <td style="padding: 12px;">${booking.service_type || '—'}</td>
+          <td style="padding: 12px;">
+            <span style="${getOwnerPaymentStyle(booking)} padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap;">${getOwnerPaymentLabel(booking)}</span>
+          </td>
           <td style="padding: 12px;">${formattedDate}</td>
           <td style="padding: 12px;">${booking.booking_time || '—'}</td>
           <td style="padding: 12px;">
@@ -1341,6 +1346,18 @@
         </tr>
       `;
     });
+  }
+
+  function getOwnerPaymentLabel(booking) {
+    return String(booking.payment_status || '').toLowerCase() === 'pay_later'
+      ? 'Pay After Service'
+      : 'Stripe';
+  }
+
+  function getOwnerPaymentStyle(booking) {
+    return String(booking.payment_status || '').toLowerCase() === 'pay_later'
+      ? 'background: rgba(0,255,65,0.12); color: var(--primary); border: 1px solid rgba(0,255,65,0.45);'
+      : 'background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.45);';
   }
   
   async function loadSchedule() {

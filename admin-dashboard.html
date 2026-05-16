@@ -79,6 +79,8 @@
     .location-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; border: 1px solid rgba(0,255,65,0.45); color: var(--primary); background: rgba(0,255,65,0.1); }
     .location-pill.location { color: var(--text); border-color: var(--border); background: rgba(255,255,255,0.04); }
     .location-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }
+    .payment-pill { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; border: 1px solid rgba(59,130,246,0.45); color: #60a5fa; background: rgba(59,130,246,0.12); white-space: nowrap; }
+    .payment-pill.pay-later { border-color: rgba(0,255,65,0.45); color: var(--primary); background: rgba(0,255,65,0.1); }
 
     .status-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-pending { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.4); }
@@ -235,12 +237,13 @@
               <th>Customer</th>
               <th>Service</th>
               <th>Location</th>
+              <th>Payment</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="bookingsTableBody">
-            <tr><td colspan="7">Loading...</td></tr>
+            <tr><td colspan="8">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -649,6 +652,14 @@
     };
   }
 
+  function getPaymentMethodDetails(booking) {
+    const paymentStatus = String(booking.payment_status || '').toLowerCase();
+    if (paymentStatus === 'pay_later') {
+      return { label: 'Pay After Service', typeClass: 'pay-later' };
+    }
+    return { label: 'Stripe', typeClass: 'stripe' };
+  }
+
   // Section navigation
   function showSection(sectionName, activeItem) {
     // Hide all sections
@@ -704,12 +715,13 @@
       const bookings = data.bookings || [];
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
       tbody.innerHTML = bookings.map(b => {
         const serviceName = getCleanServiceName(b.service_type);
         const location = getBookingLocationDetails(b);
+        const payment = getPaymentMethodDetails(b);
         return `
           <tr>
             <td>${formatDateForDisplay(b.booking_date)}</td>
@@ -726,6 +738,7 @@
               <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
               ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
             </td>
+            <td><span class="payment-pill ${escapeHtml(payment.typeClass)}">${escapeHtml(payment.label)}</span></td>
             <td><span class="status-badge status-${escapeHtml(b.status)}">${escapeHtml(b.status)}</span></td>
             <td><div class="action-buttons">
               <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
