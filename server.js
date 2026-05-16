@@ -436,6 +436,10 @@ app.get('/api/owner/bookings', verifyToken, requireRole(['owner', 'dev']), async
          customer_email = 'booking.test@gmail.com'
          AND customer_name = 'Available Slot'
        )
+       AND (
+         status IN ('confirmed', 'paid', 'completed')
+         OR payment_status IN ('paid', 'pay_later')
+       )
        ORDER BY booking_date ASC, booking_time ASC`
     );
     res.json({ bookings: result.rows });

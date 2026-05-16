@@ -1397,6 +1397,21 @@
   }
 
   function getOwnerServicePrice(booking) {
+    const services = String(booking.service_type || '')
+      .split('+')
+      .map(service => getOwnerCleanServiceName(service))
+      .filter(Boolean);
+    let total = 0;
+    services.forEach(serviceName => {
+      const catalogPrice = ownerServicePrices[serviceName];
+      if (catalogPrice) {
+        total += String(booking.vehicle_type || '').toLowerCase() === 'truck'
+          ? catalogPrice.truck
+          : catalogPrice.car;
+      }
+    });
+    if (total > 0) return total;
+
     const serviceName = getOwnerCleanServiceName(booking.service_type);
     const catalogPrice = ownerServicePrices[serviceName];
     if (catalogPrice) {

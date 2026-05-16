@@ -16,6 +16,13 @@ const ACTIVE_BOOKING_WHERE = `
   status NOT IN ('cancelled', 'deleted', 'failed', 'expired', 'no-show')
 `;
 
+const CONFIRMED_BOOKING_WHERE = `
+  (
+    status IN ('confirmed', 'paid', 'completed')
+    OR payment_status IN ('paid', 'pay_later')
+  )
+`;
+
 const staffOnly = [verifyToken, requireRole(['owner', 'dev'])];
 
 async function reconcileAutoConfirmedBookings() {
@@ -55,25 +62,19 @@ router.get('/dashboard', verifyToken, async (req, res) => {
     // Today's bookings (active only)
     const todayResult = await pool.query(
       `SELECT COUNT(*) as count FROM bookings
-       WHERE booking_date = $1 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
+       WHERE booking_date = $1 AND ${ACTIVE_BOOKING_WHERE} AND ${CONFIRMED_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
       [today]
     );
 
     // This calendar week's bookings (Monday-Sunday, active only)
     const weekResult = await pool.query(
       `SELECT COUNT(*) as count FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
+       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${CONFIRMED_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}`,
       [weekStart, weekEnd]
     );
 
     // Pending confirmations for real customer bookings only.
-    const pendingResult = await pool.query(
-      `SELECT COUNT(*) as count FROM bookings
-       WHERE status = $1
-       AND COALESCE(payment_status, 'unpaid') NOT IN ('paid', 'pay_later')
-       AND ${REAL_BOOKING_WHERE}`,
-      ['pending']
-    );
+    const pendingResult = { rows: [{ count: 0 }] };
 
     // Revenue from confirmed real bookings only (cancelled never count)
     const revenueResult = await pool.query(
@@ -90,7 +91,7 @@ router.get('/dashboard', verifyToken, async (req, res) => {
 
     const upcomingResult = await pool.query(
       `SELECT * FROM bookings
-       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}
+       WHERE booking_date BETWEEN $1 AND $2 AND ${ACTIVE_BOOKING_WHERE} AND ${CONFIRMED_BOOKING_WHERE} AND ${REAL_BOOKING_WHERE}
        ORDER BY booking_date ASC, booking_time ASC
        LIMIT 10`,
       [today, sevenDaysLaterStr]
@@ -116,7 +117,7 @@ router.get('/bookings', staffOnly, async (req, res) => {
 
     const { status, search } = req.query;
 
-    let query = `SELECT * FROM bookings WHERE ${REAL_BOOKING_WHERE}`;
+    let query = `SELECT * FROM bookings WHERE ${REAL_BOOKING_WHERE} AND ${CONFIRMED_BOOKING_WHERE}`;
     const params = [];
     let paramIndex = 1;
 

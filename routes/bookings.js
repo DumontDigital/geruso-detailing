@@ -8,7 +8,7 @@ const { createCheckoutSession } = require('../stripe');
 const router = express.Router();
 
 // Get booked time slots (public endpoint - no auth required)
-// Only count REAL customer bookings: pending, confirmed, paid
+// Only count REAL completed bookings: paid Stripe or pay-after-service.
 // EXCLUDE: placeholder rows, cancelled, deleted, failed, expired
 router.get('/public/booked-slots', async (req, res) => {
   try {
@@ -16,7 +16,7 @@ router.get('/public/booked-slots', async (req, res) => {
 
     const result = await pool.query(
       `SELECT booking_date, booking_time, service_type, service_address FROM bookings
-       WHERE status IN ('pending', 'confirmed', 'paid', 'completed')
+       WHERE (status IN ('confirmed', 'paid', 'completed') OR payment_status IN ('paid', 'pay_later'))
        AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
       []
     );
@@ -199,7 +199,7 @@ async function getActiveBookingsForDate(bookingDate) {
   const result = await pool.query(
     `SELECT id, booking_time, service_type FROM bookings
      WHERE booking_date::date = $1::date
-     AND status IN ('pending', 'confirmed', 'paid', 'completed')
+     AND (status IN ('confirmed', 'paid', 'completed') OR payment_status IN ('paid', 'pay_later'))
      AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
     [bookingDate]
   );

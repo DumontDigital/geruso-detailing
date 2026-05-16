@@ -685,6 +685,21 @@
   }
 
   function getDashboardServicePrice(booking) {
+    const services = String(booking.service_type || '')
+      .split('+')
+      .map(service => getCleanServiceName(service))
+      .filter(Boolean);
+    let total = 0;
+    services.forEach(serviceName => {
+      const catalogPrice = dashboardServicePrices[serviceName];
+      if (catalogPrice) {
+        total += String(booking.vehicle_type || '').toLowerCase() === 'truck'
+          ? catalogPrice.truck
+          : catalogPrice.car;
+      }
+    });
+    if (total > 0) return total;
+
     const serviceName = getCleanServiceName(booking.service_type);
     const catalogPrice = dashboardServicePrices[serviceName];
     if (catalogPrice) {
