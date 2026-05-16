@@ -55,6 +55,29 @@
     .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
     .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 24px; }
     .section-sub { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.8; margin-bottom: 32px; }
+    .schedule-bullets {
+      max-width: 760px;
+      margin: 0 0 32px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .schedule-bullets li { position: relative; padding-left: 22px; }
+    .schedule-bullets li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65em;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px rgba(0,255,65,0.35);
+    }
     section { padding: 80px 48px; }
     .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
 
@@ -193,6 +216,7 @@
         overflow-wrap: anywhere;
       }
       .section-sub { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+      .schedule-bullets { font-size: 14px; gap: 9px; margin-bottom: 18px; }
       .booking-container { gap: 16px; }
       .calendar-section,
       .time-slots-section,
@@ -294,11 +318,21 @@
   <div class="section-inner">
     <div class="section-label">SCHEDULE YOUR APPOINTMENT</div>
     <h1 class="section-heading">Book Your Detailing Service</h1>
-    <p class="section-sub">Choose Mobile if you want Geruso Detailing to come to you, or choose Geruso Location for 313 Lynne Lane, Mapleville, Rhode Island 02938. Mobile appointments are available Thursday and Friday. Geruso Location appointments are available Saturday and Sunday by appointment only. No walk-ins.</p>
+    <ul class="schedule-bullets" aria-label="Scheduling details">
+      <li>Choose Mobile if you want Geruso Detailing to come to you.</li>
+      <li>Choose Geruso Location for 313 Lynne Lane, Mapleville, Rhode Island 02938.</li>
+      <li>Mobile appointments are available Thursday and Friday.</li>
+      <li>Geruso Location appointments are available Saturday and Sunday by appointment only.</li>
+      <li>No walk-ins.</li>
+    </ul>
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
       <div>
+        <div class="booking-step-note">
+          <strong>Quick note:</strong> Fill out your information first, choose a service, then select an available day and time on the calendar.
+        </div>
+
         <div class="calendar-section">
           <div class="calendar-header">
             <h3 class="calendar-month" id="calendarMonth">January 2026</h3>
@@ -336,10 +370,6 @@
         <div id="messageBox"></div>
 
         <form id="bookingForm">
-          <div class="booking-step-note">
-            <strong>Quick note:</strong> Fill out your information first, choose a service, then select an available day and time on the calendar.
-          </div>
-
           <div class="booking-summary" id="bookingSummary" style="display: none;">
             <div class="summary-item"><span class="summary-label">Date:</span> <span class="summary-value" id="summaryDate">Not selected</span></div>
             <div class="summary-item"><span class="summary-label">Time:</span> <span class="summary-value" id="summaryTime">Not selected</span></div>
