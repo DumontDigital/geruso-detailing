@@ -1286,15 +1286,18 @@
         }
       });
 
+      const groupedUpcomingBookings = groupOwnerBookingsForDisplay(upcomingBookings);
+      const groupedHistoryBookings = groupOwnerBookingsForDisplay(historyBookings);
+
       // Render upcoming bookings
-      renderBookingsSection('upcomingBookingsList', 'upcomingEmpty', upcomingBookings);
+      renderBookingsSection('upcomingBookingsList', 'upcomingEmpty', groupedUpcomingBookings);
 
       // Render history bookings
-      renderBookingsSection('historyBookingsList', 'historyEmpty', historyBookings);
+      renderBookingsSection('historyBookingsList', 'historyEmpty', groupedHistoryBookings);
 
       // Update counts
-      document.getElementById('upcomingCount').textContent = `(${upcomingBookings.length})`;
-      document.getElementById('historyCount').textContent = `(${historyBookings.length})`;
+      document.getElementById('upcomingCount').textContent = `(${groupedUpcomingBookings.length})`;
+      document.getElementById('historyCount').textContent = `(${groupedHistoryBookings.length})`;
 
     } catch (error) {
       console.error('Error loading bookings:', error);
@@ -1327,7 +1330,10 @@
           <td style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
           <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
           <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
-          <td style="padding: 12px;">${booking.service_type || '—'}</td>
+          <td style="padding: 12px;">
+            <div style="font-weight: 700;">${booking.service_type || '—'}</div>
+            <div style="color: var(--text-muted); font-size: 12px;">$${Number(booking.totalPrice || 0).toLocaleString()} total</div>
+          </td>
           <td style="padding: 12px;">
             <span style="${getOwnerPaymentStyle(booking)} padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap;">${getOwnerPaymentLabel(booking)}</span>
           </td>
@@ -1338,10 +1344,10 @@
           </td>
           <td style="padding: 12px;">
             <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-              <button onclick="ownerMarkCompleted('${booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
+              <button onclick="ownerMarkCompletedGroup('${booking.idList || booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
               ${booking.status !== 'cancelled' ?
-                `<button onclick="ownerCancelBooking('${booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>` : ''}
-              <button onclick="ownerDeleteBooking('${booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Delete</button>
+                `<button onclick="ownerCancelBookingGroup('${booking.idList || booking.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>` : ''}
+              <button onclick="ownerDeleteBookingGroup('${booking.idList || booking.id}')" style="padding: 4px 8px; background: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Delete</button>
             </div>
           </td>
         </tr>
@@ -1371,6 +1377,65 @@
     return String(booking.payment_status || '').toLowerCase() === 'pay_later'
       ? 'background: rgba(0,255,65,0.12); color: var(--primary); border: 1px solid rgba(0,255,65,0.45);'
       : 'background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.45);';
+  }
+
+  const ownerServicePrices = {
+    'Full Motorcycle Service': { car: 70, truck: 70 },
+    'Interior Detailing': { car: 100, truck: 100 },
+    'Car Wash': { car: 85, truck: 120 },
+    'Ceramic Coating': { car: 400, truck: 400 },
+    'Premium Package': { car: 175, truck: 215 },
+    'Ultra Premium': { car: 335, truck: 375 },
+    'Engine Bay Cleaning': { car: 75, truck: 75 },
+    'Full Vehicle Polish': { car: 250, truck: 250 },
+    'Pet Hair / Odor Elimination': { car: 50, truck: 50 },
+    'Headlight Restoration': { car: 50, truck: 50 },
+  };
+
+  function getOwnerCleanServiceName(serviceType) {
+    return String(serviceType || '').split('-')[0].trim() || 'Service';
+  }
+
+  function getOwnerServicePrice(booking) {
+    const serviceName = getOwnerCleanServiceName(booking.service_type);
+    const catalogPrice = ownerServicePrices[serviceName];
+    if (catalogPrice) {
+      return String(booking.vehicle_type || '').toLowerCase() === 'truck'
+        ? catalogPrice.truck
+        : catalogPrice.car;
+    }
+    const match = String(booking.service_type || '').match(/\$(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  function groupOwnerBookingsForDisplay(bookings) {
+    const groups = new Map();
+    bookings.forEach(booking => {
+      const key = [
+        String(booking.booking_date || '').split('T')[0],
+        String(booking.booking_time || '').trim(),
+        String(booking.customer_email || '').trim().toLowerCase(),
+        String(booking.customer_phone || '').replace(/\D/g, ''),
+        String(booking.service_address || '').trim().toLowerCase()
+      ].join('|');
+      if (!groups.has(key)) {
+        groups.set(key, { ...booking, ids: [], serviceNames: [], totalPrice: 0 });
+      }
+      const group = groups.get(key);
+      group.ids.push(booking.id);
+      const serviceName = getOwnerCleanServiceName(booking.service_type);
+      if (serviceName && !group.serviceNames.includes(serviceName)) group.serviceNames.push(serviceName);
+      group.totalPrice += getOwnerServicePrice(booking);
+      if (String(booking.payment_status || '').toLowerCase() === 'paid') group.payment_status = 'paid';
+      if (String(booking.payment_status || '').toLowerCase() === 'pay_later' && group.payment_status !== 'paid') group.payment_status = 'pay_later';
+      if (['completed', 'cancelled'].includes(String(booking.status || '').toLowerCase())) group.status = booking.status;
+    });
+    return Array.from(groups.values()).map(group => ({
+      ...group,
+      id: group.ids[0],
+      idList: group.ids.join(','),
+      service_type: group.serviceNames.join(' + ')
+    }));
   }
   
   async function loadSchedule() {
@@ -1571,6 +1636,44 @@
     } catch (error) {
       alert('Failed to delete: ' + error.message);
     }
+  };
+
+  async function runOwnerBookingGroupAction(idList, action, confirmText, successText) {
+    const ids = String(idList || '').split(',').filter(Boolean);
+    if (!ids.length) { alert('Cannot update: missing booking id.'); return; }
+    if (confirmText && !confirm(confirmText)) return;
+
+    try {
+      for (const id of ids) {
+        const endpoint = action === 'delete'
+          ? `/api/owner/booking/${encodeURIComponent(id)}`
+          : `/api/owner/booking/${encodeURIComponent(id)}/${action}`;
+        const response = await fetch(endpoint, {
+          method: action === 'delete' ? 'DELETE' : 'POST',
+          headers: ownerAuthHeaders()
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body.error || `Server returned ${response.status}`);
+        }
+      }
+      alert(successText);
+      loadBookings();
+    } catch (error) {
+      alert('Failed to update appointment: ' + error.message);
+    }
+  }
+
+  window.ownerMarkCompletedGroup = (idList) => {
+    return runOwnerBookingGroupAction(idList, 'complete', 'Mark this full appointment as completed?', '✓ Appointment marked as completed');
+  };
+
+  window.ownerCancelBookingGroup = (idList) => {
+    return runOwnerBookingGroupAction(idList, 'cancel', 'Cancel this full appointment?', '✓ Appointment cancelled');
+  };
+
+  window.ownerDeleteBookingGroup = (idList) => {
+    return runOwnerBookingGroupAction(idList, 'delete', 'Delete this full appointment permanently? This cannot be undone.', '✓ Appointment deleted');
   };
   
   window.ownerSaveScheduleDay = async (day) => {

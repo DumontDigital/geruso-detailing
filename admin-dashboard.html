@@ -626,6 +626,18 @@
   }
 
   const locationOnlyServices = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
+  const dashboardServicePrices = {
+    'Full Motorcycle Service': { car: 70, truck: 70 },
+    'Interior Detailing': { car: 100, truck: 100 },
+    'Car Wash': { car: 85, truck: 120 },
+    'Ceramic Coating': { car: 400, truck: 400 },
+    'Premium Package': { car: 175, truck: 215 },
+    'Ultra Premium': { car: 335, truck: 375 },
+    'Engine Bay Cleaning': { car: 75, truck: 75 },
+    'Full Vehicle Polish': { car: 250, truck: 250 },
+    'Pet Hair / Odor Elimination': { car: 50, truck: 50 },
+    'Headlight Restoration': { car: 50, truck: 50 },
+  };
 
   function getCleanServiceName(serviceType) {
     return String(serviceType || '').split('-')[0].trim() || 'Service';
@@ -670,6 +682,53 @@
       return { label: 'confirmed', typeClass: 'confirmed' };
     }
     return { label: savedStatus || 'pending', typeClass: savedStatus || 'pending' };
+  }
+
+  function getDashboardServicePrice(booking) {
+    const serviceName = getCleanServiceName(booking.service_type);
+    const catalogPrice = dashboardServicePrices[serviceName];
+    if (catalogPrice) {
+      return String(booking.vehicle_type || '').toLowerCase() === 'truck'
+        ? catalogPrice.truck
+        : catalogPrice.car;
+    }
+    const match = String(booking.service_type || '').match(/\$(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  function groupBookingsForDisplay(bookings) {
+    const groups = new Map();
+    bookings.forEach(booking => {
+      const key = [
+        String(booking.booking_date || '').split('T')[0],
+        String(booking.booking_time || '').trim(),
+        String(booking.customer_email || '').trim().toLowerCase(),
+        String(booking.customer_phone || '').replace(/\D/g, ''),
+        String(booking.service_address || '').trim().toLowerCase()
+      ].join('|');
+      if (!groups.has(key)) {
+        groups.set(key, {
+          ...booking,
+          ids: [],
+          serviceNames: [],
+          totalPrice: 0
+        });
+      }
+      const group = groups.get(key);
+      group.ids.push(booking.id);
+      const serviceName = getCleanServiceName(booking.service_type);
+      if (serviceName && !group.serviceNames.includes(serviceName)) group.serviceNames.push(serviceName);
+      group.totalPrice += getDashboardServicePrice(booking);
+      if (String(booking.payment_status || '').toLowerCase() === 'paid') group.payment_status = 'paid';
+      if (String(booking.payment_status || '').toLowerCase() === 'pay_later' && group.payment_status !== 'paid') group.payment_status = 'pay_later';
+      if (['completed', 'cancelled'].includes(String(booking.status || '').toLowerCase())) group.status = booking.status;
+    });
+    return Array.from(groups.values()).map(group => ({
+      ...group,
+      id: group.ids[0],
+      idList: group.ids.join(','),
+      service_type: group.serviceNames.join(' + ')
+    }));
   }
 
   // Section navigation
@@ -730,7 +789,7 @@
         tbody.innerHTML = '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
-      tbody.innerHTML = bookings.map(b => {
+      tbody.innerHTML = groupBookingsForDisplay(bookings).map(b => {
         const serviceName = getCleanServiceName(b.service_type);
         const location = getBookingLocationDetails(b);
         const payment = getPaymentMethodDetails(b);
@@ -744,8 +803,8 @@
               <div class="booking-secondary">${escapeHtml(b.customer_phone || 'No phone number')}</div>
             </td>
             <td>
-              <div class="booking-primary">${escapeHtml(serviceName)}</div>
-              <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')}</div>
+              <div class="booking-primary">${escapeHtml(b.service_type)}</div>
+              <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')} • $${Number(b.totalPrice || 0).toLocaleString()} total</div>
             </td>
             <td>
               <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
@@ -755,10 +814,10 @@
             <td><span class="status-badge status-${escapeHtml(status.typeClass)}">${escapeHtml(status.label)}</span></td>
             <td><div class="action-buttons">
               <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
-              <button class="action-btn success" onclick="markConfirmed('${b.id}')">Confirm</button>
-              <button class="action-btn success" onclick="markCompletedRow('${b.id}')">Complete</button>
-              <button class="action-btn error" onclick="cancelBooking('${b.id}')">Cancel</button>
-              <button class="action-btn error" onclick="deleteBookingRow('${b.id}')">Delete</button>
+              <button class="action-btn success" onclick="markConfirmedGroup('${b.idList}')">Confirm</button>
+              <button class="action-btn success" onclick="markCompletedGroup('${b.idList}')">Complete</button>
+              <button class="action-btn error" onclick="cancelBookingGroup('${b.idList}')">Cancel</button>
+              <button class="action-btn error" onclick="deleteBookingGroup('${b.idList}')">Delete</button>
             </div></td>
           </tr>
         `;
@@ -867,6 +926,71 @@
     } catch (error) {
       alert('Failed to delete: ' + error.message);
     }
+  }
+
+  async function runBookingGroupAction(idList, action, confirmText, successText) {
+    const ids = String(idList || '').split(',').filter(Boolean);
+    if (!ids.length) { alert('Cannot update: missing booking id.'); return; }
+    if (confirmText && !confirm(confirmText)) return;
+
+    try {
+      for (const id of ids) {
+        if (action === 'delete') {
+          let res = await fetch(`/api/admin/booking/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: adminAuthHeaders()
+          });
+          if (res.status === 401 || res.status === 403) {
+            res = await fetch(`/api/owner/booking/${encodeURIComponent(id)}`, {
+              method: 'DELETE',
+              headers: adminAuthHeaders()
+            });
+          }
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(body.error || `Server returned ${res.status}`);
+        } else {
+          const adminPath = action === 'complete' ? 'mark-completed'
+            : action === 'confirm' ? 'mark-confirmed'
+            : 'cancel';
+          let res = await fetch(`/api/admin/booking/${encodeURIComponent(id)}/${adminPath}`, {
+            method: 'POST',
+            headers: adminAuthHeaders()
+          });
+          if (res.status === 401 || res.status === 403 || res.status === 404) {
+            const ownerPath = action === 'complete' ? 'complete'
+              : action === 'confirm' ? 'confirm'
+              : 'cancel';
+            res = await fetch(`/api/owner/booking/${encodeURIComponent(id)}/${ownerPath}`, {
+              method: 'POST',
+              headers: adminAuthHeaders()
+            });
+          }
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(body.error || `Server returned ${res.status}`);
+        }
+      }
+      alert(successText);
+      loadDashboard();
+      loadBookings();
+    } catch (error) {
+      alert('Failed to update appointment: ' + error.message);
+    }
+  }
+
+  function deleteBookingGroup(idList) {
+    return runBookingGroupAction(idList, 'delete', 'Delete this full appointment permanently?', '✓ Appointment deleted');
+  }
+
+  function markCompletedGroup(idList) {
+    return runBookingGroupAction(idList, 'complete', 'Mark this full appointment as completed?', '✓ Appointment marked complete');
+  }
+
+  function markConfirmedGroup(idList) {
+    return runBookingGroupAction(idList, 'confirm', null, '✓ Appointment confirmed');
+  }
+
+  function cancelBookingGroup(idList) {
+    return runBookingGroupAction(idList, 'cancel', 'Cancel this full appointment?', '✓ Appointment cancelled');
   }
 
   // Row-level Complete (mark booking completed). Same fallback as Delete.
