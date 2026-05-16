@@ -797,6 +797,147 @@ async function cleanupPlaceholderBookings() {
   }
 }
 
+async function restoreKnownPaidBookings() {
+  const restoreId = 'restore-paid-bookings-2026-05-16-erik-nick';
+  const paidBookings = [
+    {
+      id: '11111111-0516-2026-0000-000000000001',
+      customerName: 'Erik Colon',
+      customerEmail: 'erik.colon.restored@gerusodetailing.com',
+      customerPhone: '6176378044',
+      serviceAddress: '313 Lynne Lane, Mapleville, Rhode Island 02938',
+      serviceType: 'Ultra Premium + Full Vehicle Polish',
+      bookingDate: '2026-05-16',
+      bookingTime: '12:00 PM',
+      vehicleType: 'Car',
+      notes: 'Restored paid Stripe booking from May 16 admin record.',
+      stripeSessionId: 'restored-paid-erik-colon-2026-05-16-1200'
+    },
+    {
+      id: '11111111-0517-2026-0000-000000000002',
+      customerName: 'Erik Colon',
+      customerEmail: 'erik.colon.restored@gerusodetailing.com',
+      customerPhone: '6176378044',
+      serviceAddress: '313 Lynne Lane, Mapleville, Rhode Island 02938',
+      serviceType: 'Full Vehicle Polish + Ultra Premium',
+      bookingDate: '2026-05-17',
+      bookingTime: '12:00 PM',
+      vehicleType: 'Car',
+      notes: 'Restored paid Stripe booking from May 17 admin record.',
+      stripeSessionId: 'restored-paid-erik-colon-2026-05-17-1200'
+    },
+    {
+      id: '11111111-0529-2026-0000-000000000003',
+      customerName: 'Nick Winn',
+      customerEmail: 'nick.winn.restored@gerusodetailing.com',
+      customerPhone: '4014811943',
+      serviceAddress: '33 Briar Hill Dr',
+      serviceType: 'Premium Package + Ultra Premium',
+      bookingDate: '2026-05-29',
+      bookingTime: '12:00 PM',
+      vehicleType: 'Car',
+      notes: 'Restored paid Stripe booking from May 29 admin record. Combined matching same-time services into one booking.',
+      stripeSessionId: 'restored-paid-nick-winn-2026-05-29-1200'
+    }
+  ];
+
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS data_restores (
+        id VARCHAR(120) PRIMARY KEY,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const existingRestore = await pool.query('SELECT id FROM data_restores WHERE id = $1', [restoreId]);
+    if (existingRestore.rowCount > 0) {
+      console.log('[Startup] Paid booking restore already applied:', restoreId);
+      return;
+    }
+
+    await pool.query('BEGIN');
+
+    for (const booking of paidBookings) {
+      const compactTime = booking.bookingTime.replace(':00 ', ' ');
+      await pool.query(
+        `DELETE FROM bookings
+         WHERE booking_date::date = $1::date
+         AND (booking_time = $2 OR booking_time = $3)`,
+        [booking.bookingDate, booking.bookingTime, compactTime]
+      );
+
+      await pool.query(
+        `INSERT INTO bookings (
+          id,
+          customer_name,
+          customer_email,
+          customer_phone,
+          service_address,
+          service_type,
+          booking_date,
+          booking_time,
+          vehicle_type,
+          notes,
+          status,
+          payment_status,
+          stripe_session_id,
+          stripe_payment_intent_id,
+          deposit_amount,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8, $9, $10, 'confirmed', 'paid', $11, $12, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (id)
+        DO UPDATE SET
+          customer_name = EXCLUDED.customer_name,
+          customer_email = EXCLUDED.customer_email,
+          customer_phone = EXCLUDED.customer_phone,
+          service_address = EXCLUDED.service_address,
+          service_type = EXCLUDED.service_type,
+          vehicle_type = EXCLUDED.vehicle_type,
+          notes = EXCLUDED.notes,
+          status = 'confirmed',
+          payment_status = 'paid',
+          stripe_session_id = EXCLUDED.stripe_session_id,
+          stripe_payment_intent_id = EXCLUDED.stripe_payment_intent_id,
+          deposit_amount = EXCLUDED.deposit_amount,
+          updated_at = CURRENT_TIMESTAMP`,
+        [
+          booking.id,
+          booking.customerName,
+          booking.customerEmail,
+          booking.customerPhone,
+          booking.serviceAddress,
+          booking.serviceType,
+          booking.bookingDate,
+          booking.bookingTime,
+          booking.vehicleType,
+          booking.notes,
+          booking.stripeSessionId,
+          `restored-${booking.id}`
+        ]
+      );
+    }
+
+    await pool.query(
+      `INSERT INTO data_restores (id, applied_at)
+       VALUES ($1, CURRENT_TIMESTAMP)
+       ON CONFLICT (id) DO NOTHING`,
+      [restoreId]
+    );
+    await pool.query('COMMIT');
+
+    console.log('[Startup] Restored paid bookings for Erik Colon and Nick Winn');
+  } catch (error) {
+    try {
+      await pool.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('[Startup] Warning: Paid booking restore rollback failed:', rollbackError.message);
+    }
+    console.error('[Startup] Warning: Failed to restore paid bookings:', error.message);
+  }
+}
+
 async function startServer() {
   console.log('[Startup] ════════════════════════════════════════');
   console.log('[Startup] Starting Geruso Detailing server... [PHASE-1-BUILD-2025]');
@@ -815,6 +956,7 @@ async function startServer() {
   }
 
   await cleanupPlaceholderBookings();
+  await restoreKnownPaidBookings();
 
   // Start listening for connections
   app.listen(PORT, '0.0.0.0', () => {
