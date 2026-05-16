@@ -27,6 +27,7 @@ router.get('/public/booked-slots', async (req, res) => {
 
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
+    const bookedAppointments = [];
     const blockedDates = {};
     result.rows.forEach(booking => {
       // booking_date is already in YYYY-MM-DD format from database, don't convert
@@ -36,6 +37,12 @@ router.get('/public/booked-slots', async (req, res) => {
       const key = `${dateStr} ${bookingTime}`;
       bookedSlots[key] = true;
       const serviceType = String(booking.service_type || '');
+      bookedAppointments.push({
+        date: dateStr,
+        time: bookingTime,
+        serviceType,
+        durationMinutes: isLongDetailService(serviceType) ? 360 : 60
+      });
       if (isLongDetailService(serviceType)) {
         getBlockedSlotsForLongDetail(bookingTime).forEach(time => {
           bookedSlots[`${dateStr} ${time}`] = true;
@@ -55,7 +62,7 @@ router.get('/public/booked-slots', async (req, res) => {
 
     console.log('[Bookings API] Returning', result.rows.length, 'real customer booked slots (excluding',
       result.rowCount > 0 ? 'any placeholders' : 'placeholders', ')');
-    res.json({ bookedSlots, blockedDates });
+    res.json({ bookedSlots, blockedDates, bookedAppointments });
   } catch (error) {
     console.error('[Bookings API] Error fetching booked slots:', error.message);
     res.status(500).json({ error: 'Failed to fetch available slots' });
@@ -295,45 +302,7 @@ router.post('/checkout', async (req, res) => {
 
     const booking = result.rows[0];
     console.log('[Bookings API] Real customer booking created:', booking.id);
-
-    // Send confirmation email to customer
-    console.log('[Bookings API] Sending confirmation email to:', customerEmail);
-    const confirmationResult = await sendBookingConfirmation({
-      customerName,
-      customerEmail,
-      bookingDate,
-      bookingTime: normalizedBookingTime,
-      serviceType,
-      serviceAddress,
-      hasPhoto: !!vehiclePhoto
-    });
-
-    if (!confirmationResult.success) {
-      console.error('[Bookings API] Failed to send booking confirmation email:', confirmationResult.error);
-    } else {
-      console.log('[Bookings API] Confirmation email sent successfully');
-    }
-
-    // Send owner/admin notification email
-    console.log('[Bookings API] Sending owner notification email');
-    const ownerResult = await sendOwnerNotification({
-      customerName,
-      customerEmail,
-      customerPhone,
-      bookingDate,
-      bookingTime: normalizedBookingTime,
-      serviceType,
-      serviceAddress,
-      vehicleType,
-      notes,
-      hasPhoto: !!vehiclePhoto
-    });
-
-    if (!ownerResult.success) {
-      console.error('[Bookings API] Failed to send owner notification email:', ownerResult.error);
-    } else {
-      console.log('[Bookings API] Owner notification email sent successfully');
-    }
+    console.log('[Bookings API] Booking is pending checkout; emails are sent only after Stripe is paid or Pay After Service is confirmed.');
 
     // Check if Stripe is configured
     const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;

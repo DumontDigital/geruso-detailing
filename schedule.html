@@ -180,6 +180,70 @@
       .booking-container { grid-template-columns: 1fr; gap: 40px; }
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
+    @media (max-width: 700px) {
+      html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+      section { padding: 30px 12px 56px; }
+      .section-inner { max-width: 100%; }
+      .section-label { font-size: 10px; letter-spacing: 1.5px; margin-bottom: 8px; }
+      .section-heading {
+        font-size: clamp(28px, 10vw, 40px);
+        line-height: 1.05;
+        margin-bottom: 14px;
+        overflow-wrap: anywhere;
+      }
+      .section-sub { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+      .booking-container { gap: 16px; }
+      .calendar-section,
+      .time-slots-section,
+      .booking-form {
+        width: 100%;
+        min-width: 0;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .calendar-header { align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+      .calendar-month { font-size: 22px; line-height: 1.1; }
+      .calendar-nav { gap: 8px; flex-shrink: 0; }
+      .calendar-btn { padding: 8px 10px; font-size: 13px; min-height: 40px; }
+      .weekdays,
+      .calendar-grid { gap: 6px; }
+      .weekday { padding: 4px 0; font-size: 10px; }
+      .calendar-day {
+        min-width: 0;
+        border-radius: 7px;
+        font-size: 13px;
+        min-height: 42px;
+      }
+      .time-slots-section { margin-top: 12px; }
+      .time-slots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .time-slot { min-height: 48px; padding: 12px 8px; font-size: 13px; }
+      .time-slot.disabled::after { display: none; }
+      .booking-form { padding: 18px 16px; }
+      .form-title { font-size: 22px; margin-bottom: 18px; }
+      .form-input,
+      .form-select,
+      .form-textarea { font-size: 16px; min-height: 48px; }
+      .service-mode-lock { grid-template-columns: 1fr; }
+      .add-on-box { padding: 12px; }
+      .add-on-option { align-items: center; }
+      .booking-step-note,
+      .mobile-water-note,
+      .booking-summary { font-size: 13px; }
+      .location-policy-line { white-space: normal; }
+      .file-input-label { padding: 18px 12px; min-height: 86px; }
+      .btn-submit { min-height: 52px; font-size: 16px; }
+    }
+
+    @media (max-width: 380px) {
+      section { padding-left: 8px; padding-right: 8px; }
+      .calendar-section,
+      .time-slots-section,
+      .booking-form { padding: 12px; }
+      .calendar-day { min-height: 38px; font-size: 12px; }
+      .calendar-grid,
+      .weekdays { gap: 5px; }
+    }
   
   /* ── CART ── */
   .cart-link {
@@ -655,6 +719,7 @@
   let selectedTime = null;
   let selectedServiceMode = '';
   let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
+  let bookedAppointments = []; // Store full appointment windows for overlap checks.
   let blockedDates = {}; // Store fully blocked days: { 'YYYY-MM-DD': true }
 
   const SHOP_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
@@ -736,12 +801,16 @@
 
       // Clear previous booked slots
       bookedTimeSlots = {};
+      bookedAppointments = [];
       blockedDates = {};
 
       // Build a map of booked times
       if (data.bookedSlots) {
         bookedTimeSlots = data.bookedSlots;
         console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
+      }
+      if (Array.isArray(data.bookedAppointments)) {
+        bookedAppointments = data.bookedAppointments;
       }
       if (data.blockedDates) {
         blockedDates = data.blockedDates;
@@ -873,7 +942,7 @@
     if (blockedDates[dateStr]) return false;
 
     for (const slot of slots) {
-      const isBooked = !!bookedTimeSlots[`${dateStr} ${slot}`];
+      const isBooked = !!bookedTimeSlots[`${dateStr} ${slot}`] || isSlotOverlappingBookedAppointment(dateStr, slot);
       const isPast = isTimeslotPast(date, slot);
       if (!isBooked && !isPast) return true;
     }
@@ -904,6 +973,32 @@
 
   function hasLongDetailServiceSelected() {
     return getSelectedPackageNames().some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
+  }
+
+  function parseTimeToMinutes(timeString) {
+    const raw = String(timeString || '').trim();
+    const match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+    if (!match) return null;
+    let hour = parseInt(match[1], 10);
+    const minute = parseInt(match[2] || '0', 10);
+    const period = match[3].toUpperCase();
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    return hour * 60 + minute;
+  }
+
+  function isSlotOverlappingBookedAppointment(dateStr, slot) {
+    const slotStart = parseTimeToMinutes(slot);
+    if (slotStart === null) return false;
+    const slotEnd = slotStart + (hasLongDetailServiceSelected() ? 360 : 60);
+
+    return bookedAppointments.some(appointment => {
+      if (String(appointment.date || '') !== dateStr) return false;
+      const appointmentStart = parseTimeToMinutes(appointment.time);
+      if (appointmentStart === null) return false;
+      const appointmentEnd = appointmentStart + (Number(appointment.durationMinutes) || 60);
+      return slotStart < appointmentEnd && appointmentStart < slotEnd;
+    });
   }
 
   function getLongDetailTimeMessage(dayOfWeek) {
@@ -1161,7 +1256,7 @@
 
       // Check if this time slot is booked
       const bookingKey = `${dateStr} ${slot}`;
-      const isBooked = isBlockedDate || bookedTimeSlots[bookingKey];
+      const isBooked = isBlockedDate || bookedTimeSlots[bookingKey] || isSlotOverlappingBookedAppointment(dateStr, slot);
 
       // Check if this time slot is in the past (ET)
       const isPast = isTimeslotPast(date, slot);
