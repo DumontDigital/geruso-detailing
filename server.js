@@ -217,14 +217,19 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
       try {
         const bookingIdFromMetadata = session.metadata && session.metadata.booking_id;
         const result = await pool.query(
-          `UPDATE bookings
+          `WITH existing AS (
+             SELECT payment_status FROM bookings
+             WHERE stripe_session_id = $4 OR id = $5
+           )
+           UPDATE bookings
            SET payment_status = $1,
                status = $2,
                stripe_payment_intent_id = $3,
                stripe_session_id = COALESCE(stripe_session_id, $4),
                updated_at = CURRENT_TIMESTAMP
+           FROM existing
            WHERE stripe_session_id = $4 OR id = $5
-           RETURNING *`,
+           RETURNING bookings.*, existing.payment_status AS previous_payment_status`,
           ['paid', 'confirmed', session.payment_intent, session.id, bookingIdFromMetadata || null]
         );
 
@@ -248,10 +253,13 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
             paymentConfirmed: true
           };
 
-          await sendBookingConfirmation(paidBookingEmailData);
-          await sendOwnerNotification(paidBookingEmailData);
-
-          console.log('[Stripe Webhook] Customer confirmation and owner notification emails sent');
+          if (String(booking.previous_payment_status || '').toLowerCase() !== 'paid') {
+            await sendBookingConfirmation(paidBookingEmailData);
+            await sendOwnerNotification(paidBookingEmailData);
+            console.log('[Stripe Webhook] Customer confirmation and owner notification emails sent');
+          } else {
+            console.log('[Stripe Webhook] Booking was already marked paid; skipping duplicate emails');
+          }
         }
       } catch (dbError) {
         console.error('[Stripe Webhook] Error updating booking:', dbError.message);

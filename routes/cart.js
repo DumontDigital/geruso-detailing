@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { initializeStripe } = require('../stripe');
+const { sendOwnerNotification } = require('../email');
 
 const router = express.Router();
 
@@ -49,6 +50,31 @@ function validateCartItems(cartItems) {
   return '';
 }
 
+function buildBookingEmailData(booking, paymentConfirmed = false) {
+  return {
+    customerName: booking.customer_name,
+    customerEmail: booking.customer_email,
+    customerPhone: booking.customer_phone,
+    bookingDate: booking.booking_date,
+    bookingTime: booking.booking_time,
+    serviceType: booking.service_type,
+    serviceAddress: booking.service_address,
+    vehicleType: booking.vehicle_type,
+    notes: booking.notes,
+    hasPhoto: !!booking.vehicle_photo,
+    paymentConfirmed,
+  };
+}
+
+async function sendOwnerBookingEmail(booking, paymentConfirmed = false) {
+  const result = await sendOwnerNotification(buildBookingEmailData(booking, paymentConfirmed));
+  if (!result.success) {
+    console.error('[Cart Email] Failed to send owner booking email:', result.error);
+  } else {
+    console.log('[Cart Email] Owner booking email sent successfully');
+  }
+}
+
 router.post('/pay-later', async (req, res) => {
   try {
     const { items, customer = {} } = req.body;
@@ -69,15 +95,24 @@ router.post('/pay-later', async (req, res) => {
     }
 
     const bookingResult = await pool.query(
-      `UPDATE bookings
+      `WITH existing AS (
+         SELECT payment_status FROM bookings WHERE id = $3 AND status <> 'cancelled'
+       )
+       UPDATE bookings
        SET payment_status = $1, status = $2, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3 AND status <> 'cancelled'
-       RETURNING id`,
+       FROM existing
+       WHERE bookings.id = $3 AND bookings.status <> 'cancelled'
+       RETURNING bookings.*, existing.payment_status AS previous_payment_status`,
       ['pay_later', 'confirmed', bookingId]
     );
 
     if (bookingResult.rowCount === 0) {
       return res.status(404).json({ error: 'This booking could not be found. Please schedule again.' });
+    }
+
+    const booking = bookingResult.rows[0];
+    if (String(booking.previous_payment_status || '').toLowerCase() !== 'pay_later') {
+      await sendOwnerBookingEmail(booking, false);
     }
 
     const orderId = uuidv4();
@@ -185,6 +220,33 @@ router.get('/session/:sessionId', async (req, res) => {
 
     const stripeClient = initializeStripe();
     const session = await stripeClient.checkout.sessions.retrieve(req.params.sessionId);
+    const bookingId = session.metadata && session.metadata.booking_id;
+
+    if (session.payment_status === 'paid' && bookingId) {
+      const bookingResult = await pool.query(
+        `WITH existing AS (
+           SELECT payment_status FROM bookings
+           WHERE (stripe_session_id = $1 OR id = $2) AND status <> 'cancelled'
+         )
+         UPDATE bookings
+         SET payment_status = $3,
+             status = $4,
+             stripe_payment_intent_id = $5,
+             stripe_session_id = COALESCE(stripe_session_id, $1),
+             updated_at = CURRENT_TIMESTAMP
+         FROM existing
+         WHERE (bookings.stripe_session_id = $1 OR bookings.id = $2) AND bookings.status <> 'cancelled'
+         RETURNING bookings.*, existing.payment_status AS previous_payment_status`,
+        [session.id, bookingId, 'paid', 'confirmed', session.payment_intent]
+      );
+
+      if (bookingResult.rows.length > 0) {
+        const booking = bookingResult.rows[0];
+        if (String(booking.previous_payment_status || '').toLowerCase() !== 'paid') {
+          await sendOwnerBookingEmail(booking, true);
+        }
+      }
+    }
 
     res.json({
       success: true,
@@ -196,7 +258,7 @@ router.get('/session/:sessionId', async (req, res) => {
       customerName: session.metadata && session.metadata.customer_name,
       customerPhone: session.metadata && session.metadata.customer_phone,
       serviceAddress: session.metadata && session.metadata.service_address,
-      bookingId: session.metadata && session.metadata.booking_id,
+      bookingId,
     });
   } catch (error) {
     console.error('[Cart Checkout] Session lookup error:', error.message);
