@@ -42,6 +42,7 @@
     .sidebar-footer { margin-top: auto; padding: 0 20px; border-top: 1px solid var(--border); padding-top: 20px; }
     .btn-logout { width: 100%; padding: 10px; background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
     .btn-logout:hover { background: rgba(239,68,68,0.3); }
+    .mobile-dashboard-nav { display: none; }
 
     /* Main Content */
     .main-content { min-width: 0; min-height: 100dvh; padding: 40px; overflow-y: auto; }
@@ -139,13 +140,169 @@
     @media (max-width: 960px) {
       .dashboard-wrapper { grid-template-columns: 1fr; }
       .sidebar { display: none; }
+      .mobile-dashboard-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 12px 14px;
+        background: rgba(10,10,10,0.96);
+        border-bottom: 1px solid var(--border);
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-dashboard-nav::-webkit-scrollbar { display: none; }
+      .dashboard-nav-item {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--light-bg2);
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .dashboard-nav-item.active {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(0,255,65,0.1);
+      }
+      .main-content {
+        min-height: auto;
+        padding: 22px 14px 40px;
+        overflow: visible;
+      }
+      .content-header {
+        display: block;
+        margin-bottom: 20px;
+      }
+      .content-title {
+        font-size: clamp(28px, 9vw, 38px);
+        line-height: 1.05;
+      }
+      .content-sub {
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        padding: 18px;
+        border-radius: 10px;
+      }
+      .table-section {
+        padding: 16px;
+        border-radius: 10px;
+      }
+      .table-header {
+        display: block;
+        margin-bottom: 16px;
+      }
+      .table-title {
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+      .table-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .table-filter {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+      }
+      table, thead, tbody, tr, td {
+        display: block;
+        width: 100%;
+      }
+      thead {
+        display: none;
+      }
+      tbody tr {
+        margin-bottom: 14px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--light-bg);
+      }
+      tbody tr:hover {
+        background: var(--light-bg);
+      }
+      tbody tr.empty-row {
+        padding: 0;
+      }
+      tbody tr.empty-row td {
+        display: block;
+      }
+      tbody tr.empty-row td::before {
+        display: none;
+      }
+      td {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: transparent;
+        font-size: 15px;
+      }
+      td:last-child {
+        border-bottom: 0;
+      }
+      td::before {
+        content: attr(data-label);
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        line-height: 1.35;
+      }
+      .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .action-btn {
+        min-height: 42px;
+        padding: 9px 10px;
+        font-size: 13px;
+        text-align: center;
+      }
       .form-grid { grid-template-columns: 1fr; }
       .modal-content { width: 95%; padding: 20px; }
+    }
+
+    @media (max-width: 420px) {
+      .main-content { padding: 18px 10px 34px; }
+      .table-section { padding: 12px; }
+      td { grid-template-columns: 78px minmax(0, 1fr); }
+      .action-buttons { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 <div class="dashboard-wrapper">
+  <div class="mobile-dashboard-nav" aria-label="Dashboard navigation">
+    <button type="button" class="dashboard-nav-item active" onclick="showSection('overview', this)">Overview</button>
+    <button type="button" class="dashboard-nav-item" onclick="showSection('bookings', this)">Bookings</button>
+    <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('services', this)">Services</button>
+    <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('addons', this)">Add-ons</button>
+    <button type="button" class="dashboard-nav-item" onclick="showSection('schedule', this)">Schedule</button>
+    <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('content', this)">Content</button>
+  </div>
+
   <!-- Sidebar Navigation -->
   <div class="sidebar">
     <div class="sidebar-header">
@@ -168,7 +325,7 @@
       try {
         const u = JSON.parse(localStorage.getItem('user') || 'null');
         if (u && u.role === 'dev') {
-          document.querySelectorAll('.sidebar-item.owner-only').forEach(el => el.style.display = 'none');
+          document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
         }
       } catch (e) {}
     </script>
@@ -751,12 +908,14 @@
     // Hide all sections
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.dashboard-nav-item').forEach(s => s.classList.remove('active'));
 
     // Show selected section
     const section = document.getElementById(sectionName + '-section');
     if (!section) return;
     section.classList.add('active');
     if (activeItem) activeItem.classList.add('active');
+    document.querySelectorAll(`.sidebar-item[onclick*="'${sectionName}'"], .dashboard-nav-item[onclick*="'${sectionName}'"]`).forEach(item => item.classList.add('active'));
 
     // Load section data
     if (sectionName === 'bookings') loadBookings();
@@ -801,7 +960,7 @@
       const bookings = data.bookings || [];
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
       tbody.innerHTML = groupBookingsForDisplay(bookings).map(b => {
@@ -811,24 +970,24 @@
         const status = getBookingStatusDetails(b);
         return `
           <tr>
-            <td>${formatDateForDisplay(b.booking_date)}</td>
-            <td>${escapeHtml(b.booking_time)}</td>
-            <td>
+            <td data-label="Date">${formatDateForDisplay(b.booking_date)}</td>
+            <td data-label="Time">${escapeHtml(b.booking_time)}</td>
+            <td data-label="Customer">
               <div class="booking-primary">${escapeHtml(b.customer_name)}</div>
               <div class="booking-secondary">${escapeHtml(b.customer_email || 'No email on file')}</div>
               <div class="booking-secondary">${escapeHtml(b.customer_phone || 'No phone number')}</div>
             </td>
-            <td>
+            <td data-label="Service">
               <div class="booking-primary">${escapeHtml(b.service_type)}</div>
               <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')} • $${Number(b.totalPrice || 0).toLocaleString()} total</div>
             </td>
-            <td>
+            <td data-label="Location">
               <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
               ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
             </td>
-            <td><span class="payment-pill ${escapeHtml(payment.typeClass)}">${escapeHtml(payment.label)}</span></td>
-            <td><span class="status-badge status-${escapeHtml(status.typeClass)}">${escapeHtml(status.label)}</span></td>
-            <td><div class="action-buttons">
+            <td data-label="Payment"><span class="payment-pill ${escapeHtml(payment.typeClass)}">${escapeHtml(payment.label)}</span></td>
+            <td data-label="Status"><span class="status-badge status-${escapeHtml(status.typeClass)}">${escapeHtml(status.label)}</span></td>
+            <td data-label="Actions"><div class="action-buttons">
               <button class="action-btn" onclick="editBookingModal('${b.id}')">Edit</button>
               <button class="action-btn success" onclick="markConfirmedGroup('${b.idList}')">Confirm</button>
               <button class="action-btn success" onclick="markCompletedGroup('${b.idList}')">Complete</button>
@@ -840,7 +999,7 @@
       }).join('');
     } catch (error) {
       console.error('Load bookings error:', error);
-      document.getElementById('bookingsTableBody').innerHTML = '<tr><td colspan="7" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
+      document.getElementById('bookingsTableBody').innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
     }
   }
 

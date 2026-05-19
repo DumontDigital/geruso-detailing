@@ -201,6 +201,83 @@
     .view-content iframe.is-loaded {
       opacity: 1;
     }
+
+    @media (max-width: 720px) {
+      html, body {
+        overflow: hidden;
+      }
+
+      .app-container {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .top-nav {
+        padding: 10px 12px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .nav-brand {
+        min-width: 0;
+        flex: 1;
+        font-size: 17px;
+        line-height: 1.05;
+      }
+
+      .nav-brand img {
+        width: 34px !important;
+        height: 34px !important;
+        flex: 0 0 auto;
+      }
+
+      .nav-right {
+        flex: 0 0 auto;
+        gap: 8px;
+      }
+
+      .user-info {
+        display: none;
+      }
+
+      .nav-right a {
+        min-height: 40px;
+        padding: 8px 10px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
+      }
+
+      .logout-btn {
+        min-height: 40px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .top-nav {
+        padding: 8px 10px;
+      }
+
+      .nav-brand {
+        font-size: 15px;
+        gap: 8px !important;
+      }
+
+      .nav-right a {
+        max-width: 92px;
+        line-height: 1.05;
+        text-align: center;
+      }
+
+      .logout-btn {
+        max-width: 70px;
+      }
+    }
   </style>
 </head>
 <body>
