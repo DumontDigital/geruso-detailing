@@ -667,18 +667,103 @@
     }
 
     #bookingsTab table,
-    #servicesTab table,
-    #scheduleTab table,
-    #galleryTab table {
-      min-width: 860px !important;
+    #bookingsTab thead,
+    #bookingsTab tbody,
+    #bookingsTab tr,
+    #bookingsTab td {
+      display: block !important;
+      width: 100% !important;
     }
 
-    #bookingsTab > div[style*="overflow: hidden"],
+    #bookingsTab thead {
+      display: none !important;
+    }
+
+    #upcomingBookingsList,
+    #historyBookingsList {
+      padding: 12px !important;
+    }
+
+    #upcomingBookingsList tr,
+    #historyBookingsList tr {
+      margin-bottom: 14px !important;
+      padding: 14px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+      background: var(--light-bg) !important;
+    }
+
+    #upcomingBookingsList td,
+    #historyBookingsList td {
+      display: grid !important;
+      grid-template-columns: 82px minmax(0, 1fr) !important;
+      gap: 12px !important;
+      align-items: start !important;
+      padding: 10px 0 !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      background: transparent !important;
+      color: var(--text) !important;
+      max-width: none !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    #upcomingBookingsList td:last-child,
+    #historyBookingsList td:last-child {
+      border-bottom: 0 !important;
+    }
+
+    #upcomingBookingsList td::before,
+    #historyBookingsList td::before {
+      content: attr(data-label);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }
+
+    #upcomingBookingsList td[data-label="Actions"] > div,
+    #historyBookingsList td[data-label="Actions"] > div {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+    }
+
+    #upcomingBookingsList td[data-label="Actions"] button,
+    #historyBookingsList td[data-label="Actions"] button {
+      min-height: 42px !important;
+      padding: 9px 10px !important;
+      font-size: 13px !important;
+      white-space: normal !important;
+    }
+
     #servicesTab > div[style*="overflow: hidden"],
     #scheduleTab > div[style*="overflow: hidden"],
     #galleryTab > div[style*="overflow: hidden"] {
       overflow-x: auto !important;
       -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  @media (max-width: 420px) {
+    #ownerDashboard > div[style*="display: flex"] > div:last-child {
+      padding: 16px 10px 32px !important;
+    }
+
+    #upcomingBookingsList,
+    #historyBookingsList {
+      padding: 10px !important;
+    }
+
+    #upcomingBookingsList td,
+    #historyBookingsList td {
+      grid-template-columns: 76px minmax(0, 1fr) !important;
+    }
+
+    #upcomingBookingsList td[data-label="Actions"] > div,
+    #historyBookingsList td[data-label="Actions"] > div {
+      grid-template-columns: 1fr !important;
     }
   }
 </style></head><body>
@@ -1411,23 +1496,23 @@
 
       tbody.innerHTML += `
         <tr style="border-bottom: 1px solid var(--border);">
-          <td style="padding: 12px; font-weight: 700;">${booking.customer_name || '—'}</td>
-          <td style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
-          <td style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
-          <td style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
-          <td style="padding: 12px;">
+          <td data-label="Name" style="padding: 12px; font-weight: 700;">${booking.customer_name || '—'}</td>
+          <td data-label="Email" style="padding: 12px; font-size: 13px;">${booking.customer_email || '—'}</td>
+          <td data-label="Phone" style="padding: 12px; font-size: 13px;">${booking.customer_phone || '—'}</td>
+          <td data-label="Address" style="padding: 12px; font-size: 13px; max-width: 200px;">${booking.service_address || '—'}</td>
+          <td data-label="Service" style="padding: 12px;">
             <div style="font-weight: 700;">${booking.service_type || '—'}</div>
             <div style="color: var(--text-muted); font-size: 12px;">$${Number(booking.totalPrice || 0).toLocaleString()} total</div>
           </td>
-          <td style="padding: 12px;">
+          <td data-label="Payment" style="padding: 12px;">
             <span style="${getOwnerPaymentStyle(booking)} padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap;">${getOwnerPaymentLabel(booking)}</span>
           </td>
-          <td style="padding: 12px;">${formattedDate}</td>
-          <td style="padding: 12px;">${booking.booking_time || '—'}</td>
-          <td style="padding: 12px;">
+          <td data-label="Date" style="padding: 12px;">${formattedDate}</td>
+          <td data-label="Time" style="padding: 12px;">${booking.booking_time || '—'}</td>
+          <td data-label="Status" style="padding: 12px;">
             <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${status.label}</span>
           </td>
-          <td style="padding: 12px;">
+          <td data-label="Actions" style="padding: 12px;">
             <div style="display: flex; gap: 4px; flex-wrap: wrap;">
               <button onclick="ownerMarkCompletedGroup('${booking.idList || booking.id}')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">✓ Complete</button>
               ${booking.status !== 'cancelled' ?
