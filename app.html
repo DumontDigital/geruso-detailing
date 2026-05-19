@@ -368,10 +368,6 @@
         return;
       }
 
-      // Show app
-      loadingScreen.style.display = 'none';
-      appContainer.style.display = 'grid';
-
       // Display user info
       userDisplay.textContent = auth.getUserDisplay();
       roleDisplay.textContent = auth.getRole();
@@ -385,10 +381,17 @@
         window.location.href = '/';
         return;
       } else if (role === 'owner') {
-        ownerView.classList.add('active');
+        window.location.replace('/admin-dashboard.html');
+        return;
       } else if (role === 'dev') {
-        devView.classList.add('active');
+        window.location.replace('/admin-dashboard.html');
+        return;
       }
+
+      // This shell is kept as a fallback, but staff dashboards run top-level
+      // so Mobile Safari does not have to handle nested iframe touch events.
+      loadingScreen.style.display = 'none';
+      appContainer.style.display = 'grid';
     });
 
     // Logout handler

@@ -25,11 +25,71 @@
     html { scroll-behavior: smooth; background: var(--light-bg) !important; color-scheme: dark; }
     html, body { width: 100%; min-width: 100vw; height: 100%; min-height: 100%; overflow-x: hidden; background: var(--light-bg) !important; }
     body { background: var(--light-bg) !important; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    button, a, input, select, textarea { touch-action: manipulation; -webkit-tap-highlight-color: rgba(0, 255, 65, 0.18); }
     body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: var(--light-bg); }
     .dashboard-wrapper { width: 100vw; min-width: 100vw; background: var(--light-bg) !important; }
     .main-content { background: var(--light-bg) !important; }
 
-    .dashboard-wrapper { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100dvh; }
+    .staff-dashboard-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px;
+      background: var(--light-bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 255, 65, 0.1);
+    }
+    .staff-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .staff-brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+    .staff-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+    .staff-action-btn {
+      min-height: 40px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .staff-customer-btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+    .staff-logout-btn {
+      background: #ff6b6b;
+      border: 1px solid #ff6b6b;
+      color: #fff;
+    }
+
+    .dashboard-wrapper { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: calc(100dvh - 71px); }
 
     /* Sidebar */
     .sidebar { background: var(--light-bg2); border-right: 1px solid var(--border); padding: 28px 0; display: flex; flex-direction: column; }
@@ -140,9 +200,33 @@
     @media (max-width: 960px) {
       .dashboard-wrapper { grid-template-columns: 1fr; }
       .sidebar { display: none; }
+      .staff-dashboard-header {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px 12px;
+      }
+      .staff-brand {
+        font-size: 18px;
+      }
+      .staff-brand img {
+        width: 40px;
+        height: 40px;
+      }
+      .staff-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .staff-action-btn {
+        width: 100%;
+        min-height: 48px;
+        font-size: 15px;
+      }
       .mobile-dashboard-nav {
-        position: sticky;
-        top: 0;
+        position: relative;
         z-index: 20;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -289,6 +373,8 @@
     }
 
     @media (max-width: 420px) {
+      .staff-dashboard-header { padding: 12px 10px; }
+      .staff-brand { font-size: 17px; }
       .main-content { padding: 18px 10px 34px; }
       .mobile-dashboard-nav { padding: 8px 10px; gap: 6px; }
       .dashboard-nav-item { height: 34px; min-height: 34px; max-height: 34px; font-size: 11px !important; border-radius: 8px; }
@@ -299,6 +385,21 @@
   </style>
 </head>
 <body>
+<script>
+  if (window.top && window.top !== window.self) {
+    window.top.location.replace('/admin-dashboard.html');
+  }
+</script>
+<header class="staff-dashboard-header">
+  <div class="staff-brand">
+    <img src="/logo.png" alt="Geruso Detailing logo">
+    <span>Geruso Detailing</span>
+  </div>
+  <div class="staff-actions">
+    <a class="staff-action-btn staff-customer-btn" href="/home.html">Customer View</a>
+    <button class="staff-action-btn staff-logout-btn" type="button" onclick="logout()">Logout</button>
+  </div>
+</header>
 <div class="dashboard-wrapper">
   <div class="mobile-dashboard-nav" aria-label="Dashboard navigation">
     <button type="button" class="dashboard-nav-item active" onclick="showSection('overview', this)">Overview</button>
@@ -733,9 +834,15 @@
   // Unified auth check
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  let user = null;
+  try {
+    user = userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    localStorage.removeItem('user');
+  }
 
   let currentEditingBookingId = null;
+  const hasDashboardAccess = !!token && !!user && (user.role === 'dev' || user.role === 'owner');
 
   function getCurrentToken() {
     return localStorage.getItem('token') || token;
@@ -759,8 +866,13 @@
     }
   }
 
+  function isInvalidSessionResponse(res, payload = {}) {
+    const message = String(payload.error || payload.message || '');
+    return res.status === 401 || /invalid token|jwt expired|jwt malformed/i.test(message);
+  }
+
   // Check authentication - allow dev and owner roles
-  if (!token || !user || (user.role !== 'dev' && user.role !== 'owner')) {
+  if (!hasDashboardAccess) {
     if (window.top && window.top !== window.self) {
       window.top.location.href = '/login';
     } else {
@@ -956,7 +1068,14 @@
         handleInvalidSession();
         return;
       }
-      if (!res.ok) throw new Error('Failed to load dashboard');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (isInvalidSessionResponse(res, errorData)) {
+          handleInvalidSession();
+          return;
+        }
+        throw new Error(errorData.error || 'Failed to load dashboard');
+      }
 
       const data = await res.json();
       document.getElementById('todayCount').textContent = data.todayCount;
@@ -993,6 +1112,10 @@
       }
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        if (isInvalidSessionResponse(res, errorData)) {
+          handleInvalidSession();
+          return;
+        }
         throw new Error(errorData.error || `Failed to load bookings (${res.status})`);
       }
 
@@ -1507,14 +1630,16 @@
   }
 
   // Initialize on load
-  loadDashboard();
-  setInterval(() => {
+  if (hasDashboardAccess) {
     loadDashboard();
-    const bookingsSection = document.getElementById('bookings-section');
-    if (bookingsSection && bookingsSection.classList.contains('active')) {
-      loadBookings();
-    }
-  }, 30000);
+    setInterval(() => {
+      loadDashboard();
+      const bookingsSection = document.getElementById('bookings-section');
+      if (bookingsSection && bookingsSection.classList.contains('active')) {
+        loadBookings();
+      }
+    }, 30000);
+  }
 </script>
 </body>
 </html>

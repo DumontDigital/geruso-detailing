@@ -658,7 +658,7 @@
 
         // Send each account type to its correct view.
         const role = data.user && data.user.role;
-        const nextUrl = (role === 'owner' || role === 'dev') ? '/app' : '/';
+        const nextUrl = (role === 'owner' || role === 'dev') ? '/admin-dashboard.html' : '/';
         if (window.top && window.top !== window.self) {
           window.top.location.href = nextUrl;
         } else {
