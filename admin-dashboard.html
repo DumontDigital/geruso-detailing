@@ -148,23 +148,25 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
         overflow: visible;
-        padding: 10px 12px;
+        padding: 8px 12px;
         background: rgba(10,10,10,0.96);
         border-bottom: 1px solid var(--border);
       }
       .dashboard-nav-item {
         width: 100%;
         min-width: 0;
-        min-height: 42px;
+        height: 36px;
+        min-height: 36px;
+        max-height: 36px;
         padding: 0 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 8px;
         background: var(--light-bg2);
         color: var(--text-muted);
-        font-size: 13px !important;
+        font-size: 12px !important;
         line-height: 1.1;
         font-weight: 800;
         cursor: pointer;
@@ -177,7 +179,7 @@
       }
       .main-content {
         min-height: auto;
-        padding: 22px 14px 40px;
+        padding: 18px 14px 36px;
         overflow: visible;
       }
       .content-header {
@@ -185,7 +187,7 @@
         margin-bottom: 20px;
       }
       .content-title {
-        font-size: clamp(28px, 9vw, 38px);
+        font-size: clamp(27px, 8vw, 34px);
         line-height: 1.05;
       }
       .content-sub {
@@ -202,7 +204,7 @@
         border-radius: 10px;
       }
       .table-section {
-        padding: 16px;
+        padding: 14px;
         border-radius: 10px;
       }
       .table-header {
@@ -210,7 +212,7 @@
         margin-bottom: 16px;
       }
       .table-title {
-        font-size: 22px;
+        font-size: 20px;
         margin-bottom: 12px;
       }
       .table-controls {
@@ -220,8 +222,8 @@
       }
       .table-filter {
         width: 100%;
-        min-height: 44px;
-        font-size: 16px;
+        min-height: 40px;
+        font-size: 15px;
       }
       table, thead, tbody, tr, td {
         display: block;
@@ -277,9 +279,9 @@
         gap: 8px;
       }
       .action-btn {
-        min-height: 42px;
+        min-height: 38px;
         padding: 9px 10px;
-        font-size: 13px;
+        font-size: 12px;
         text-align: center;
       }
       .form-grid { grid-template-columns: 1fr; }
@@ -289,7 +291,7 @@
     @media (max-width: 420px) {
       .main-content { padding: 18px 10px 34px; }
       .mobile-dashboard-nav { padding: 8px 10px; gap: 6px; }
-      .dashboard-nav-item { min-height: 40px; font-size: 12px !important; border-radius: 8px; }
+      .dashboard-nav-item { height: 34px; min-height: 34px; max-height: 34px; font-size: 11px !important; border-radius: 8px; }
       .table-section { padding: 12px; }
       td { grid-template-columns: 78px minmax(0, 1fr); }
       .action-buttons { grid-template-columns: 1fr; }
@@ -747,6 +749,15 @@
     };
   }
 
+  function handleInvalidSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    try {
+      window.parent.postMessage({ type: 'AUTH_ERROR' }, window.location.origin);
+    } catch (e) {}
+    window.location.href = '/login';
+  }
+
   // Check authentication - allow dev and owner roles
   if (!token || !user || (user.role !== 'dev' && user.role !== 'owner')) {
     window.location.href = '/login';
@@ -958,10 +969,18 @@
       let res = await fetch(`/api/admin/bookings?${query}`, {
         headers: adminAuthHeaders()
       });
+      if (res.status === 401) {
+        handleInvalidSession();
+        return;
+      }
       if (!res.ok) {
         res = await fetch('/api/owner/bookings', {
           headers: adminAuthHeaders()
         });
+      }
+      if (res.status === 401) {
+        handleInvalidSession();
+        return;
       }
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
