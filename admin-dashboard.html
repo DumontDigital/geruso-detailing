@@ -752,15 +752,20 @@
   function handleInvalidSession() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    try {
-      window.parent.postMessage({ type: 'AUTH_ERROR' }, window.location.origin);
-    } catch (e) {}
-    window.location.href = '/login';
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = '/login';
+    } else {
+      window.location.href = '/login';
+    }
   }
 
   // Check authentication - allow dev and owner roles
   if (!token || !user || (user.role !== 'dev' && user.role !== 'owner')) {
-    window.location.href = '/login';
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = '/login';
+    } else {
+      window.location.href = '/login';
+    }
   }
 
   // Format date string (YYYY-MM-DD) WITHOUT UTC conversion
@@ -947,6 +952,10 @@
       const res = await fetch('/api/admin/dashboard', {
         headers: adminAuthHeaders()
       });
+      if (res.status === 401) {
+        handleInvalidSession();
+        return;
+      }
       if (!res.ok) throw new Error('Failed to load dashboard');
 
       const data = await res.json();
@@ -1490,7 +1499,11 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = '/login';
+    } else {
+      window.location.href = '/login';
+    }
   }
 
   // Initialize on load

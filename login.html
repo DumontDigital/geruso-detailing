@@ -658,10 +658,11 @@
 
         // Send each account type to its correct view.
         const role = data.user && data.user.role;
-        if (role === 'owner' || role === 'dev') {
-          window.location.href = '/app';
+        const nextUrl = (role === 'owner' || role === 'dev') ? '/app' : '/';
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = nextUrl;
         } else {
-          window.location.href = '/';
+          window.location.href = nextUrl;
         }
       } catch (error) {
         console.error('Google sign-in error:', error);
