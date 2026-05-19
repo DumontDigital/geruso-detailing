@@ -144,29 +144,31 @@
         position: sticky;
         top: 0;
         z-index: 20;
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
-        overflow-x: auto;
-        padding: 12px 14px;
+        overflow: visible;
+        padding: 10px 12px;
         background: rgba(10,10,10,0.96);
         border-bottom: 1px solid var(--border);
-        -webkit-overflow-scrolling: touch;
       }
-      .mobile-dashboard-nav::-webkit-scrollbar { display: none; }
       .dashboard-nav-item {
-        flex: 0 0 auto;
-        min-height: 44px;
-        padding: 0 14px;
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        padding: 0 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 10px;
         background: var(--light-bg2);
         color: var(--text-muted);
-        font-size: 13px;
+        font-size: 13px !important;
+        line-height: 1.1;
         font-weight: 800;
         cursor: pointer;
+        white-space: nowrap;
       }
       .dashboard-nav-item.active {
         border-color: var(--primary);
@@ -286,6 +288,8 @@
 
     @media (max-width: 420px) {
       .main-content { padding: 18px 10px 34px; }
+      .mobile-dashboard-nav { padding: 8px 10px; gap: 6px; }
+      .dashboard-nav-item { min-height: 40px; font-size: 12px !important; border-radius: 8px; }
       .table-section { padding: 12px; }
       td { grid-template-columns: 78px minmax(0, 1fr); }
       .action-buttons { grid-template-columns: 1fr; }
@@ -951,13 +955,31 @@
       const search = document.getElementById('searchFilter').value;
       const query = new URLSearchParams({ status, search }).toString();
 
-      const res = await fetch(`/api/admin/bookings?${query}`, {
+      let res = await fetch(`/api/admin/bookings?${query}`, {
         headers: adminAuthHeaders()
       });
-      if (!res.ok) throw new Error('Failed to load bookings');
+      if (!res.ok) {
+        res = await fetch('/api/owner/bookings', {
+          headers: adminAuthHeaders()
+        });
+      }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to load bookings (${res.status})`);
+      }
 
       const data = await res.json();
-      const bookings = data.bookings || [];
+      let bookings = data.bookings || [];
+      if (status) {
+        bookings = bookings.filter(booking => String(booking.status || '').toLowerCase() === status);
+      }
+      if (search) {
+        const needle = search.toLowerCase();
+        bookings = bookings.filter(booking =>
+          String(booking.customer_name || '').toLowerCase().includes(needle) ||
+          String(booking.customer_email || '').toLowerCase().includes(needle)
+        );
+      }
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
         tbody.innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
@@ -999,7 +1021,10 @@
       }).join('');
     } catch (error) {
       console.error('Load bookings error:', error);
-      document.getElementById('bookingsTableBody').innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--error); text-align: center; padding: 28px;">Failed to load bookings.</td></tr>';
+      const message = error.message && !/Failed to load bookings \(\d+\)/.test(error.message)
+        ? error.message
+        : 'Failed to load bookings. Please log out and sign back in.';
+      document.getElementById('bookingsTableBody').innerHTML = `<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(message)}</td></tr>`;
     }
   }
 

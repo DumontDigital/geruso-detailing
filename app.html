@@ -212,16 +212,20 @@
       }
 
       .top-nav {
-        padding: 10px 12px;
-        gap: 10px;
-        align-items: center;
+        padding: 10px;
+        gap: 8px;
+        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr;
       }
 
       .nav-brand {
         min-width: 0;
-        flex: 1;
-        font-size: 17px;
+        width: 100%;
+        flex: none;
+        font-size: 18px;
         line-height: 1.05;
+        justify-content: flex-start;
       }
 
       .nav-brand img {
@@ -231,8 +235,11 @@
       }
 
       .nav-right {
-        flex: 0 0 auto;
+        width: 100%;
+        flex: none;
         gap: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
       }
 
       .user-info {
@@ -240,6 +247,7 @@
       }
 
       .nav-right a {
+        width: 100%;
         min-height: 40px;
         padding: 8px 10px !important;
         display: inline-flex;
@@ -251,6 +259,7 @@
       }
 
       .logout-btn {
+        width: 100%;
         min-height: 40px;
         padding: 8px 10px;
         border-radius: 8px;
@@ -269,13 +278,13 @@
       }
 
       .nav-right a {
-        max-width: 92px;
+        max-width: none;
         line-height: 1.05;
         text-align: center;
       }
 
       .logout-btn {
-        max-width: 70px;
+        max-width: none;
       }
     }
   </style>
