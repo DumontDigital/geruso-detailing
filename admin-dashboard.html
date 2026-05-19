@@ -204,45 +204,48 @@
         position: relative;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 14px 12px;
+        gap: 8px;
+        padding: 10px 12px;
       }
       .staff-brand {
-        font-size: 18px;
+        font-size: 17px;
       }
       .staff-brand img {
-        width: 40px;
-        height: 40px;
+        width: 34px;
+        height: 34px;
       }
       .staff-actions {
         width: 100%;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        gap: 8px;
       }
       .staff-action-btn {
         width: 100%;
-        min-height: 48px;
-        font-size: 15px;
+        min-height: 38px;
+        font-size: 13px;
+        border-radius: 7px;
       }
       .mobile-dashboard-nav {
         position: relative;
         z-index: 20;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        overflow: visible;
-        padding: 8px 12px;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 6px 12px;
         background: rgba(10,10,10,0.96);
         border-bottom: 1px solid var(--border);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
       }
+      .mobile-dashboard-nav::-webkit-scrollbar { display: none; }
       .dashboard-nav-item {
-        width: 100%;
-        min-width: 0;
-        height: 36px;
-        min-height: 36px;
-        max-height: 36px;
-        padding: 0 8px;
+        flex: 1 0 auto;
+        min-width: 92px;
+        height: 32px;
+        min-height: 32px;
+        max-height: 32px;
+        padding: 0 10px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -263,20 +266,20 @@
       }
       .main-content {
         min-height: auto;
-        padding: 18px 14px 36px;
+        padding: 14px 12px 30px;
         overflow: visible;
       }
       .content-header {
         display: block;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
       }
       .content-title {
-        font-size: clamp(27px, 8vw, 34px);
+        font-size: clamp(24px, 7vw, 30px);
         line-height: 1.05;
       }
       .content-sub {
-        font-size: 15px;
-        line-height: 1.5;
+        font-size: 13px;
+        line-height: 1.35;
       }
       .stats-grid {
         grid-template-columns: 1fr;
@@ -288,26 +291,26 @@
         border-radius: 10px;
       }
       .table-section {
-        padding: 14px;
+        padding: 10px;
         border-radius: 10px;
       }
       .table-header {
         display: block;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
       }
       .table-title {
-        font-size: 20px;
-        margin-bottom: 12px;
+        font-size: 18px;
+        margin-bottom: 8px;
       }
       .table-controls {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 8px;
       }
       .table-filter {
         width: 100%;
-        min-height: 40px;
-        font-size: 15px;
+        min-height: 36px;
+        font-size: 13px;
       }
       table, thead, tbody, tr, td {
         display: block;
@@ -317,8 +320,11 @@
         display: none;
       }
       tbody tr {
-        margin-bottom: 14px;
-        padding: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+        margin-bottom: 10px;
+        padding: 12px;
         border: 1px solid var(--border);
         border-radius: 12px;
         background: var(--light-bg);
@@ -336,51 +342,62 @@
         display: none;
       }
       td {
-        display: grid;
-        grid-template-columns: 86px minmax(0, 1fr);
-        gap: 12px;
-        align-items: start;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        display: block;
+        padding: 0;
+        border-bottom: 0;
         background: transparent;
-        font-size: 15px;
+        font-size: 13px;
+        min-width: 0;
       }
       td:last-child {
         border-bottom: 0;
       }
       td::before {
         content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
         color: var(--text-muted);
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 900;
         letter-spacing: 0.4px;
         text-transform: uppercase;
-        line-height: 1.35;
+        line-height: 1.1;
+      }
+      td[data-label="Customer"],
+      td[data-label="Service"],
+      td[data-label="Location"],
+      td[data-label="Actions"] {
+        grid-column: 1 / -1;
       }
       .action-buttons {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 5px;
       }
       .action-btn {
-        min-height: 38px;
-        padding: 9px 10px;
-        font-size: 12px;
+        min-height: 32px;
+        padding: 6px 4px;
+        font-size: 10px;
         text-align: center;
+        border-radius: 6px;
       }
+      .booking-primary { font-size: 14px; line-height: 1.2; }
+      .booking-secondary { font-size: 11px; line-height: 1.25; margin-top: 2px; }
+      .location-pill, .payment-pill, .status-badge { font-size: 10px; padding: 4px 8px; }
       .form-grid { grid-template-columns: 1fr; }
       .modal-content { width: 95%; padding: 20px; }
     }
 
     @media (max-width: 420px) {
-      .staff-dashboard-header { padding: 12px 10px; }
-      .staff-brand { font-size: 17px; }
-      .main-content { padding: 18px 10px 34px; }
-      .mobile-dashboard-nav { padding: 8px 10px; gap: 6px; }
-      .dashboard-nav-item { height: 34px; min-height: 34px; max-height: 34px; font-size: 11px !important; border-radius: 8px; }
-      .table-section { padding: 12px; }
-      td { grid-template-columns: 78px minmax(0, 1fr); }
-      .action-buttons { grid-template-columns: 1fr; }
+      .staff-dashboard-header { padding: 9px 10px; gap: 7px; }
+      .staff-brand { font-size: 16px; gap: 9px; }
+      .staff-action-btn { min-height: 36px; font-size: 12px; }
+      .main-content { padding: 12px 8px 28px; }
+      .mobile-dashboard-nav { padding: 6px 8px; gap: 5px; }
+      .dashboard-nav-item { min-width: 84px; height: 30px; min-height: 30px; max-height: 30px; font-size: 10px !important; border-radius: 7px; }
+      .table-section { padding: 8px; }
+      tbody tr { padding: 10px; gap: 7px 10px; }
+      .action-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
   </style>
 </head>
