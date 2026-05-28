@@ -4,6 +4,7 @@
   const NAV_LINKS = [
     { href: '/home.html',     label: 'Home' },
     { href: '/services.html', label: 'Services' },
+    { href: '/memberships.html', label: 'Maintenance' },
     { href: '/work.html',     label: 'Our Work' },
     { href: '/schedule.html', label: 'Schedule' },
     { href: '/reviews.html',  label: 'Reviews' },
@@ -64,7 +65,7 @@
       const titleAttr = label ? ` title="Signed in as ${label}"` : '';
       const items = [];
       if (role === 'owner' || role === 'dev') {
-        items.push(`<li><a href="/app" class="nav-signin">Dashboard</a></li>`);
+        items.push(`<li><a href="/dashboard" class="nav-signin">Dashboard</a></li>`);
       }
       items.push(`<li><button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button></li>`);
       return items.join('');
@@ -134,6 +135,7 @@
             <ul>
               <li><a href="/home.html">Home</a></li>
               <li><a href="/services.html">Services</a></li>
+              <li><a href="/memberships.html">Maintenance</a></li>
               <li><a href="/work.html">Our Work</a></li>
               <li><a href="/reviews.html">Reviews</a></li>
             </ul>
@@ -142,6 +144,7 @@
             <h4>Booking</h4>
             <ul>
               <li><a href="/booking.html">Book Service</a></li>
+              <li><a href="/memberships.html">Maintenance Plans</a></li>
               <li><a href="/schedule.html">Hours</a></li>
               <li><a href="/contact.html">Contact</a></li>
             </ul>

@@ -9,6 +9,7 @@ const { sendQuoteEmail } = require('./email');
 const authRoutes = require('./routes/auth');
 const bookingsRoutes = require('./routes/bookings');
 const cartRoutes = require('./routes/cart');
+const { router: maintenanceRoutes, activateSubscriptionFromSession } = require('./routes/maintenance');
 const availabilityRoutes = require('./routes/availability');
 const adminRoutes = require('./routes/admin');
 const { verifyToken, requireRole } = require('./middleware/auth');
@@ -28,8 +29,16 @@ function sendHtmlWithGooglePlacesKey(res, fileName) {
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+const jsonParser = express.json({ limit: '25mb' });
+const urlencodedParser = express.urlencoded({ extended: true, limit: '25mb' });
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/webhook/stripe') return next();
+  return jsonParser(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/webhook/stripe') return next();
+  return urlencodedParser(req, res, next);
+});
 
 // Cache-busting middleware for HTML files
 app.use((req, res, next) => {
@@ -76,7 +85,8 @@ app.get('/app', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  // Authenticated dashboard
+  // Authenticated shell. Staff users are redirected client-side into the
+  // restored old dashboard; customers go back to the public site.
   res.sendFile(path.join(__dirname, 'app.html'));
 });
 
@@ -85,7 +95,7 @@ app.get('/dashboard', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  res.sendFile(path.join(__dirname, 'app.html'));
+  res.sendFile(path.join(__dirname, 'owner-dashboard.html'));
 });
 
 // /booking.html now redirects to /schedule.html (single source of truth for booking).
@@ -95,16 +105,15 @@ app.get('/booking.html', (req, res) => {
   res.redirect(301, '/schedule.html');
 });
 
-// Owner dashboard view (embedded)
-app.get('/index.html', (req, res) => {
+// Owner/dev dashboard view. Keep every old dashboard URL pointing to the
+// same staff dashboard so owner and dev accounts do not land on stale pages.
+app.get(['/admin-dashboard.html', '/owner-dashboard.html', '/dev-dashboard.html', '/staff-dashboard.html'], (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'owner-dashboard.html'));
 });
 
-// Dev dashboard view (embedded)
-app.get('/admin-dashboard.html', (req, res) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
+app.get('/index.html', (req, res) => {
+  res.redirect(302, '/admin-dashboard.html');
 });
 app.get('/services', (req, res) => {
   sendHtmlWithGooglePlacesKey(res, 'services.html');
@@ -114,6 +123,10 @@ app.get('/work', (req, res) => {
   res.sendFile(path.join(__dirname, 'work.html'));
 });
 app.get('/memberships', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.sendFile(path.join(__dirname, 'memberships.html'));
+});
+app.get(['/maintenance', '/maintenance.html', '/membership', '/membership.html'], (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.sendFile(path.join(__dirname, 'memberships.html'));
 });
@@ -212,6 +225,18 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
     if (webhookResult.type === 'payment_succeeded') {
       const session = webhookResult.data;
       console.log('[Stripe Webhook] Session:', session.id);
+
+      if (session.metadata && session.metadata.source === 'maintenance_subscription') {
+        try {
+          const subscription = await activateSubscriptionFromSession(session);
+          if (subscription) {
+            console.log('[Stripe Webhook] Maintenance subscription activated:', subscription.id);
+          }
+        } catch (maintenanceError) {
+          console.error('[Stripe Webhook] Maintenance subscription error:', maintenanceError.message);
+        }
+        return res.json({ received: true });
+      }
 
       // Update booking payment status and auto-confirm
       try {
@@ -380,6 +405,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/availability', availabilityRoutes);
 
 // Test endpoint to verify deployment

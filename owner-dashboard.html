@@ -593,9 +593,11 @@
 
   /* Prevent white table rows */
   #upcomingBookingsList tr,
-  #historyBookingsList tr { background: var(--light-bg2); }
+  #historyBookingsList tr,
+  #subscriptionsList tr { background: var(--light-bg2); }
   #upcomingBookingsList td,
-  #historyBookingsList td { color: var(--text); }
+  #historyBookingsList td,
+  #subscriptionsList td { color: var(--text); }
 
   @media (max-width: 760px) {
     #ownerPanel {
@@ -668,25 +670,32 @@
     }
 
     #bookingsTab table,
+    #subscriptionsTab table,
     #bookingsTab thead,
+    #subscriptionsTab thead,
     #bookingsTab tbody,
+    #subscriptionsTab tbody,
     #bookingsTab tr,
+    #subscriptionsTab tr,
     #bookingsTab td {
       display: block !important;
       width: 100% !important;
     }
 
-    #bookingsTab thead {
+    #bookingsTab thead,
+    #subscriptionsTab thead {
       display: none !important;
     }
 
     #upcomingBookingsList,
-    #historyBookingsList {
+    #historyBookingsList,
+    #subscriptionsList {
       padding: 12px !important;
     }
 
     #upcomingBookingsList tr,
-    #historyBookingsList tr {
+    #historyBookingsList tr,
+    #subscriptionsList tr {
       margin-bottom: 14px !important;
       padding: 14px !important;
       border: 1px solid var(--border) !important;
@@ -695,7 +704,8 @@
     }
 
     #upcomingBookingsList td,
-    #historyBookingsList td {
+    #historyBookingsList td,
+    #subscriptionsList td {
       display: grid !important;
       grid-template-columns: 82px minmax(0, 1fr) !important;
       gap: 12px !important;
@@ -709,12 +719,14 @@
     }
 
     #upcomingBookingsList td:last-child,
-    #historyBookingsList td:last-child {
+    #historyBookingsList td:last-child,
+    #subscriptionsList td:last-child {
       border-bottom: 0 !important;
     }
 
     #upcomingBookingsList td::before,
-    #historyBookingsList td::before {
+    #historyBookingsList td::before,
+    #subscriptionsList td::before {
       content: attr(data-label);
       color: var(--text-muted);
       font-size: 11px;
@@ -725,14 +737,16 @@
     }
 
     #upcomingBookingsList td[data-label="Actions"] > div,
-    #historyBookingsList td[data-label="Actions"] > div {
+    #historyBookingsList td[data-label="Actions"] > div,
+    #subscriptionsList td[data-label="Actions"] > div {
       display: grid !important;
       grid-template-columns: 1fr 1fr !important;
       gap: 8px !important;
     }
 
     #upcomingBookingsList td[data-label="Actions"] button,
-    #historyBookingsList td[data-label="Actions"] button {
+    #historyBookingsList td[data-label="Actions"] button,
+    #subscriptionsList td[data-label="Actions"] button {
       min-height: 42px !important;
       padding: 9px 10px !important;
       font-size: 13px !important;
@@ -740,6 +754,7 @@
     }
 
     #servicesTab > div[style*="overflow: hidden"],
+    #subscriptionsTab > div[style*="overflow: hidden"],
     #scheduleTab > div[style*="overflow: hidden"],
     #galleryTab > div[style*="overflow: hidden"] {
       overflow-x: auto !important;
@@ -753,17 +768,20 @@
     }
 
     #upcomingBookingsList,
-    #historyBookingsList {
+    #historyBookingsList,
+    #subscriptionsList {
       padding: 10px !important;
     }
 
     #upcomingBookingsList td,
-    #historyBookingsList td {
+    #historyBookingsList td,
+    #subscriptionsList td {
       grid-template-columns: 76px minmax(0, 1fr) !important;
     }
 
     #upcomingBookingsList td[data-label="Actions"] > div,
-    #historyBookingsList td[data-label="Actions"] > div {
+    #historyBookingsList td[data-label="Actions"] > div,
+    #subscriptionsList td[data-label="Actions"] > div {
       grid-template-columns: 1fr !important;
     }
   }
@@ -858,6 +876,7 @@
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
         <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Subscriptions</button>
         <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
         <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
         <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
@@ -930,6 +949,43 @@
               <tbody id="historyBookingsList"></tbody>
             </table>
             <div id="historyEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No booking history</div>
+          </div>
+        </div>
+
+        <!-- Subscriptions Tab -->
+        <div id="subscriptionsTab" class="owner-tab" style="display: none;">
+          <h2 style="margin-bottom: 24px;">Manage Subscriptions</h2>
+
+          <div style="margin-bottom: 24px; display: flex; gap: 12px;">
+            <input type="text" id="subscriptionSearch" placeholder="Search by customer name, email, or phone..." style="flex: 1; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+            <select id="subscriptionStatusFilter" style="padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--light-bg);">
+              <h3 style="color: var(--primary); margin: 0;">Maintenance Subscriptions <span id="subscriptionCount" style="color: var(--text-muted);">(0)</span></h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--light-bg);">
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Name</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Email</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Plan</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Price</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Status</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Started</th>
+                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subscriptionsList"></tbody>
+            </table>
+            <div id="subscriptionsEmpty" style="padding: 24px; text-align: center; color: var(--text-muted);">No subscriptions yet</div>
           </div>
         </div>
 
@@ -1191,8 +1247,14 @@
 
   // Check authentication on page load
   window.addEventListener('load', () => {
-    // Parent app.html already verified authentication
-    // Just show the dashboard
+    if (!auth.requireAuth(['owner', 'dev'])) {
+      return;
+    }
+
+    const roleLabel = auth.getRole() === 'dev' ? 'Dev Dashboard' : 'Owner Dashboard';
+    const dashboardTitle = document.querySelector('#ownerDashboard nav > div:first-child');
+    if (dashboardTitle) dashboardTitle.textContent = roleLabel;
+
     ownerPanel.style.display = 'block';
     document.body.style.overflow = 'hidden';
     showDashboard();
@@ -1233,6 +1295,7 @@
     dashboard.style.display = 'block';
     updateEasternTimeDisplay();
     loadBookings();
+    loadSubscriptions();
     loadServices();
     loadSchedule();
     loadWebsiteContent();
@@ -1269,6 +1332,7 @@
 
         if (tab === 'schedule') loadSchedule();
         if (tab === 'bookings') loadBookings();
+        if (tab === 'subscriptions') loadSubscriptions();
         if (tab === 'services') loadServices();
         if (tab === 'content') loadWebsiteContent();
         if (tab === 'gallery') loadGallery();
@@ -1623,6 +1687,135 @@
       service_type: group.serviceNames.join(' + ')
     }));
   }
+
+  function formatOwnerMoneyFromCents(cents) {
+    return '$' + (Number(cents || 0) / 100).toFixed(0);
+  }
+
+  function formatOwnerShortDate(dateValue) {
+    if (!dateValue) return '—';
+    return formatDateOnly(String(dateValue).split('T')[0]);
+  }
+
+  function getSubscriptionStatusStyle(status) {
+    const normalized = String(status || 'active').toLowerCase();
+    if (normalized === 'cancelled') {
+      return 'background: rgba(239,68,68,0.16); color: #ff6b6b; border: 1px solid rgba(239,68,68,0.45);';
+    }
+    if (normalized === 'paused') {
+      return 'background: rgba(249,115,22,0.16); color: #f97316; border: 1px solid rgba(249,115,22,0.45);';
+    }
+    return 'background: rgba(0,255,65,0.12); color: var(--primary); border: 1px solid rgba(0,255,65,0.45);';
+  }
+
+  async function loadSubscriptions() {
+    const tbody = document.getElementById('subscriptionsList');
+    const emptyDiv = document.getElementById('subscriptionsEmpty');
+    const countEl = document.getElementById('subscriptionCount');
+    if (!tbody || !emptyDiv) return;
+
+    try {
+      tbody.innerHTML = '';
+      emptyDiv.textContent = 'Loading subscriptions...';
+      emptyDiv.style.display = 'block';
+
+      const response = await fetch('/api/maintenance/admin/subscriptions', {
+        headers: ownerAuthHeaders()
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Server returned ${response.status}`);
+
+      const search = String(document.getElementById('subscriptionSearch')?.value || '').toLowerCase();
+      const statusFilter = String(document.getElementById('subscriptionStatusFilter')?.value || '').toLowerCase();
+      let subscriptions = data.subscriptions || [];
+
+      if (statusFilter) {
+        subscriptions = subscriptions.filter(item => String(item.status || '').toLowerCase() === statusFilter);
+      }
+      if (search) {
+        subscriptions = subscriptions.filter(item =>
+          String(item.customer_name || '').toLowerCase().includes(search) ||
+          String(item.customer_email || '').toLowerCase().includes(search) ||
+          String(item.customer_phone || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (countEl) countEl.textContent = `(${subscriptions.length})`;
+
+      if (!subscriptions.length) {
+        emptyDiv.textContent = 'No subscriptions yet';
+        emptyDiv.style.display = 'block';
+        return;
+      }
+
+      emptyDiv.style.display = 'none';
+      tbody.innerHTML = subscriptions.map(item => {
+        const status = String(item.status || 'active').toLowerCase();
+        return `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td data-label="Name" style="padding: 12px; font-weight: 700;">${item.customer_name || '—'}</td>
+            <td data-label="Email" style="padding: 12px; font-size: 13px;">${item.customer_email || '—'}</td>
+            <td data-label="Phone" style="padding: 12px; font-size: 13px;">${item.customer_phone || '—'}</td>
+            <td data-label="Plan" style="padding: 12px;">
+              <div style="font-weight: 700;">${item.plan_name || 'Maintenance Plan'}</div>
+              <div style="color: var(--text-muted); font-size: 12px;">${item.plan_interval || 'Recurring'}</div>
+            </td>
+            <td data-label="Price" style="padding: 12px; font-weight: 800; color: var(--primary);">${formatOwnerMoneyFromCents(item.price_cents)}</td>
+            <td data-label="Status" style="padding: 12px;">
+              <span style="${getSubscriptionStatusStyle(status)} padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap;">${status}</span>
+            </td>
+            <td data-label="Started" style="padding: 12px;">${formatOwnerShortDate(item.created_at)}</td>
+            <td data-label="Actions" style="padding: 12px;">
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                <button onclick="ownerUpdateSubscriptionStatus('${item.id}', 'active')" style="padding: 4px 8px; background: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Active</button>
+                <button onclick="ownerUpdateSubscriptionStatus('${item.id}', 'paused')" style="padding: 4px 8px; background: transparent; color: var(--primary); border: 1px solid var(--primary); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Pause</button>
+                <button onclick="ownerCancelSubscription('${item.id}')" style="padding: 4px 8px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;">Cancel</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading subscriptions:', error);
+      if (countEl) countEl.textContent = '(0)';
+      emptyDiv.textContent = 'Failed to load subscriptions: ' + error.message;
+      emptyDiv.style.display = 'block';
+    }
+  }
+
+  window.ownerUpdateSubscriptionStatus = async (id, status) => {
+    try {
+      const response = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        headers: ownerAuthHeaders(),
+        body: JSON.stringify({ status })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      loadSubscriptions();
+    } catch (error) {
+      alert('Failed to update subscription: ' + error.message);
+    }
+  };
+
+  window.ownerCancelSubscription = async (id) => {
+    if (!confirm('Cancel this maintenance subscription?')) return;
+    try {
+      const response = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: ownerAuthHeaders()
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Server returned ${response.status}`);
+      alert('✓ Subscription cancelled');
+      loadSubscriptions();
+    } catch (error) {
+      alert('Failed to cancel subscription: ' + error.message);
+    }
+  };
+
+  document.getElementById('subscriptionSearch')?.addEventListener('input', loadSubscriptions);
+  document.getElementById('subscriptionStatusFilter')?.addEventListener('change', loadSubscriptions);
   
   async function loadSchedule() {
     try {

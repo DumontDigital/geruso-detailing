@@ -1,286 +1,221 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memberships — Geruso Detailing</title><style>
-  :root {
-    --primary: #00FF41;
-    --primary-dark: #00DD33;
-    --primary-light: #33FF66;
-    --white: #ffffff;
-    --light-bg: #0a0a0a;
-    --light-bg2: #1a1a1a;
-    --border: #2a2a2a;
-    --text: #ffffff;
-    --text-muted: #aaaaaa;
-    --text-light: #888888;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--light-bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance Plans — Geruso Detailing</title>
+  <link rel="stylesheet" href="/css/customer.css">
+  <style>
+    .maintenance-page { padding: 64px 28px 80px; }
+    .maintenance-wrap { max-width: 1180px; margin: 0 auto; }
+    .maintenance-hero { margin-bottom: 34px; }
+    .maintenance-hero h1 { font-size: clamp(36px, 6vw, 72px); line-height: 1.02; margin: 8px 0 18px; }
+    .maintenance-hero p { color: var(--text-muted); font-size: clamp(16px, 2vw, 20px); max-width: 760px; line-height: 1.7; }
+    .plans-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin: 30px 0; }
+    .plan-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 100%;
+    }
+    .plan-card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.12), rgba(0,255,65,0.02)); }
+    .plan-kicker { color: var(--primary); font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+    .plan-card h2 { font-size: 30px; line-height: 1.1; }
+    .plan-price { color: var(--primary); font-size: 42px; font-weight: 900; }
+    .plan-price span { color: var(--text-muted); font-size: 15px; font-weight: 700; }
+    .plan-card p { color: var(--text-muted); line-height: 1.65; }
+    .plan-list { list-style: none; display: grid; gap: 10px; margin: 0; padding: 0; }
+    .plan-list li { color: var(--text); display: flex; gap: 10px; align-items: flex-start; }
+    .plan-list li::before { content: ""; width: 9px; height: 9px; margin-top: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 10px rgba(0,255,65,0.65); flex: 0 0 auto; }
+    .plan-select { margin-top: auto; }
+    .maintenance-form {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-top: 28px;
+    }
+    .maintenance-form h2 { font-size: 28px; margin-bottom: 8px; }
+    .maintenance-form > p { color: var(--text-muted); margin-bottom: 22px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .field { display: grid; gap: 8px; }
+    .field label { color: var(--text-muted); font-size: 12px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .field input {
+      width: 100%;
+      background: #050505;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      min-height: 54px;
+      padding: 0 14px;
+      font: inherit;
+      outline: none;
+    }
+    .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,255,65,0.12); }
+    .selected-plan {
+      margin: 18px 0 0;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,255,65,0.25);
+      background: rgba(0,255,65,0.08);
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .selected-plan strong { color: var(--primary); }
+    .message { display: none; margin-top: 16px; padding: 14px 16px; border-radius: 8px; font-weight: 700; }
+    .message.error { display: block; color: #ff9c9c; background: rgba(239,68,68,0.16); border: 1px solid rgba(239,68,68,0.45); }
+    .message.success { display: block; color: var(--primary); background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.35); }
+    .maintenance-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+    .maintenance-actions .btn { min-width: 220px; justify-content: center; }
+    @media (max-width: 760px) {
+      .maintenance-page { padding: 42px 18px 64px; }
+      .plans-grid, .form-grid { grid-template-columns: 1fr; }
+      .plan-card, .maintenance-form { padding: 22px; }
+      .maintenance-actions .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body data-page="memberships">
+  <div data-nav></div>
 
-  nav { position: sticky; top: 0; z-index: 100; background: var(--light-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; box-shadow: 0 2px 8px rgba(0,255,65,0.1); }
-  .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-  .nav-logo { width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-  .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav-brand-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-  .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
-  .nav-toggle { display: none; }
-  .nav-toggle-label { display: none; flex-direction: column; cursor: pointer; gap: 5px; }
-  .nav-toggle-label span { display: block; width: 25px; height: 3px; background: var(--primary); border-radius: 3px; transition: all 0.3s ease; }
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.2s; position: relative; padding-bottom: 2px; }
-  .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .nav-links a.active::after { content: ''; position: absolute; bottom: -8px; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: none; }
-  .nav-actions { display: flex; align-items: center; gap: 16px; }
-  .nav-phone { font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-  .nav-phone:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .btn-quote-nav { background: var(--primary); color: #000; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 6px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-quote-nav:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
+  <main class="maintenance-page">
+    <div class="maintenance-wrap">
+      <section class="maintenance-hero">
+        <div class="page-hero-eyebrow">Maintenance Plans</div>
+        <h1>Keep Your Car Clean Year-Round.</h1>
+        <p>Maintenance is for customers who want their vehicle kept up between bigger details. Each visit includes an interior vacuum, dash wipe down, and exterior maintenance clean.</p>
+      </section>
 
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(1) { transform: rotate(45deg) translate(10px, 10px); }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(2) { opacity: 0; }
-  .nav-toggle:checked ~ .nav-toggle-label span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-  .nav-toggle:checked ~ .nav-links { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: var(--light-bg2); border-bottom: 1px solid var(--border); padding: 20px; gap: 16px; }
-  .nav-toggle:checked ~ .nav-phone { display: block; }
+      <section class="plans-grid" aria-label="Maintenance plan options">
+        <article class="plan-card featured" data-plan-card="biweekly">
+          <div class="plan-kicker">Best Upkeep</div>
+          <h2>Biweekly Maintenance</h2>
+          <div class="plan-price">$100 <span>/ every 2 weeks</span></div>
+          <p>For cars that get used often and need regular cleanup before dirt builds up.</p>
+          <ul class="plan-list">
+            <li>Interior vacuum</li>
+            <li>Dash and trim wipe down</li>
+            <li>Exterior maintenance wash</li>
+            <li>Recurring Stripe billing every 2 weeks</li>
+          </ul>
+          <button class="btn btn-primary plan-select" type="button" data-plan="biweekly">Choose Biweekly</button>
+        </article>
 
-  .btn-primary { background: var(--primary); color: #000; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 8px; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .btn-primary:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .btn-outline { background: transparent; color: var(--primary); font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .btn-outline:hover { background: var(--primary); color: #000; transform: translateY(-2px); box-shadow: 0 0 16px rgba(0,255,65,0.5); }
+        <article class="plan-card" data-plan-card="monthly">
+          <div class="plan-kicker">Simple Routine</div>
+          <h2>Monthly Maintenance</h2>
+          <div class="plan-price">$130 <span>/ month</span></div>
+          <p>For keeping the vehicle fresh with a consistent monthly maintenance clean.</p>
+          <ul class="plan-list">
+            <li>Interior vacuum</li>
+            <li>Dash and trim wipe down</li>
+            <li>Exterior maintenance wash</li>
+            <li>Recurring Stripe billing monthly</li>
+          </ul>
+          <button class="btn btn-outline plan-select" type="button" data-plan="monthly">Choose Monthly</button>
+        </article>
+      </section>
 
-  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 16px; }
-  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 560px; line-height: 1.7; }
-  section { padding: 80px 48px; }
-  .section-inner { max-width: 1240px; margin: 0 auto; width: 100%; }
+      <section class="maintenance-form" id="signup">
+        <h2>Start Maintenance</h2>
+        <p>Enter the customer details below, choose a plan, then continue to Stripe to activate the subscription.</p>
+        <form id="maintenanceForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="customerName">Full Name</label>
+              <input id="customerName" name="name" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="customerEmail">Email</label>
+              <input id="customerEmail" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div class="field">
+              <label for="customerPhone">Phone</label>
+              <input id="customerPhone" name="phone" type="tel" autocomplete="tel" required>
+            </div>
+          </div>
+          <input type="hidden" id="selectedPlan" name="plan" value="biweekly">
+          <div class="selected-plan" id="selectedPlanText"><strong>Selected:</strong> Biweekly Maintenance - $100 every 2 weeks.</div>
+          <div id="maintenanceMessage" class="message"></div>
+          <div class="maintenance-actions">
+            <button class="btn btn-primary" id="maintenanceSubmit" type="submit">Continue to Stripe</button>
+            <a class="btn btn-outline" href="/services.html">View One-Time Services</a>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
 
-  .card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.3s; position: relative; }
-  .card:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(0,255,65,0.1) 0%, transparent 100%); }
-  .card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; box-shadow: 0 0 12px rgba(0,255,65,0.4); }
+  <div data-footer></div>
+  <script src="/js/customer-shell.js"></script>
+  <script>
+    const plans = {
+      biweekly: { label: 'Biweekly Maintenance', price: '$100 every 2 weeks' },
+      monthly: { label: 'Monthly Maintenance', price: '$130 per month' }
+    };
+    const selectedPlanInput = document.getElementById('selectedPlan');
+    const selectedPlanText = document.getElementById('selectedPlanText');
+    const message = document.getElementById('maintenanceMessage');
+    const submit = document.getElementById('maintenanceSubmit');
 
-  footer { background: var(--light-bg2); border-top: 1px solid var(--border); padding: 60px 48px 0; }
-  .footer-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto auto; gap: 80px; padding-bottom: 40px; }
-  .footer-brand-name { font-size: 18px; font-weight: 700; color: var(--primary); }
-  .footer-tagline { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; line-height: 1.5; }
-  .footer-owner { font-size: 12px; color: var(--text-light); }
-  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .footer-links a { text-decoration: none; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
-  .footer-links a:hover { color: var(--primary); text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .footer-bottom { max-width: 1240px; margin: 0 auto; border-top: 1px solid var(--border); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-light); }
-
-  @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
-
-  #memberships { background: var(--light-bg); }
-  .mem-layout { display: grid; grid-template-columns: 1fr 300px; gap: 60px; align-items: start; margin-bottom: 52px; }
-  .perks-card { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
-  .perks-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); margin-bottom: 18px; text-shadow: 0 0 4px rgba(0,255,65,0.2); }
-  .perks-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-  .perks-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
-  .perks-check { width: 14px; height: 14px; background: var(--primary); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #000; font-weight: 700; flex-shrink: 0; }
-  .mem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  .mem-tier { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
-  .mem-name { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-  .mem-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; flex: 1; }
-  .mem-cta { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid var(--border); background: transparent; color: var(--primary); text-decoration: none; display: block; text-align: center; transition: all 0.2s; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,65,0.2); }
-  .mem-cta:hover { border-color: var(--primary); background: var(--primary); color: #000; box-shadow: 0 0 16px rgba(0,255,65,0.5); }
-  .mem-cta.primary { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 12px rgba(0,255,65,0.4); }
-  .mem-cta.primary:hover { background: var(--primary-light); border-color: var(--primary-light); box-shadow: 0 6px 16px rgba(0,255,65,0.2); }
-  .mem-footer { margin-top: 40px; background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .mem-footer h4 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .mem-footer p { font-size: 14px; color: var(--text-muted); }
-
-  /* ── CART ── */
-  .cart-link {
-    background: var(--primary);
-    color: #000;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .cart-link:hover {
-    background: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,255,65,0.2);
-  }
-
-  .cart-modal {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--light-bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 99;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-
-  .cart-content {
-    padding: 20px;
-  }
-
-  .cart-content h2 {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 16px;
-    text-shadow: 0 0 4px rgba(0,255,65,0.2);
-  }
-
-  .cart-total {
-    padding: 16px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .cart-modal button {
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  #cartItems {
-    margin-bottom: 16px;
-    max-height: 50vh;
-    overflow-y: auto;
-  }
-
-  @media (max-width: 600px) {
-    .cart-modal {
-      width: calc(100% - 40px);
-      right: 20px;
-      left: 20px;
-      top: auto;
-      bottom: 20px;
+    function setPlan(planKey) {
+      selectedPlanInput.value = planKey;
+      document.querySelectorAll('[data-plan-card]').forEach(card => {
+        card.classList.toggle('featured', card.dataset.planCard === planKey);
+      });
+      document.querySelectorAll('[data-plan]').forEach(button => {
+        const active = button.dataset.plan === planKey;
+        button.classList.toggle('btn-primary', active);
+        button.classList.toggle('btn-outline', !active);
+      });
+      const plan = plans[planKey];
+      selectedPlanText.innerHTML = `<strong>Selected:</strong> ${plan.label} - ${plan.price}.`;
+      document.getElementById('signup').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    .nav-actions {
-      flex-wrap: wrap;
-      gap: 8px;
+    function showMessage(text, type) {
+      message.textContent = text || '';
+      message.className = text ? `message ${type}` : 'message';
     }
-  }
 
-  @media(max-width:960px){ .mem-layout{grid-template-columns:1fr} .mem-grid{grid-template-columns:1fr} .mem-footer{flex-direction:column;align-items:flex-start} }
-</style></head><body>
-<nav>
-  <a href="index.html" class="nav-brand">
-    <div class="nav-logo"></div>
-    <div class="nav-brand-text">
-      <span class="nav-brand-name">Geruso Detailing</span>
-      <span class="nav-brand-sub">Rhode Island Mobile Detailing</span>
-    </div>
-  </a>
-  <input type="checkbox" id="nav-toggle" class="nav-toggle">
-  <label for="nav-toggle" class="nav-toggle-label">
-    <span></span>
-    <span></span>
-    <span></span>
-  </label>
-  <ul class="nav-links">
-    <li><a href="services.html" >Services</a></li>
-    <li><a href="work.html" >Our Work</a></li>
-    <li><a href="booking.html" >Schedule</a></li>
-    <li><a href="reviews.html" >Reviews</a></li>
-  </ul>
-  <div class="nav-actions">
-    <a href="tel:4014901236" class="nav-phone">401-490-1236</a>
-    <a href="contact.html" class="btn-quote-nav">Get a Quote</a>
-    <a href="#" id="cartBtn" class="cart-link">Cart (0)</a>
-  </div>
-</nav>
+    document.querySelectorAll('[data-plan]').forEach(button => {
+      button.addEventListener('click', () => setPlan(button.dataset.plan));
+    });
 
-<section id="memberships">
-  <div class="section-inner">
-    <div class="section-label">RECURRING SERVICE</div>
-    <h1 class="section-heading">Membership Plans</h1>
-    <p class="section-sub">Save with recurring monthly details. Cancel anytime, no lock-in required.</p>
-
-    <div class="mem-layout">
-      <div class="mem-grid">
-        <div class="card">
-          <div class="mem-tier">Monthly Basic</div>
-          <div class="mem-name">Maintenance</div>
-          <p class="mem-desc">Monthly wash & shine to keep your car looking fresh.</p>
-          <a href="contact.html" class="mem-cta">Choose Plan</a>
-        </div>
-        <div class="card featured">
-          <div class="card-badge">Popular</div>
-          <div class="mem-tier">Monthly Premium</div>
-          <div class="mem-name">Detail</div>
-          <p class="mem-desc">Full monthly detail. Interior vacuum, exterior shine, protection renewed.</p>
-          <a href="contact.html" class="mem-cta primary">Choose Plan</a>
-        </div>
-        <div class="card">
-          <div class="mem-tier">Quarterly Plus</div>
-          <div class="mem-name">Ultimate</div>
-          <p class="mem-desc">Quarterly deep detail with ceramic coating refresher.</p>
-          <a href="contact.html" class="mem-cta">Choose Plan</a>
-        </div>
-      </div>
-
-      <div class="perks-card">
-        <div class="perks-title">Member Perks</div>
-        <ul class="perks-list">
-          <li><span class="perks-check">✔</span> Save 20-25% off retail prices</li>
-          <li><span class="perks-check">✔</span> Priority scheduling</li>
-          <li><span class="perks-check">✔</span> Free touch-ups between visits</li>
-          <li><span class="perks-check">✔</span> Mobile service to your home</li>
-          <li><span class="perks-check">✔</span> Cancel anytime</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="mem-footer">
-      <div>
-        <h4>Questions about memberships?</h4>
-        <p>Give us a call or send a message. We'll help you find the right plan.</p>
-      </div>
-      <a href="contact.html" class="btn-primary">Contact Us</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-brand-name">Geruso Detailing</div>
-      <p class="footer-tagline">"Excellence through quality, one detail at a time."</p>
-      <p class="footer-owner">Owner — Cameron Geruso</p>
-    </div>
-    <div>
-      <div class="footer-col-title">Services</div>
-      <ul class="footer-links">
-        <li><a href="services.html">Basic Package</a></li>
-        <li><a href="services.html">Premium Package</a></li>
-        <li><a href="services.html">Ultra Premium</a></li>
-        <li><a href="memberships.html">Memberships</a></li>
-      </ul>
-    </div>
-    <div>
-      <div class="footer-col-title">Contact</div>
-      <ul class="footer-links">
-        <li><a href="tel:4014901236">401-490-1236</a></li>
-        <li><a href="contact.html">Get a Quote</a></li>
-        <li><a href="booking.html">Service Area</a></li>
-        <li><a href="reviews.html">Reviews</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Geruso Detailing • SSL Secured • Payments Powered by Stripe</span>
-  </div>
-</footer>
-<script>document.querySelector('.nav-logo').style.backgroundImage = "url('logo.png')"</script>
-<script src="/cart.js?v=checkout-flow-20260504"></script></body></html>
+    document.getElementById('maintenanceForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showMessage('Starting secure Stripe checkout...', 'success');
+      submit.disabled = true;
+      submit.textContent = 'Starting Stripe...';
+      const form = new FormData(event.currentTarget);
+      try {
+        const response = await fetch('/api/maintenance/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: form.get('plan'),
+            customer: {
+              name: form.get('name'),
+              email: form.get('email'),
+              phone: form.get('phone'),
+            }
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.checkoutUrl) {
+          throw new Error(data.error || 'Unable to start Stripe checkout.');
+        }
+        window.location.href = data.checkoutUrl;
+      } catch (error) {
+        showMessage(error.message || 'Unable to start maintenance checkout.', 'error');
+        submit.disabled = false;
+        submit.textContent = 'Continue to Stripe';
+      }
+    });
+  </script>
+</body>
+</html>
