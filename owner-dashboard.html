@@ -863,8 +863,10 @@
   <div id="ownerDashboard" style="display: none;">
     <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
       <div style="font-weight: 700; color: var(--primary);">Owner Dashboard</div>
-      <!-- Logout intentionally removed — the parent app.html top bar
-           provides "Customer View" + "Logout" so we don't double up. -->
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="/home.html" style="padding: 8px 14px; color: var(--primary); border: 1px solid var(--primary); border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700;">Customer View</a>
+        <button type="button" id="ownerLogoutBtn" style="padding: 9px 14px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700;">Logout</button>
+      </div>
     </nav>
 
     <!-- Debug strip removed for cleaner production UI. -->
@@ -875,7 +877,7 @@
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
         <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
-        <button class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Subscriptions</button>
+        <button class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Memberships</button>
         <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
         <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
         <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
@@ -953,9 +955,9 @@
           </div>
         </div>
 
-        <!-- Subscriptions Tab -->
+        <!-- Memberships Tab -->
         <div id="subscriptionsTab" class="owner-tab" style="display: none;">
-          <h2 style="margin-bottom: 24px;">Manage Subscriptions</h2>
+          <h2 style="margin-bottom: 24px;">Manage Memberships</h2>
 
           <div style="margin-bottom: 24px; display: flex; gap: 12px;">
             <input type="text" id="subscriptionSearch" placeholder="Search by customer name, email, or phone..." style="flex: 1; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
@@ -969,7 +971,7 @@
 
           <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
             <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--light-bg);">
-              <h3 style="color: var(--primary); margin: 0;">Maintenance Subscriptions <span id="subscriptionCount" style="color: var(--text-muted);">(0)</span></h3>
+              <h3 style="color: var(--primary); margin: 0;">Maintenance Memberships <span id="subscriptionCount" style="color: var(--text-muted);">(0)</span></h3>
             </div>
             <table style="width: 100%; border-collapse: collapse;">
               <thead>

@@ -29,7 +29,7 @@
 
   function isLoggedIn() {
     // Require both token AND a parseable user object so role-based nav
-    // items (Dashboard, Subscriptions) render correctly. A token alone
+    // items render correctly. A token alone
     // is not enough — we need the role from the user object.
     try {
       const token = localStorage.getItem('token');
@@ -70,7 +70,6 @@
       if (role === 'owner' || role === 'dev') {
         const dashUrl = role === 'owner' ? '/owner-dashboard.html' : '/admin-dashboard.html';
         items.push(`<li><a href="${dashUrl}" class="nav-signin">Dashboard</a></li>`);
-        items.push(`<li><a href="${dashUrl}" onclick="sessionStorage.setItem('dashTab','memberships')" class="nav-signin">Subscriptions</a></li>`);
       }
       items.push(`<li><button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button></li>`);
       return items.join('');
@@ -149,7 +148,6 @@
             <h4>Booking</h4>
             <ul>
               <li><a href="/booking.html">Book Service</a></li>
-              <li><a href="/memberships.html">Maintenance Plans</a></li>
               <li><a href="/schedule.html">Hours</a></li>
               <li><a href="/contact.html">Contact</a></li>
             </ul>
