@@ -11,6 +11,7 @@ const bookingsRoutes = require('./routes/bookings');
 const cartRoutes = require('./routes/cart');
 const availabilityRoutes = require('./routes/availability');
 const adminRoutes = require('./routes/admin');
+const { router: maintenanceRoutes, activateSubscriptionFromSession } = require('./routes/maintenance');
 const { verifyToken, requireRole } = require('./middleware/auth');
 
 const app = express();
@@ -213,6 +214,12 @@ app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), async (
       const session = webhookResult.data;
       console.log('[Stripe Webhook] Session:', session.id);
 
+      if (session.metadata?.source === 'maintenance_subscription') {
+        await activateSubscriptionFromSession(session);
+        console.log('[Stripe Webhook] Maintenance membership activated:', session.id);
+        return res.json({ received: true });
+      }
+
       // Update booking payment status and auto-confirm
       try {
         const bookingIdFromMetadata = session.metadata && session.metadata.booking_id;
@@ -381,6 +388,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 // Test endpoint to verify deployment
 app.get('/api/test-deployment', (req, res) => {

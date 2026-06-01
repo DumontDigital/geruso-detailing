@@ -421,6 +421,7 @@
   <div class="mobile-dashboard-nav" aria-label="Dashboard navigation">
     <button type="button" class="dashboard-nav-item active" onclick="showSection('overview', this)">Overview</button>
     <button type="button" class="dashboard-nav-item" onclick="showSection('bookings', this)">Bookings</button>
+    <button type="button" class="dashboard-nav-item" onclick="showSection('memberships', this)">Memberships</button>
     <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('services', this)">Services</button>
     <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('addons', this)">Add-ons</button>
     <button type="button" class="dashboard-nav-item" onclick="showSection('schedule', this)">Schedule</button>
@@ -435,6 +436,7 @@
     <div class="sidebar-nav">
       <div class="sidebar-item active" onclick="showSection('overview', this)">📊 Overview</div>
       <div class="sidebar-item" onclick="showSection('bookings', this)">📅 Bookings</div>
+      <div class="sidebar-item" onclick="showSection('memberships', this)">♻️ Memberships</div>
       <!-- Owner-only sections (Services, Add-ons, Content)
            are hidden for dev role via JS below to limit dev access. -->
       <div class="sidebar-item owner-only" onclick="showSection('services', this)">🔧 Services</div>
@@ -526,6 +528,36 @@
           </thead>
           <tbody id="bookingsTableBody">
             <tr><td colspan="9">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MEMBERSHIPS SECTION -->
+    <div id="memberships-section" class="section">
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Manage Memberships</h1>
+          <p class="content-sub">View and manage recurring maintenance customers.</p>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="table-header">
+          <h2 class="table-title">Maintenance Memberships</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Plan</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="membershipsTableBody">
+            <tr><td colspan="6">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1069,6 +1101,7 @@
 
     // Load section data
     if (sectionName === 'bookings') loadBookings();
+    else if (sectionName === 'memberships') loadMemberships();
     else if (sectionName === 'services') loadServices();
     else if (sectionName === 'addons') loadAddons();
     else if (sectionName === 'schedule') loadScheduleBlocks();
@@ -1634,6 +1667,64 @@
       loadContent();
     } catch (error) {
       alert('Failed to save content: ' + error.message);
+    }
+  }
+
+  function escapeMembershipText(value) {
+    return String(value || '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[char]));
+  }
+
+  async function loadMemberships() {
+    const tbody = document.getElementById('membershipsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+    try {
+      const res = await fetch('/api/maintenance/admin/subscriptions', {
+        headers: adminAuthHeaders()
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to load memberships');
+      if (!data.subscriptions?.length) {
+        tbody.innerHTML = '<tr><td colspan="6">No maintenance memberships yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.subscriptions.map(subscription => {
+        const amount = `$${(Number(subscription.amount_cents || 0) / 100).toFixed(0)}`;
+        const status = escapeMembershipText(subscription.status || 'pending');
+        return `
+          <tr>
+            <td data-label="Customer"><strong>${escapeMembershipText(subscription.customer_name)}</strong><br><small>${escapeMembershipText(subscription.customer_email)}</small></td>
+            <td data-label="Contact">${escapeMembershipText(subscription.customer_phone)}</td>
+            <td data-label="Plan"><strong>${escapeMembershipText(subscription.plan_name)}</strong><br><small>${escapeMembershipText(subscription.plan_interval)}</small></td>
+            <td data-label="Price">${amount}</td>
+            <td data-label="Status"><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
+            <td data-label="Actions">
+              <button class="btn-small btn-success" onclick="updateMembershipStatus('${subscription.id}', 'active')">Active</button>
+              <button class="btn-small" onclick="updateMembershipStatus('${subscription.id}', 'paused')">Pause</button>
+              <button class="btn-small btn-danger" onclick="updateMembershipStatus('${subscription.id}', 'cancelled')">Cancel</button>
+            </td>
+          </tr>`;
+      }).join('');
+    } catch (error) {
+      tbody.innerHTML = `<tr><td colspan="6">${escapeMembershipText(error.message)}</td></tr>`;
+    }
+  }
+
+  async function updateMembershipStatus(id, status) {
+    if (status === 'cancelled' && !confirm('Cancel this maintenance membership?')) return;
+    try {
+      const res = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        headers: adminAuthHeaders(),
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to update membership');
+      loadMemberships();
+    } catch (error) {
+      alert('Membership update failed: ' + error.message);
     }
   }
 

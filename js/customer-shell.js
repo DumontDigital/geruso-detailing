@@ -4,6 +4,7 @@
   const NAV_LINKS = [
     { href: '/home.html',     label: 'Home' },
     { href: '/services.html', label: 'Services' },
+    { href: '/memberships.html', label: 'Membership' },
     { href: '/work.html',     label: 'Our Work' },
     { href: '/reviews.html',  label: 'Reviews' },
     { href: '/contact.html',  label: 'Contact' },
@@ -133,6 +134,7 @@
             <ul>
               <li><a href="/home.html">Home</a></li>
               <li><a href="/services.html">Services</a></li>
+              <li><a href="/memberships.html">Membership</a></li>
               <li><a href="/work.html">Our Work</a></li>
               <li><a href="/reviews.html">Reviews</a></li>
             </ul>

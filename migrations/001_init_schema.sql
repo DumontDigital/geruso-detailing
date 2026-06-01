@@ -249,3 +249,27 @@ CREATE INDEX IF NOT EXISTS idx_reviews_active ON reviews(is_active);
 CREATE INDEX IF NOT EXISTS idx_site_content_key ON site_content(key);
 CREATE INDEX IF NOT EXISTS idx_schedule_day ON schedule(day_of_week);
 CREATE INDEX IF NOT EXISTS idx_settings_id ON settings(id);
+
+-- Recurring maintenance memberships
+CREATE TABLE IF NOT EXISTS maintenance_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_name VARCHAR(255) NOT NULL,
+  customer_email VARCHAR(255) NOT NULL,
+  customer_phone VARCHAR(50) NOT NULL,
+  plan_key VARCHAR(50) NOT NULL,
+  plan_name VARCHAR(100) NOT NULL,
+  plan_interval VARCHAR(50) NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  stripe_session_id VARCHAR(255),
+  stripe_subscription_id VARCHAR(255),
+  stripe_customer_id VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_maintenance_subscriptions_status ON maintenance_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_maintenance_subscriptions_email ON maintenance_subscriptions(customer_email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_maintenance_subscriptions_stripe_session
+  ON maintenance_subscriptions(stripe_session_id)
+  WHERE stripe_session_id IS NOT NULL;
