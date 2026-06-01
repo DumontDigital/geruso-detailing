@@ -319,6 +319,64 @@ const sendOwnerNotification = async (bookingData) => {
   }
 };
 
+const sendMaintenanceSubscriptionNotification = async (subscriptionData) => {
+  const {
+    customer_name,
+    customer_email,
+    customer_phone,
+    plan_name,
+    plan_interval,
+    price_cents,
+    status
+  } = subscriptionData;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[Maintenance Email] FAILED - Missing RESEND_API_KEY');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  if (!process.env.OWNER_EMAIL) {
+    console.error('[Maintenance Email] FAILED - OWNER_EMAIL not configured');
+    return { success: false, error: 'Owner email not configured' };
+  }
+
+  const price = `$${(Number(price_cents || 0) / 100).toFixed(0)}`;
+  const htmlContent = `
+    <h2>New Maintenance Subscription - Geruso Detailing</h2>
+    <p>A customer started a recurring maintenance plan through Stripe.</p>
+    <hr>
+    <p><strong>Customer Name:</strong> ${customer_name}</p>
+    <p><strong>Email:</strong> <a href="mailto:${customer_email}">${customer_email}</a></p>
+    <p><strong>Phone:</strong> <a href="tel:${customer_phone}">${customer_phone}</a></p>
+    <p><strong>Plan:</strong> ${plan_name}</p>
+    <p><strong>Frequency:</strong> ${plan_interval}</p>
+    <p><strong>Price:</strong> ${price}</p>
+    <p><strong>Status:</strong> ${status || 'active'}</p>
+    <hr>
+    <p>Log in to the owner/dev dashboard to manage this subscription.</p>
+  `;
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+      to: process.env.OWNER_EMAIL,
+      subject: `New Maintenance Subscription - ${customer_name} - ${plan_name}`,
+      html: htmlContent,
+    });
+
+    if (result.error) {
+      console.error('[Maintenance Email] FAILED - Resend error:', result.error);
+      return { success: false, error: result.error.message };
+    }
+
+    console.log('[Maintenance Email] SUCCESS - Email ID:', result.data.id);
+    return { success: true };
+  } catch (error) {
+    console.error('[Maintenance Email] FAILED - Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 const sendOwnerEmail = async (requestData) => {
   const { requestType, requestDetails, submittedAt } = requestData;
 
@@ -375,4 +433,4 @@ const sendOwnerEmail = async (requestData) => {
   }
 };
 
-module.exports = { sendQuoteEmail, sendBookingConfirmation, sendOwnerNotification, sendOwnerEmail };
+module.exports = { sendQuoteEmail, sendBookingConfirmation, sendOwnerNotification, sendOwnerEmail, sendMaintenanceSubscriptionNotification };

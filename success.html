@@ -364,6 +364,7 @@
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get('session_id');
       const payLater = params.get('pay_later') === 'true';
+      const maintenance = params.get('maintenance') === '1';
 
       if (payLater) {
         showSuccess({
@@ -382,6 +383,19 @@
       }
 
       try {
+        if (maintenance) {
+          const maintenanceResponse = await fetch(`/api/maintenance/session/${encodeURIComponent(sessionId)}`);
+          if (maintenanceResponse.ok) {
+            const maintenanceData = await maintenanceResponse.json();
+            if (maintenanceData.paymentStatus === 'paid') {
+              showSuccess({ ...maintenanceData, source: 'maintenance_subscription' });
+            } else {
+              showError();
+            }
+            return;
+          }
+        }
+
         const cartResponse = await fetch(`/api/cart/session/${encodeURIComponent(sessionId)}`);
         if (cartResponse.ok) {
           const cartData = await cartResponse.json();
@@ -450,6 +464,19 @@
         document.getElementById('bookingTime').textContent = 'Confirmed';
         document.getElementById('bookingService').textContent = 'Cart purchase';
         document.getElementById('paymentStatus').textContent = 'Paid';
+        return;
+      }
+
+      if (data.source === 'maintenance_subscription') {
+        document.getElementById('successSubtitle').textContent = 'Your maintenance plan is active';
+        document.getElementById('successHeading').textContent = 'Maintenance Subscription Confirmed';
+        document.getElementById('successCopy').textContent = 'Your recurring Geruso Detailing maintenance plan is active. The owner has the details in the dashboard.';
+        document.getElementById('primaryIdLabel').textContent = 'Subscription ID';
+        document.getElementById('bookingId').textContent = data.subscriptionId || 'Confirmed';
+        document.getElementById('bookingDate').textContent = data.planInterval || 'Recurring';
+        document.getElementById('bookingTime').textContent = 'Recurring service';
+        document.getElementById('bookingService').textContent = data.planName || 'Maintenance Plan';
+        document.getElementById('paymentStatus').textContent = 'Active subscription';
         return;
       }
 

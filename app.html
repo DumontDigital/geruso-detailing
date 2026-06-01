@@ -335,7 +335,7 @@
       <div id="devView" class="view">
         <div class="view-content" id="devContent">
           <!-- Dev dashboard will be loaded here -->
-          <iframe id="devFrame" class="dashboard-frame" src="/admin-dashboard.html"></iframe>
+          <iframe id="devFrame" class="dashboard-frame" src="/owner-dashboard.html"></iframe>
         </div>
       </div>
     </div>
@@ -381,10 +381,10 @@
         window.location.href = '/';
         return;
       } else if (role === 'owner') {
-        window.location.replace('/admin-dashboard.html');
+        window.location.replace('/owner-dashboard.html');
         return;
       } else if (role === 'dev') {
-        window.location.replace('/admin-dashboard.html');
+        window.location.replace('/owner-dashboard.html');
         return;
       }
 

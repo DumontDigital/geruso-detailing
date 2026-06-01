@@ -45,6 +45,24 @@ CREATE TABLE IF NOT EXISTS bookings (
   UNIQUE(booking_date, booking_time)
 );
 
+-- Create maintenance subscriptions table
+CREATE TABLE IF NOT EXISTS maintenance_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_name VARCHAR(255) NOT NULL,
+  customer_email VARCHAR(255) NOT NULL,
+  customer_phone VARCHAR(20) NOT NULL,
+  plan_key VARCHAR(50) NOT NULL,
+  plan_name VARCHAR(120) NOT NULL,
+  plan_interval VARCHAR(60) NOT NULL,
+  price_cents INTEGER NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  stripe_session_id VARCHAR(255),
+  stripe_subscription_id VARCHAR(255),
+  stripe_customer_id VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create availability table
 CREATE TABLE IF NOT EXISTS availability (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -76,6 +94,28 @@ BEGIN
 
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bookings' AND column_name = 'deposit_amount') THEN
     ALTER TABLE bookings ADD COLUMN deposit_amount INTEGER DEFAULT 2500;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'maintenance_subscriptions') THEN
+    CREATE TABLE maintenance_subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      customer_name VARCHAR(255) NOT NULL,
+      customer_email VARCHAR(255) NOT NULL,
+      customer_phone VARCHAR(20) NOT NULL,
+      plan_key VARCHAR(50) NOT NULL,
+      plan_name VARCHAR(120) NOT NULL,
+      plan_interval VARCHAR(60) NOT NULL,
+      price_cents INTEGER NOT NULL,
+      status VARCHAR(50) DEFAULT 'pending',
+      stripe_session_id VARCHAR(255),
+      stripe_subscription_id VARCHAR(255),
+      stripe_customer_id VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   END IF;
 END $$;
 
@@ -241,6 +281,10 @@ CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_payment_status ON bookings(payment_status);
 CREATE INDEX IF NOT EXISTS idx_bookings_date_time ON bookings(booking_date, booking_time);
 CREATE INDEX IF NOT EXISTS idx_bookings_stripe_session ON bookings(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_maintenance_status ON maintenance_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_maintenance_email ON maintenance_subscriptions(customer_email);
+CREATE INDEX IF NOT EXISTS idx_maintenance_stripe_session ON maintenance_subscriptions(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_maintenance_stripe_subscription ON maintenance_subscriptions(stripe_subscription_id);
 CREATE INDEX IF NOT EXISTS idx_availability_date ON availability(date);
 CREATE INDEX IF NOT EXISTS idx_admins_email ON admins(email);
 CREATE INDEX IF NOT EXISTS idx_blocked_dates ON blocked_dates(blocked_date);
@@ -249,27 +293,3 @@ CREATE INDEX IF NOT EXISTS idx_reviews_active ON reviews(is_active);
 CREATE INDEX IF NOT EXISTS idx_site_content_key ON site_content(key);
 CREATE INDEX IF NOT EXISTS idx_schedule_day ON schedule(day_of_week);
 CREATE INDEX IF NOT EXISTS idx_settings_id ON settings(id);
-
--- Recurring maintenance memberships
-CREATE TABLE IF NOT EXISTS maintenance_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_name VARCHAR(255) NOT NULL,
-  customer_email VARCHAR(255) NOT NULL,
-  customer_phone VARCHAR(50) NOT NULL,
-  plan_key VARCHAR(50) NOT NULL,
-  plan_name VARCHAR(100) NOT NULL,
-  plan_interval VARCHAR(50) NOT NULL,
-  amount_cents INTEGER NOT NULL,
-  status VARCHAR(50) DEFAULT 'pending',
-  stripe_session_id VARCHAR(255),
-  stripe_subscription_id VARCHAR(255),
-  stripe_customer_id VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_maintenance_subscriptions_status ON maintenance_subscriptions(status);
-CREATE INDEX IF NOT EXISTS idx_maintenance_subscriptions_email ON maintenance_subscriptions(customer_email);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_maintenance_subscriptions_stripe_session
-  ON maintenance_subscriptions(stripe_session_id)
-  WHERE stripe_session_id IS NOT NULL;

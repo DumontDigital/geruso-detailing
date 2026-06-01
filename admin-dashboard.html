@@ -1691,7 +1691,7 @@
         return;
       }
       tbody.innerHTML = data.subscriptions.map(subscription => {
-        const amount = `$${(Number(subscription.amount_cents || 0) / 100).toFixed(0)}`;
+        const amount = `$${(Number(subscription.price_cents || 0) / 100).toFixed(0)}`;
         const status = escapeMembershipText(subscription.status || 'pending');
         return `
           <tr>

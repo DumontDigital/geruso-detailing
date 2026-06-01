@@ -107,6 +107,91 @@
     .preview-card p { color: var(--text-muted); font-size: 14px; line-height: 1.7; flex: 1; margin-bottom: 18px; }
     .preview-card .link { color: var(--primary); font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
 
+    /* MAINTENANCE FEATURE */
+    .maintenance-feature {
+      background: var(--light-bg);
+      padding: 80px 32px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .maintenance-feature-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+    .maintenance-copy,
+    .maintenance-price-card {
+      background: var(--light-bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 34px;
+    }
+    .maintenance-copy {
+      background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(26,26,26,1) 58%);
+      border-color: rgba(0,255,65,0.35);
+    }
+    .maintenance-copy h2 {
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.08;
+      margin: 10px 0 16px;
+    }
+    .maintenance-copy p {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.7;
+      max-width: 720px;
+      margin-bottom: 22px;
+    }
+    .maintenance-list {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      margin: 0 0 26px;
+      padding: 0;
+    }
+    .maintenance-list li {
+      color: var(--text);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-weight: 650;
+    }
+    .maintenance-list li::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      margin-top: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px rgba(0,255,65,0.65);
+      flex: 0 0 auto;
+    }
+    .maintenance-price-card {
+      display: grid;
+      gap: 16px;
+    }
+    .maintenance-plan-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .maintenance-plan-line:last-of-type { border-bottom: 0; }
+    .maintenance-plan-line h3 { font-size: 18px; margin-bottom: 4px; }
+    .maintenance-plan-line span { color: var(--text-muted); font-size: 13px; }
+    .maintenance-plan-line strong { color: var(--primary); font-size: 26px; white-space: nowrap; }
+    @media (max-width: 820px) {
+      .maintenance-feature-inner { grid-template-columns: 1fr; }
+      .maintenance-copy,
+      .maintenance-price-card { padding: 24px; }
+      .maintenance-plan-line { align-items: flex-start; flex-direction: column; }
+    }
+
     /* WORK PREVIEW */
     .preview-work { background: var(--light-bg); padding: 80px 32px; }
     .work-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1240px; margin: 0 auto 40px; }
@@ -255,6 +340,43 @@
     </div>
     <div style="text-align: center;">
       <a href="/services.html" class="btn btn-outline">See All Services</a>
+    </div>
+  </section>
+
+  <!-- MAINTENANCE FEATURE -->
+  <section class="maintenance-feature">
+    <div class="maintenance-feature-inner">
+      <div class="maintenance-copy">
+        <span class="section-eyebrow">Maintenance Plans</span>
+        <h2>Keep It Clean Between Big Details.</h2>
+        <p>
+          Maintenance plans are for customers who want a consistent clean instead of waiting until the car needs another full detail.
+        </p>
+        <ul class="maintenance-list">
+          <li>Interior vacuum and dash wipe down</li>
+          <li>Exterior maintenance clean</li>
+          <li>Automatic Stripe subscription billing</li>
+          <li>Owner and dev dashboard tracking</li>
+        </ul>
+        <a href="/memberships.html" class="btn btn-outline">View Maintenance Plans</a>
+      </div>
+      <div class="maintenance-price-card">
+        <div class="maintenance-plan-line">
+          <div>
+            <h3>Biweekly Maintenance</h3>
+            <span>Every 2 weeks</span>
+          </div>
+          <strong>$100</strong>
+        </div>
+        <div class="maintenance-plan-line">
+          <div>
+            <h3>Monthly Maintenance</h3>
+            <span>Once per month</span>
+          </div>
+          <strong>$130</strong>
+        </div>
+        <a href="/memberships.html#signup" class="btn btn-primary">Start a Plan</a>
+      </div>
     </div>
   </section>
 

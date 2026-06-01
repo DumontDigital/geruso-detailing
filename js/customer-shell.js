@@ -28,11 +28,15 @@
   }
 
   function isLoggedIn() {
-    // Treat "logged in" loosely — if there's ANY token or user record in
-    // localStorage, show Logout. Avoids cases where one of the two is
-    // missing or malformed (older builds set only one, etc.).
+    // Require both token AND a parseable user object so role-based nav
+    // items (Dashboard, Subscriptions) render correctly. A token alone
+    // is not enough — we need the role from the user object.
     try {
-      return !!(localStorage.getItem('token') || localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+      const raw = localStorage.getItem('user');
+      if (!token || !raw) return false;
+      const u = JSON.parse(raw);
+      return !!(u && u.role);
     } catch (e) { return false; }
   }
 
@@ -64,7 +68,9 @@
       const titleAttr = label ? ` title="Signed in as ${label}"` : '';
       const items = [];
       if (role === 'owner' || role === 'dev') {
-        items.push(`<li><a href="/app" class="nav-signin">Dashboard</a></li>`);
+        const dashUrl = role === 'owner' ? '/owner-dashboard.html' : '/admin-dashboard.html';
+        items.push(`<li><a href="${dashUrl}" class="nav-signin">Dashboard</a></li>`);
+        items.push(`<li><a href="${dashUrl}" onclick="sessionStorage.setItem('dashTab','memberships')" class="nav-signin">Subscriptions</a></li>`);
       }
       items.push(`<li><button type="button" class="nav-signin" id="navLogoutBtn"${titleAttr}>Logout</button></li>`);
       return items.join('');
@@ -143,6 +149,7 @@
             <h4>Booking</h4>
             <ul>
               <li><a href="/booking.html">Book Service</a></li>
+              <li><a href="/memberships.html">Maintenance Plans</a></li>
               <li><a href="/schedule.html">Hours</a></li>
               <li><a href="/contact.html">Contact</a></li>
             </ul>
