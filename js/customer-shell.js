@@ -5,7 +5,6 @@
     { href: '/home.html',     label: 'Home' },
     { href: '/services.html', label: 'Services' },
     { href: '/work.html',     label: 'Our Work' },
-    { href: '/schedule.html', label: 'Schedule' },
     { href: '/reviews.html',  label: 'Reviews' },
     { href: '/contact.html',  label: 'Contact' },
   ];
