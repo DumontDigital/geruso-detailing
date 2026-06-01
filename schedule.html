@@ -1513,6 +1513,11 @@
       showMessage('Please select a service type', 'error');
       return;
     }
+    const vehicleType = document.querySelector('select[name="vehicleType"]').value;
+    if (!vehicleType) {
+      showMessage('Please select a vehicle type', 'error');
+      return;
+    }
 
     const customerName = document.querySelector('input[name="customerName"]').value.trim();
     const customerEmail = document.querySelector('input[name="customerEmail"]').value.trim();
@@ -1550,7 +1555,7 @@
       serviceType: combinedServiceNames.join(' + '),
       bookingDate: localDateStr, // Plain string: YYYY-MM-DD (NO UTC conversion)
       bookingTime: selectedTime,
-      vehicleType: document.querySelector('select[name="vehicleType"]').value,
+      vehicleType,
       serviceTag: getCurrentServiceTag(),
       serviceLocation: selectedServiceMode === 'location' ? 'Geruso Location' : 'Mobile',
       notes: document.querySelector('textarea[name="notes"]').value,

@@ -252,9 +252,12 @@ router.post('/checkout', async (req, res) => {
     const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto, serviceLocation } = req.body;
 
     // Validate required fields
-    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime) {
+    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime || !vehicleType) {
       console.warn('[Bookings API] Validation failed - Missing required fields');
       return res.status(400).json({ error: 'All required fields must be filled' });
+    }
+    if (!['Car', 'SUV', 'Truck', 'Motorcycle'].includes(vehicleType)) {
+      return res.status(400).json({ error: 'Please select a valid vehicle type' });
     }
 
     console.log('[Bookings API] Validation passed');
@@ -369,7 +372,7 @@ router.post('/', async (req, res) => {
     const { customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, bookingTime, vehicleType, notes, vehiclePhoto, serviceLocation } = req.body;
 
     // Validate required fields
-    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime) {
+    if (!customerName || !customerEmail || !customerPhone || !serviceAddress || !serviceType || !bookingDate || !bookingTime || !vehicleType) {
       console.warn('[Bookings API] Validation failed - Missing required fields');
       console.warn('[Bookings API] customerName:', customerName);
       console.warn('[Bookings API] customerEmail:', customerEmail);
@@ -379,6 +382,9 @@ router.post('/', async (req, res) => {
       console.warn('[Bookings API] bookingDate:', bookingDate);
       console.warn('[Bookings API] bookingTime:', bookingTime);
       return res.status(400).json({ error: 'All required fields must be filled' });
+    }
+    if (!['Car', 'SUV', 'Truck', 'Motorcycle'].includes(vehicleType)) {
+      return res.status(400).json({ error: 'Please select a valid vehicle type' });
     }
 
     console.log('[Bookings API] Validation passed');

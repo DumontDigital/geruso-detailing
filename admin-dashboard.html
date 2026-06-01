@@ -517,6 +517,7 @@
               <th>Time</th>
               <th>Customer</th>
               <th>Service</th>
+              <th>Vehicle</th>
               <th>Location</th>
               <th>Payment</th>
               <th>Status</th>
@@ -524,7 +525,7 @@
             </tr>
           </thead>
           <tbody id="bookingsTableBody">
-            <tr><td colspan="8">Loading...</td></tr>
+            <tr><td colspan="9">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1150,7 +1151,7 @@
       }
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="9" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
       tbody.innerHTML = groupBookingsForDisplay(bookings).map(b => {
@@ -1169,8 +1170,9 @@
             </td>
             <td data-label="Service">
               <div class="booking-primary">${escapeHtml(b.service_type)}</div>
-              <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')} • $${Number(b.totalPrice || 0).toLocaleString()} total</div>
+              <div class="booking-secondary">$${Number(b.totalPrice || 0).toLocaleString()} total</div>
             </td>
+            <td data-label="Vehicle"><div class="booking-primary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')}</div></td>
             <td data-label="Location">
               <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
               ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
@@ -1192,7 +1194,7 @@
       const message = error.message && !/Failed to load bookings \(\d+\)/.test(error.message)
         ? error.message
         : 'Failed to load bookings. Please log out and sign back in.';
-      document.getElementById('bookingsTableBody').innerHTML = `<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(message)}</td></tr>`;
+      document.getElementById('bookingsTableBody').innerHTML = `<tr class="empty-row"><td colspan="9" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(message)}</td></tr>`;
     }
   }
 
