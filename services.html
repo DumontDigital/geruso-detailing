@@ -62,10 +62,22 @@
     .service-card h3 { font-size: 18px; margin-bottom: 5px; color: var(--text); }
     .service-card .price { font-size: 23px; font-weight: 800; color: var(--primary); margin-bottom: 9px; }
     .service-card p { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-bottom: 12px; flex: 1; }
-    .service-card .features { list-style: none; margin-bottom: 14px; }
-    .service-card .features li { color: var(--text-muted); font-size: 11px; line-height: 1.35; padding: 4px 0; border-bottom: 1px solid var(--border); }
-    .service-card .features li:before { content: '\2713  '; color: var(--primary); font-weight: 700; margin-right: 6px; }
-    .service-card .features li:last-child { border-bottom: none; }
+    .service-card .features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3px 10px;
+      list-style: none;
+      margin-bottom: 12px;
+    }
+    .service-card .features li {
+      display: flex;
+      align-items: flex-start;
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.25;
+      padding: 2px 0;
+    }
+    .service-card .features li:before { content: '\2713'; color: var(--primary); font-weight: 700; margin-right: 4px; flex: 0 0 auto; }
     .service-card .btn { width: 100%; text-align: center; }
     .service-note {
       max-width: 1440px;
@@ -110,13 +122,14 @@
       .service-card h3 { font-size: 15px; }
       .service-card .price { font-size: 19px; margin-bottom: 6px; }
       .service-card p { font-size: 11px; line-height: 1.4; margin-bottom: 8px; }
-      .service-card .features { margin-bottom: 10px; }
-      .service-card .features li { font-size: 10px; padding: 3px 0; }
+      .service-card .features { gap: 2px 7px; margin-bottom: 8px; }
+      .service-card .features li { font-size: 9px; line-height: 1.2; padding: 1px 0; }
       .service-card .btn { padding: 10px 7px; font-size: 11px; }
       .service-note { padding: 10px 11px; margin-bottom: 9px; font-size: 11px; line-height: 1.45; }
     }
     @media (max-width: 390px) {
       .services-grid { grid-template-columns: 1fr !important; }
+      .service-card .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   </style>
 </head>
