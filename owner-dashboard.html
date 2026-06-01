@@ -876,12 +876,12 @@
     <div style="display: flex;">
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
-        <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
-        <button class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Memberships</button>
-        <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
-        <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
-        <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
-        <button class="owner-nav-btn" data-tab="gallery" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
+        <button type="button" class="owner-nav-btn" data-tab="bookings" onclick="ownerShowTab('bookings', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button type="button" class="owner-nav-btn" data-tab="subscriptions" onclick="ownerShowTab('subscriptions', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Memberships</button>
+        <button type="button" class="owner-nav-btn" data-tab="services" onclick="ownerShowTab('services', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
+        <button type="button" class="owner-nav-btn" data-tab="schedule" onclick="ownerShowTab('schedule', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
+        <button type="button" class="owner-nav-btn" data-tab="content" onclick="ownerShowTab('content', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
+        <button type="button" class="owner-nav-btn" data-tab="gallery" onclick="ownerShowTab('gallery', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
       </div>
 
       <!-- Main Content -->
@@ -1298,12 +1298,6 @@
     dashboard.style.display = 'block';
     updateEasternTimeDisplay();
     loadBookings();
-    loadSubscriptions();
-    loadServices();
-    loadSchedule();
-    loadWebsiteContent();
-    loadGallery();
-    setupTabNavigation();
     setupAutoRotation();
     // Update Eastern time display every second
     setInterval(updateEasternTimeDisplay, 1000);
@@ -1318,30 +1312,27 @@
     };
   }
 
-  function setupTabNavigation() {
-    document.querySelectorAll('.owner-nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
+  window.ownerShowTab = function(tab, btn) {
+    const tabPanel = document.getElementById(tab + 'Tab');
+    if (!tabPanel) return;
 
-        document.querySelectorAll('.owner-tab').forEach(t => t.style.display = 'none');
-        document.getElementById(tab + 'Tab').style.display = 'block';
+    document.querySelectorAll('.owner-tab').forEach(panel => panel.style.display = 'none');
+    tabPanel.style.display = 'block';
 
-        document.querySelectorAll('.owner-nav-btn').forEach(b => {
-          b.style.background = 'transparent';
-          b.style.color = 'var(--text)';
-        });
-        btn.style.background = 'var(--primary)';
-        btn.style.color = '#000';
-
-        if (tab === 'schedule') loadSchedule();
-        if (tab === 'bookings') loadBookings();
-        if (tab === 'subscriptions') loadSubscriptions();
-        if (tab === 'services') loadServices();
-        if (tab === 'content') loadWebsiteContent();
-        if (tab === 'gallery') loadGallery();
-      });
+    document.querySelectorAll('.owner-nav-btn').forEach(button => {
+      button.style.background = 'transparent';
+      button.style.color = 'var(--text)';
     });
-  }
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#000';
+
+    if (tab === 'schedule') loadSchedule();
+    if (tab === 'bookings') loadBookings();
+    if (tab === 'subscriptions') loadSubscriptions();
+    if (tab === 'services') loadServices();
+    if (tab === 'content') loadWebsiteContent();
+    if (tab === 'gallery') loadGallery();
+  };
 
   // Setup auto-rotation: refresh bookings every 60 seconds to maintain live rotating schedule
   function setupAutoRotation() {
