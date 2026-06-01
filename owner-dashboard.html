@@ -608,6 +608,25 @@
       height: auto !important;
       min-height: 56px !important;
       padding: 12px 14px !important;
+      gap: 10px !important;
+      flex-wrap: wrap !important;
+    }
+
+    #ownerDashboard > nav > div:last-child {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+      width: 100% !important;
+    }
+
+    #ownerDashboard > nav > div:last-child a,
+    #ownerDashboard > nav > div:last-child button {
+      width: 100% !important;
+      min-height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      touch-action: manipulation;
     }
 
     #ownerDashboard > div[style*="display: flex"] {
@@ -648,6 +667,7 @@
       font-size: 12px !important;
       font-weight: 800 !important;
       white-space: nowrap !important;
+      touch-action: manipulation;
     }
 
     .owner-nav-btn[style*="var(--primary)"] {
@@ -661,6 +681,32 @@
       width: 100% !important;
       padding: 18px 12px 36px !important;
       overflow-x: hidden !important;
+    }
+
+    #ownerDashboard input,
+    #ownerDashboard select,
+    #ownerDashboard textarea,
+    #ownerDashboard button {
+      max-width: 100% !important;
+      min-width: 0 !important;
+    }
+
+    #ownerDashboard input,
+    #ownerDashboard select,
+    #ownerDashboard textarea {
+      width: 100% !important;
+      min-height: 44px !important;
+      font-size: 16px !important;
+    }
+
+    #servicesTab div[style*="grid-template-columns: 1fr 1fr"],
+    #contentTab div[style*="grid-template-columns: 1fr 1fr"],
+    #galleryTab div[style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    #scheduleTab div[style*="grid-template-columns: repeat(auto-fit"] {
+      grid-template-columns: 1fr !important;
     }
 
     #bookingsTab > div[style*="display: flex"] {
