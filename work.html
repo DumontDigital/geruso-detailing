@@ -9,8 +9,8 @@
     .gallery-section { padding: 64px 32px; }
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
       max-width: 1240px;
       margin: 0 auto;
     }
@@ -27,6 +27,21 @@
     .gallery-item:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 8px 24px rgba(0,255,65,0.1); }
     .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
     .gallery-item:hover img { transform: scale(1.05); }
+    .result-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 2;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.78);
+      border: 1px solid rgba(0,255,65,0.55);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
     .gallery-overlay {
       position: absolute;
       bottom: 0;
@@ -103,6 +118,42 @@
 
   <section class="gallery-section">
     <div class="gallery-grid">
+      <div class="gallery-item" data-img="/images/work/exterior-detail-before.jpg" data-title="Exterior Detail Before" data-desc="Before exterior wash and finish detail">
+        <img src="/images/work/exterior-detail-before.jpg" alt="Exterior detail before">
+        <span class="result-badge">Before</span>
+        <div class="gallery-overlay">
+          <h3>Exterior Detail</h3>
+          <p>Before</p>
+        </div>
+      </div>
+
+      <div class="gallery-item" data-img="/images/work/exterior-detail-after.jpg" data-title="Exterior Detail After" data-desc="After exterior wash and finish detail">
+        <img src="/images/work/exterior-detail-after.jpg" alt="Exterior detail after">
+        <span class="result-badge">After</span>
+        <div class="gallery-overlay">
+          <h3>Exterior Detail</h3>
+          <p>After</p>
+        </div>
+      </div>
+
+      <div class="gallery-item" data-img="/images/work/interior-detail-before.jpg" data-title="Interior Detail Before" data-desc="Before interior vacuum, wipe down, and refresh">
+        <img src="/images/work/interior-detail-before.jpg" alt="Interior detail before">
+        <span class="result-badge">Before</span>
+        <div class="gallery-overlay">
+          <h3>Interior Detail</h3>
+          <p>Before</p>
+        </div>
+      </div>
+
+      <div class="gallery-item" data-img="/images/work/interior-detail-after.jpg" data-title="Interior Detail After" data-desc="After interior vacuum, wipe down, and refresh">
+        <img src="/images/work/interior-detail-after.jpg" alt="Interior detail after">
+        <span class="result-badge">After</span>
+        <div class="gallery-overlay">
+          <h3>Interior Detail</h3>
+          <p>After</p>
+        </div>
+      </div>
+
       <div class="gallery-item" data-img="/images/work/interior-transformation.jpg" data-title="Interior Transformation" data-desc="Complete cabin transformation — steering wheel cover, fresh fragrance, and the Pride-in-your-Ride finishing touch">
         <img src="/images/work/interior-transformation.jpg" alt="Interior transformation">
         <div class="gallery-overlay">
