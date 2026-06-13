@@ -11,18 +11,23 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const servicePrice = {
   'Full Motorcycle Service': { price: 70, startingFrom: false },
   'Interior Detailing': { price: 100, startingFrom: true },
-  'Car Wash': { price: 85, truckPrice: 120, startingFrom: true },
-  'Ceramic Coating': { price: 400, startingFrom: false },
-  'Premium Package': { price: 175, truckPrice: 215, startingFrom: true },
-  'Ultra Premium': { price: 335, truckPrice: 375, startingFrom: false },
+  'Car Wash': { price: 95, suvPrice: 110, truckPrice: 110, startingFrom: true },
+  'Premium Wash': { price: 130, suvPrice: 155, truckPrice: 180, startingFrom: true },
+  'Ceramic Coating': { price: 600, suvPrice: 625, truckPrice: 650, startingFrom: true },
+  'Premium Package': { price: 175, suvPrice: 200, truckPrice: 225, startingFrom: true },
+  'Premium Plus': { price: 245, suvPrice: 270, truckPrice: 295, startingFrom: true },
+  'Ultra Premium': { price: 335, suvPrice: 360, truckPrice: 385, startingFrom: true },
   'Pet Hair / Odor Elimination': { price: 50, startingFrom: false, label: '$50 Extra Fee' },
   'Headlight Restoration': { price: 50, startingFrom: false, label: '$50 per Headlight' },
   'Engine Bay Cleaning': { price: 75, startingFrom: false },
-  'Full Vehicle Polish': { price: 250, startingFrom: true }
+  'Full Vehicle Polish': { price: 350, suvPrice: 375, truckPrice: 400, startingFrom: true }
 };
 
-function isTruckVehicle(vehicleType) {
-  return String(vehicleType || '').trim().toLowerCase() === 'truck';
+function getVehiclePrice(priceData, vehicleType) {
+  const normalizedVehicle = String(vehicleType || '').trim().toLowerCase();
+  if (normalizedVehicle === 'truck' && priceData.truckPrice) return priceData.truckPrice;
+  if (normalizedVehicle === 'suv' && priceData.suvPrice) return priceData.suvPrice;
+  return priceData.price;
 }
 
 function toPlainDateString(dateValue) {
@@ -88,8 +93,7 @@ function extractPrice(serviceType, vehicleType) {
   // Try exact match first
   for (const [serviceName, priceData] of Object.entries(servicePrice)) {
     if (serviceType.includes(serviceName)) {
-      const truckSelected = isTruckVehicle(vehicleType) && priceData.truckPrice;
-      const price = truckSelected ? priceData.truckPrice : priceData.price;
+      const price = getVehiclePrice(priceData, vehicleType);
       const { startingFrom, label } = priceData;
 
       if (label) {
@@ -118,10 +122,7 @@ function extractPrice(serviceType, vehicleType) {
 function extractNumericPrice(serviceType, vehicleType) {
   for (const [serviceName, priceData] of Object.entries(servicePrice)) {
     if (serviceType.includes(serviceName)) {
-      if (isTruckVehicle(vehicleType) && priceData.truckPrice) {
-        return priceData.truckPrice;
-      }
-      return priceData.price;
+      return getVehiclePrice(priceData, vehicleType);
     }
   }
 

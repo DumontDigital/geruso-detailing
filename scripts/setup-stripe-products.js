@@ -18,12 +18,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const SERVICES = [
   { name: 'Full Motorcycle Service',  price: 7000,  category: 'Mobile',        description: 'Complete motorcycle detailing service' },
   { name: 'Interior Detailing',       price: 10000, category: 'Mobile',        description: 'Interior cleaning and detailing' },
-  { name: 'Car Wash',                 price: 8500,  category: 'Mobile',        description: 'Professional car washing' },
-  { name: 'Ceramic Coating',          price: 40000, category: 'Location Only', description: 'Professional ceramic coating service' },
-  { name: 'Premium Package',          price: 17000, category: 'Mobile',        description: 'Premium detailing package' },
+  { name: 'Car Wash',                 price: 9500,  category: 'Mobile',        description: 'Exterior maintenance wash with tire cleanup and basic floor vacuum' },
+  { name: 'Premium Wash',             price: 13000, category: 'Mobile',        description: 'Exterior wash with clay mitt treatment and spray-on ceramic sealant' },
+  { name: 'Ceramic Coating',          price: 60000, category: 'Mobile',        description: 'Professional ceramic coating service' },
+  { name: 'Premium Package',          price: 17500, category: 'Mobile',        description: 'Premium detailing package' },
+  { name: 'Premium Plus',             price: 24500, category: 'Mobile',        description: 'Premium package with high-grade hand wax' },
   { name: 'Ultra Premium',            price: 33500, category: 'Mobile',        description: 'Ultra premium detailing package' },
   { name: 'Engine Bay Cleaning',      price: 7500,  category: 'Mobile',        description: 'Engine bay cleaning service' },
-  { name: 'Full Vehicle Polish',      price: 25000, category: 'Location Only', description: 'Full vehicle polishing service' },
+  { name: 'Full Vehicle Polish',      price: 35000, category: 'Mobile',        description: 'Full vehicle polishing service' },
 ];
 
 const DEPOSIT_AMOUNT_CENTS = parseInt(process.env.DEPOSIT_AMOUNT_CENTS || '2500', 10); // $25.00

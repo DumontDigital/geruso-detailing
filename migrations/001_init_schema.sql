@@ -227,17 +227,47 @@ INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
   ('customer@example.com', '$2a$10$KIX3K.g7P6R5B7K8M9N0Q.H3I2J1K0L9M8N7O6P5Q4R3S2T1U0V', 'John', 'Doe', 'customer', true)
 ON CONFLICT DO NOTHING;
 
--- Seed default services (if table is empty)
-INSERT INTO services (name, description, price, category, is_active, display_order) VALUES
-  ('Full Motorcycle Service', 'Complete motorcycle detailing service', 7000, 'Mobile', true, 1),
-  ('Interior Detailing', 'Interior cleaning and detailing', 10000, 'Mobile', true, 2),
-  ('Car Wash', 'Professional car washing', 8500, 'Mobile', true, 3),
-  ('Ceramic Coating', 'Professional ceramic coating service', 40000, 'Location Only', true, 4),
-  ('Premium Package', 'Premium detailing package', 17000, 'Mobile', true, 5),
-  ('Ultra Premium', 'Ultra premium detailing package', 33500, 'Mobile', true, 6),
-  ('Engine Bay Cleaning', 'Engine bay cleaning service', 7500, 'Mobile', true, 7),
-  ('Full Vehicle Polish', 'Full vehicle polishing service', 25000, 'Location Only', true, 8)
-ON CONFLICT DO NOTHING;
+-- Keep the dashboard service catalog synchronized without duplicating rows.
+DO $$
+DECLARE
+  service_item RECORD;
+BEGIN
+  FOR service_item IN
+    SELECT * FROM (VALUES
+      ('Full Motorcycle Service', 'Complete motorcycle detailing service', 7000, 'Mobile', true, 1),
+      ('Interior Detailing', 'Interior cleaning and detailing', 10000, 'Mobile', true, 2),
+      ('Car Wash', 'Exterior maintenance wash with tire cleanup and basic floor vacuum', 9500, 'Mobile', true, 3),
+      ('Premium Wash', 'Exterior wash with clay mitt treatment and spray-on ceramic sealant', 13000, 'Mobile', true, 4),
+      ('Premium Package', 'Premium detailing package', 17500, 'Mobile', true, 5),
+      ('Premium Plus', 'Premium package with high-grade hand wax', 24500, 'Mobile', true, 6),
+      ('Ultra Premium', 'Ultra premium detailing package', 33500, 'Mobile', true, 7),
+      ('Ceramic Coating', 'Professional ceramic coating service', 60000, 'Mobile', true, 8),
+      ('Full Vehicle Polish', 'Full vehicle polishing service', 35000, 'Mobile', true, 9),
+      ('Engine Bay Cleaning', 'Engine bay cleaning add-on', 7500, 'Extra Fee', true, 10)
+    ) AS catalog(name, description, price, category, is_active, display_order)
+  LOOP
+    UPDATE services
+    SET description = service_item.description,
+        price = service_item.price,
+        category = service_item.category,
+        is_active = service_item.is_active,
+        display_order = service_item.display_order,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE name = service_item.name;
+
+    IF NOT FOUND THEN
+      INSERT INTO services (name, description, price, category, is_active, display_order)
+      VALUES (
+        service_item.name,
+        service_item.description,
+        service_item.price,
+        service_item.category,
+        service_item.is_active,
+        service_item.display_order
+      );
+    END IF;
+  END LOOP;
+END $$;
 
 -- Seed default add-ons (if table is empty)
 INSERT INTO addons (name, description, price, is_active, display_order) VALUES

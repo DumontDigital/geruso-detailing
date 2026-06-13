@@ -19,7 +19,7 @@ const PLANS = {
     key: 'monthly',
     name: 'Monthly Maintenance',
     intervalLabel: 'Monthly',
-    priceCents: 13000,
+    priceCents: 15000,
     stripeRecurring: { interval: 'month', interval_count: 1 },
   },
 };

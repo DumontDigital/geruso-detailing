@@ -748,8 +748,10 @@
           <option>Full Motorcycle Service</option>
           <option>Interior Detailing</option>
           <option>Car Wash</option>
+          <option>Premium Wash</option>
           <option>Ceramic Coating</option>
           <option>Premium Package</option>
+          <option>Premium Plus</option>
           <option>Ultra Premium</option>
           <option>Pet Hair / Odor Elimination</option>
           <option>Headlight Restoration</option>
@@ -964,19 +966,28 @@
     })[char]);
   }
 
-  const locationOnlyServices = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
+  const locationOnlyServices = new Set();
   const dashboardServicePrices = {
-    'Full Motorcycle Service': { car: 70, truck: 70 },
-    'Interior Detailing': { car: 100, truck: 100 },
-    'Car Wash': { car: 85, truck: 120 },
-    'Ceramic Coating': { car: 400, truck: 400 },
-    'Premium Package': { car: 175, truck: 215 },
-    'Ultra Premium': { car: 335, truck: 375 },
-    'Engine Bay Cleaning': { car: 75, truck: 75 },
-    'Full Vehicle Polish': { car: 250, truck: 250 },
-    'Pet Hair / Odor Elimination': { car: 50, truck: 50 },
-    'Headlight Restoration': { car: 50, truck: 50 },
+    'Full Motorcycle Service': { car: 70, suv: 70, truck: 70 },
+    'Interior Detailing': { car: 100, suv: 100, truck: 100 },
+    'Car Wash': { car: 95, suv: 110, truck: 110 },
+    'Premium Wash': { car: 130, suv: 155, truck: 180 },
+    'Ceramic Coating': { car: 600, suv: 625, truck: 650 },
+    'Premium Package': { car: 175, suv: 200, truck: 225 },
+    'Premium Plus': { car: 245, suv: 270, truck: 295 },
+    'Ultra Premium': { car: 335, suv: 360, truck: 385 },
+    'Engine Bay Cleaning': { car: 75, suv: 75, truck: 75 },
+    'Full Vehicle Polish': { car: 350, suv: 375, truck: 400 },
+    'Pet Hair / Odor Elimination': { car: 50, suv: 50, truck: 50 },
+    'Headlight Restoration': { car: 50, suv: 50, truck: 50 },
   };
+
+  function getDashboardVehiclePrice(catalogPrice, vehicleType) {
+    const vehicleKey = String(vehicleType || '').toLowerCase();
+    if (vehicleKey === 'truck') return catalogPrice.truck;
+    if (vehicleKey === 'suv') return catalogPrice.suv;
+    return catalogPrice.car;
+  }
 
   function getCleanServiceName(serviceType) {
     return String(serviceType || '').split('-')[0].trim() || 'Service';
@@ -1032,9 +1043,7 @@
     services.forEach(serviceName => {
       const catalogPrice = dashboardServicePrices[serviceName];
       if (catalogPrice) {
-        total += String(booking.vehicle_type || '').toLowerCase() === 'truck'
-          ? catalogPrice.truck
-          : catalogPrice.car;
+        total += getDashboardVehiclePrice(catalogPrice, booking.vehicle_type);
       }
     });
     if (total > 0) return total;
@@ -1042,9 +1051,7 @@
     const serviceName = getCleanServiceName(booking.service_type);
     const catalogPrice = dashboardServicePrices[serviceName];
     if (catalogPrice) {
-      return String(booking.vehicle_type || '').toLowerCase() === 'truck'
-        ? catalogPrice.truck
-        : catalogPrice.car;
+      return getDashboardVehiclePrice(catalogPrice, booking.vehicle_type);
     }
     const match = String(booking.service_type || '').match(/\$(\d+)/);
     return match ? parseInt(match[1], 10) : 0;

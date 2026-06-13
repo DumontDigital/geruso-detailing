@@ -9,12 +9,14 @@ const router = express.Router();
 const SERVICE_CATALOG = {
   'Full Motorcycle Service': { price: 70, tag: 'MOBILE' },
   'Interior Detailing': { price: 100, tag: 'MOBILE' },
-  'Car Wash': { price: 85, truckPrice: 120, tag: 'MOBILE' },
-  'Ceramic Coating': { price: 400, tag: 'MOBILE' },
-  'Premium Package': { price: 175, truckPrice: 215, tag: 'MOBILE' },
-  'Ultra Premium': { price: 335, truckPrice: 375, tag: 'MOBILE' },
+  'Car Wash': { price: 95, suvPrice: 110, truckPrice: 110, tag: 'MOBILE' },
+  'Premium Wash': { price: 130, suvPrice: 155, truckPrice: 180, tag: 'MOBILE' },
+  'Ceramic Coating': { price: 600, suvPrice: 625, truckPrice: 650, tag: 'MOBILE' },
+  'Premium Package': { price: 175, suvPrice: 200, truckPrice: 225, tag: 'MOBILE' },
+  'Premium Plus': { price: 245, suvPrice: 270, truckPrice: 295, tag: 'MOBILE' },
+  'Ultra Premium': { price: 335, suvPrice: 360, truckPrice: 385, tag: 'MOBILE' },
   'Engine Bay Cleaning': { price: 75, tag: 'EXTRA FEE' },
-  'Full Vehicle Polish': { price: 250, tag: 'MOBILE' },
+  'Full Vehicle Polish': { price: 350, suvPrice: 375, truckPrice: 400, tag: 'MOBILE' },
   'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
   'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
 };
@@ -30,7 +32,7 @@ function normalizeCartItems(items) {
 
       const quantity = Math.max(1, Math.min(parseInt(item.quantity || 1, 10) || 1, 10));
       const requestedPrice = Number(item.price || 0);
-      const allowedPrices = [catalogItem.price, catalogItem.truckPrice].filter(Boolean);
+      const allowedPrices = [catalogItem.price, catalogItem.suvPrice, catalogItem.truckPrice].filter(Boolean);
       const price = allowedPrices.includes(requestedPrice) ? requestedPrice : catalogItem.price;
       const requestedTag = String(item.serviceTag || item.tag || '').trim().toUpperCase();
       const tag = ['MOBILE', 'LOCATION ONLY', 'EXTRA FEE'].includes(requestedTag)
