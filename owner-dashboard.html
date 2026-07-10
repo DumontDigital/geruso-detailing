@@ -864,8 +864,7 @@
   <div id="ownerDashboard" style="display: none;">
     <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
       <div style="font-weight: 700; color: var(--primary);">Owner Dashboard</div>
-      <!-- Logout intentionally removed — the parent app.html top bar
-           provides "Customer View" + "Logout" so we don't double up. -->
+      <a href="/home.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 18px; border: 1px solid var(--primary); border-radius: 6px; color: var(--primary); text-decoration: none; font-weight: 800; background: #050505;">Customer View</a>
     </nav>
 
     <!-- Debug strip removed for cleaner production UI. -->
@@ -1541,11 +1540,7 @@
 
       const message = String(result.error || result.message || '');
       if (response.status === 401 || /invalid token|jwt expired|jwt malformed/i.test(message)) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('ownerToken');
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('user');
-        setOwnerAddBookingMessage('Your dashboard session expired. Please sign in again, then add the booking.', true);
+        setOwnerAddBookingMessage('Your dashboard session expired. Please log out, sign back in, and try again.', true);
         return;
       }
 

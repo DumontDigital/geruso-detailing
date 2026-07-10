@@ -5,13 +5,62 @@
 
 class AuthHelper {
   constructor() {
-    this.token = localStorage.getItem('token');
+    this.token = this.getBestToken();
     this.user = this.getUser();
+    if ((!this.user || !this.user.role) && this.token) {
+      const payload = this.getTokenPayload(this.token);
+      if (payload) {
+        this.user = {
+          id: payload.id,
+          email: payload.email,
+          role: payload.role
+        };
+        localStorage.setItem('user', JSON.stringify(this.user));
+      }
+    }
+    if (this.token) {
+      localStorage.setItem('token', this.token);
+    }
   }
 
   getUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  }
+
+  getTokenPayload(token) {
+    try {
+      if (!token || !token.includes('.')) return null;
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  isFreshToken(token) {
+    const payload = this.getTokenPayload(token);
+    return !!payload && (!payload.exp || payload.exp * 1000 > Date.now());
+  }
+
+  isFreshStaffToken(token) {
+    const payload = this.getTokenPayload(token);
+    return !!payload
+      && (payload.role === 'owner' || payload.role === 'dev')
+      && (!payload.exp || payload.exp * 1000 > Date.now());
+  }
+
+  getBestToken() {
+    const candidates = [
+      localStorage.getItem('token'),
+      localStorage.getItem('adminToken'),
+      localStorage.getItem('ownerToken')
+    ].filter(Boolean);
+
+    return candidates.find((candidate) => this.isFreshStaffToken(candidate))
+      || candidates.find((candidate) => this.isFreshToken(candidate))
+      || candidates[0]
+      || null;
   }
 
   isLoggedIn() {
@@ -55,6 +104,7 @@ class AuthHelper {
    * Make authenticated API request
    */
   async apiCall(url, options = {}) {
+    this.token = this.getBestToken();
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${this.token}`,
@@ -80,6 +130,10 @@ class AuthHelper {
    * Get auth headers for fetch requests
    */
   getAuthHeaders() {
+    this.token = this.getBestToken();
+    if (this.token) {
+      localStorage.setItem('token', this.token);
+    }
     return {
       'Authorization': `Bearer ${this.token}`,
       'Content-Type': 'application/json'
@@ -91,6 +145,8 @@ class AuthHelper {
    */
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('ownerToken');
     localStorage.removeItem('user');
     window.location.href = '/login';
   }

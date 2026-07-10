@@ -992,25 +992,6 @@
 
 <script>
   // Unified auth check
-  const token = localStorage.getItem('token');
-  const userStr = localStorage.getItem('user');
-  let user = null;
-  try {
-    user = userStr ? JSON.parse(userStr) : null;
-  } catch (error) {
-    localStorage.removeItem('user');
-  }
-
-  let currentEditingBookingId = null;
-  const hasDashboardAccess = !!token && !!user && (user.role === 'dev' || user.role === 'owner');
-
-  if (user) {
-    const staffEmail = document.getElementById('staffEmail');
-    const staffRole = document.getElementById('staffRole');
-    if (staffEmail) staffEmail.textContent = user.email || user.name || 'Staff';
-    if (staffRole) staffRole.textContent = user.role === 'owner' ? 'Owner Dashboard' : 'Dev Dashboard';
-  }
-
   function readJwtPayload(candidateToken) {
     try {
       if (!candidateToken || !candidateToken.includes('.')) return null;
@@ -1025,8 +1006,7 @@
     const candidates = [
       localStorage.getItem('token'),
       localStorage.getItem('adminToken'),
-      localStorage.getItem('ownerToken'),
-      token
+      localStorage.getItem('ownerToken')
     ].filter(Boolean);
 
     for (const candidate of candidates) {
@@ -1040,6 +1020,37 @@
     }
 
     return candidates[0] || '';
+  }
+
+  const token = getCurrentToken();
+  const userStr = localStorage.getItem('user');
+  let user = null;
+  try {
+    user = userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    localStorage.removeItem('user');
+  }
+
+  if ((!user || !(user.role === 'dev' || user.role === 'owner')) && token) {
+    const payload = readJwtPayload(token);
+    if (payload && (payload.role === 'dev' || payload.role === 'owner')) {
+      user = {
+        id: payload.id,
+        email: payload.email,
+        role: payload.role
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }
+
+  let currentEditingBookingId = null;
+  const hasDashboardAccess = !!token && !!user && (user.role === 'dev' || user.role === 'owner');
+
+  if (user) {
+    const staffEmail = document.getElementById('staffEmail');
+    const staffRole = document.getElementById('staffRole');
+    if (staffEmail) staffEmail.textContent = user.email || user.name || 'Staff';
+    if (staffRole) staffRole.textContent = user.role === 'owner' ? 'Owner Dashboard' : 'Dev Dashboard';
   }
 
   function adminAuthHeaders(extraHeaders = {}) {
@@ -1550,7 +1561,7 @@
       });
       const data = await res.json().catch(() => ({}));
       if (isInvalidSessionResponse(res, data)) {
-        handleInvalidSession();
+        setAddBookingMessage('Your dashboard session expired. Please log out, sign back in, and try again.', true);
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Failed to add booking');
