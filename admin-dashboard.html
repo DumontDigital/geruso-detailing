@@ -1011,8 +1011,35 @@
     if (staffRole) staffRole.textContent = user.role === 'owner' ? 'Owner Dashboard' : 'Dev Dashboard';
   }
 
+  function readJwtPayload(candidateToken) {
+    try {
+      if (!candidateToken || !candidateToken.includes('.')) return null;
+      const payload = candidateToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      return null;
+    }
+  }
+
   function getCurrentToken() {
-    return localStorage.getItem('token') || token;
+    const candidates = [
+      localStorage.getItem('token'),
+      localStorage.getItem('adminToken'),
+      localStorage.getItem('ownerToken'),
+      token
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const payload = readJwtPayload(candidate);
+      const isStaff = payload && (payload.role === 'owner' || payload.role === 'dev');
+      const isFresh = payload && (!payload.exp || payload.exp * 1000 > Date.now());
+      if (isStaff && isFresh) {
+        localStorage.setItem('token', candidate);
+        return candidate;
+      }
+    }
+
+    return candidates[0] || '';
   }
 
   function adminAuthHeaders(extraHeaders = {}) {

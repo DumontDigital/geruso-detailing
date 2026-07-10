@@ -1390,8 +1390,39 @@
     setInterval(updateEasternTimeDisplay, 1000);
   }
 
+  function readOwnerJwtPayload(candidateToken) {
+    try {
+      if (!candidateToken || !candidateToken.includes('.')) return null;
+      const payload = candidateToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function getOwnerCurrentToken() {
+    const candidates = [
+      localStorage.getItem('token'),
+      localStorage.getItem('ownerToken'),
+      localStorage.getItem('adminToken'),
+      auth.token
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const payload = readOwnerJwtPayload(candidate);
+      const isStaff = payload && (payload.role === 'owner' || payload.role === 'dev');
+      const isFresh = payload && (!payload.exp || payload.exp * 1000 > Date.now());
+      if (isStaff && isFresh) {
+        localStorage.setItem('token', candidate);
+        return candidate;
+      }
+    }
+
+    return candidates[0] || '';
+  }
+
   function ownerAuthHeaders(extraHeaders = {}) {
-    const currentToken = localStorage.getItem('token') || localStorage.getItem('ownerToken') || auth.token;
+    const currentToken = getOwnerCurrentToken();
     return {
       'Authorization': `Bearer ${currentToken}`,
       'Content-Type': 'application/json',
@@ -1507,6 +1538,16 @@
         body: JSON.stringify(payload)
       });
       const result = await response.json().catch(() => ({}));
+
+      const message = String(result.error || result.message || '');
+      if (response.status === 401 || /invalid token|jwt expired|jwt malformed/i.test(message)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('ownerToken');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('user');
+        setOwnerAddBookingMessage('Your dashboard session expired. Please sign in again, then add the booking.', true);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(result.error || 'Unable to save this booking.');
