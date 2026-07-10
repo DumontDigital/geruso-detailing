@@ -786,6 +786,11 @@
     }
   }
 </style></head><body>
+<script>
+  if (window.top && window.top !== window.self) {
+    window.top.location.replace('/owner-dashboard.html');
+  }
+</script>
 <nav>
   <a href="index.html" class="nav-brand">
     <div class="nav-logo"></div>
@@ -2060,9 +2065,8 @@
   
   async function loadSchedule() {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/schedule', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       const data = await response.json();
 
@@ -2143,9 +2147,8 @@
 
   async function loadServices() {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/services', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       const data = await response.json();
 
@@ -2304,13 +2307,9 @@
     const is_shop_day = document.querySelector(`.day-shop[data-day="${day}"]`).checked;
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch(`/api/admin/schedule/${day}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: ownerAuthHeaders(),
         body: JSON.stringify({ is_open, start_time, end_time, is_mobile_day, is_shop_day })
       });
 
@@ -2416,13 +2415,9 @@
     }
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/services', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: ownerAuthHeaders(),
         body: JSON.stringify({ name, price, category, description, is_active })
       });
 
@@ -2451,10 +2446,9 @@
   window.ownerDeleteService = async (serviceId) => {
     if (!confirm('Delete this service permanently?')) return;
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch(`/api/admin/services/${serviceId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       if (response.ok) {
         loadServices();
@@ -2469,9 +2463,8 @@
   // Website Content Management
   async function loadWebsiteContent() {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       const data = await response.json();
 
@@ -2504,13 +2497,9 @@
     };
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/settings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: ownerAuthHeaders(),
         body: JSON.stringify(content)
       });
 
@@ -2529,9 +2518,8 @@
   // Gallery Management
   async function loadGallery() {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/gallery', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       const data = await response.json();
 
@@ -2581,13 +2569,9 @@
     }
 
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch('/api/admin/gallery', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: ownerAuthHeaders(),
         body: JSON.stringify({ filename, label, description, display_order: 999 })
       });
 
@@ -2612,10 +2596,9 @@
   window.ownerDeleteGalleryPhoto = async (photoId) => {
     if (!confirm('Delete this photo permanently?')) return;
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('ownerToken');
       const response = await fetch(`/api/admin/gallery/${photoId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: ownerAuthHeaders()
       });
       if (response.ok) {
         loadGallery();
