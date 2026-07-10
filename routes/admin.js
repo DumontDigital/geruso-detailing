@@ -1,4 +1,5 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { getTodayInEasternTime } = require('../utils/availability');
@@ -24,6 +25,99 @@ const CONFIRMED_BOOKING_WHERE = `
 `;
 
 const staffOnly = [verifyToken, requireRole(['owner', 'dev'])];
+const GERUSO_LOCATION_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
+
+function parseBookingMinutes(timeString) {
+  const raw = String(timeString || '').trim();
+  const twentyFourHourMatch = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (twentyFourHourMatch) {
+    const hour = Number.parseInt(twentyFourHourMatch[1], 10);
+    const minute = Number.parseInt(twentyFourHourMatch[2], 10);
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+      return (hour * 60) + minute;
+    }
+  }
+
+  const match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = Number.parseInt(match[1], 10);
+  const minute = Number.parseInt(match[2] || '0', 10);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+  return (hour * 60) + minute;
+}
+
+function formatBookingMinutes(totalMinutes) {
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+}
+
+function normalizeBookingTime(timeString) {
+  const minutes = parseBookingMinutes(timeString);
+  return minutes === null ? String(timeString || '').trim() : formatBookingMinutes(minutes);
+}
+
+function isLongDetailService(serviceType) {
+  return /(Ceramic Coating|Full Vehicle Polish)/i.test(String(serviceType || ''));
+}
+
+function getAppointmentInterval(timeString, durationMinutes) {
+  const startMinutes = parseBookingMinutes(timeString);
+  if (startMinutes === null) return null;
+  return {
+    start: startMinutes,
+    end: startMinutes + durationMinutes
+  };
+}
+
+function timeIntervalsOverlap(firstInterval, secondInterval) {
+  if (!firstInterval || !secondInterval) return false;
+  return firstInterval.start < secondInterval.end && secondInterval.start < firstInterval.end;
+}
+
+async function isScheduleBlocked(bookingDate, bookingTime) {
+  const normalizedBookingTime = normalizeBookingTime(bookingTime);
+  const result = await pool.query(
+    `SELECT id, blocked_time FROM blocked_dates
+     WHERE blocked_date::date = $1::date
+     AND (blocked_time IS NULL OR blocked_time = $2 OR blocked_time = $3)`,
+    [bookingDate, bookingTime, normalizedBookingTime]
+  );
+  return result.rows.some(row => !row.blocked_time || normalizeBookingTime(row.blocked_time) === normalizedBookingTime);
+}
+
+async function findManualBookingConflict(bookingDate, bookingTime, serviceType) {
+  const requestedIsLong = isLongDetailService(serviceType);
+  const requestedInterval = getAppointmentInterval(bookingTime, requestedIsLong ? 360 : 60);
+  if (!requestedInterval) return 'Please enter a valid booking time.';
+
+  const activeBookings = await pool.query(
+    `SELECT id, booking_time, service_type
+     FROM bookings
+     WHERE booking_date::date = $1::date
+     AND ${ACTIVE_BOOKING_WHERE}
+     AND ${CONFIRMED_BOOKING_WHERE}
+     AND ${REAL_BOOKING_WHERE}`,
+    [bookingDate]
+  );
+
+  for (const booking of activeBookings.rows) {
+    const existingIsLong = isLongDetailService(booking.service_type);
+    const existingInterval = getAppointmentInterval(normalizeBookingTime(booking.booking_time), existingIsLong ? 360 : 60);
+    if (timeIntervalsOverlap(requestedInterval, existingInterval)) {
+      return requestedIsLong || existingIsLong
+        ? 'This time overlaps a 6-hour Ceramic Coating or Full Vehicle Polish appointment.'
+        : 'This time is already booked.';
+    }
+  }
+
+  return '';
+}
 
 async function reconcileAutoConfirmedBookings() {
   await pool.query(
@@ -139,6 +233,104 @@ router.get('/bookings', staffOnly, async (req, res) => {
   } catch (error) {
     console.error('Fetch admin bookings error:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
+
+// Manually add a booking from the owner/dev dashboard.
+router.post('/bookings/manual', staffOnly, async (req, res) => {
+  try {
+    const {
+      customer_name,
+      customer_email,
+      customer_phone,
+      service_address,
+      service_type,
+      booking_date,
+      booking_time,
+      vehicle_type,
+      notes,
+      service_location
+    } = req.body;
+
+    const customerName = String(customer_name || '').trim();
+    const customerEmail = String(customer_email || '').trim();
+    const customerPhone = String(customer_phone || '').trim();
+    const serviceType = String(service_type || '').trim();
+    const bookingDate = String(booking_date || '').trim();
+    const normalizedBookingTime = normalizeBookingTime(booking_time);
+    const serviceLocation = String(service_location || '').toLowerCase().includes('mobile') ? 'mobile' : 'location';
+    const serviceAddress = serviceLocation === 'location'
+      ? GERUSO_LOCATION_ADDRESS
+      : String(service_address || '').trim();
+
+    if (!customerName || !customerEmail || !customerPhone || !serviceType || !bookingDate || !normalizedBookingTime) {
+      return res.status(400).json({ error: 'Name, email, phone, service, date, and time are required.' });
+    }
+
+    if (serviceLocation === 'mobile' && !serviceAddress) {
+      return res.status(400).json({ error: 'Mobile bookings need a service address.' });
+    }
+
+    if (await isScheduleBlocked(bookingDate, normalizedBookingTime)) {
+      return res.status(409).json({ error: 'That date or time is blocked on the schedule.' });
+    }
+
+    const conflictMessage = await findManualBookingConflict(bookingDate, normalizedBookingTime, serviceType);
+    if (conflictMessage) {
+      return res.status(409).json({ error: conflictMessage });
+    }
+
+    await pool.query(
+      `DELETE FROM bookings
+       WHERE booking_date::date = $1::date
+       AND (booking_time = $2 OR booking_time = $3)
+       AND customer_email = $4
+       AND customer_name = $5`,
+      [bookingDate, booking_time, normalizedBookingTime, 'booking.test@gmail.com', 'Available Slot']
+    );
+
+    const result = await pool.query(
+      `INSERT INTO bookings (
+        id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        service_address,
+        service_type,
+        booking_date,
+        booking_time,
+        vehicle_type,
+        notes,
+        status,
+        payment_status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'confirmed', 'pay_later')
+      RETURNING *`,
+      [
+        uuidv4(),
+        customerName,
+        customerEmail,
+        customerPhone,
+        serviceAddress,
+        serviceType,
+        bookingDate,
+        normalizedBookingTime,
+        String(vehicle_type || '').trim() || null,
+        String(notes || '').trim() || 'Manually added by staff.'
+      ]
+    );
+
+    res.status(201).json({
+      success: true,
+      booking: result.rows[0],
+      message: 'Manual booking added and confirmed.'
+    });
+  } catch (error) {
+    console.error('Manual booking error:', error);
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'That exact date and time is already booked.' });
+    }
+    res.status(500).json({ error: 'Failed to add manual booking.' });
   }
 });
 

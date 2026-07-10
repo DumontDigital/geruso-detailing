@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dev Dashboard — Geruso Detailing</title>
+  <title>Staff Dashboard — Geruso Detailing</title>
   <style>
     :root {
       --primary: #00FF41;
@@ -78,6 +78,19 @@
       cursor: pointer;
       white-space: nowrap;
     }
+    .staff-session {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-align: right;
+    }
+    .staff-session strong {
+      display: block;
+      color: var(--primary);
+      text-transform: capitalize;
+      margin-top: 2px;
+    }
     .staff-customer-btn {
       background: transparent;
       border: 1px solid var(--primary);
@@ -142,10 +155,13 @@
     .location-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }
     .payment-pill { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; border: 1px solid rgba(59,130,246,0.45); color: #60a5fa; background: rgba(59,130,246,0.12); white-space: nowrap; }
     .payment-pill.pay-later { border-color: rgba(0,255,65,0.45); color: var(--primary); background: rgba(0,255,65,0.1); }
+    .payment-pill.subscription { border-color: rgba(0,255,65,0.45); color: var(--primary); background: rgba(0,255,65,0.1); }
 
     .status-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-pending { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.4); }
     .status-confirmed { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
+    .status-active { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.4); }
+    .status-paused { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.4); }
     .status-paid { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
     .status-completed { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
     .status-no-show { background: rgba(239,68,68,0.2); color: var(--error); border: 1px solid rgba(239,68,68,0.4); }
@@ -219,6 +235,11 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
+      }
+      .staff-session {
+        grid-column: 1 / -1;
+        text-align: left;
+        font-size: 11px;
       }
       .staff-action-btn {
         width: 100%;
@@ -365,6 +386,7 @@
       }
       td[data-label="Customer"],
       td[data-label="Service"],
+      td[data-label="Plan"],
       td[data-label="Location"],
       td[data-label="Actions"] {
         grid-column: 1 / -1;
@@ -413,6 +435,10 @@
     <span>Geruso Detailing</span>
   </div>
   <div class="staff-actions">
+    <div class="staff-session">
+      Signed in as: <span id="staffEmail">Staff</span>
+      <strong id="staffRole">Dashboard</strong>
+    </div>
     <a class="staff-action-btn staff-customer-btn" href="/home.html">Customer View</a>
     <button class="staff-action-btn staff-logout-btn" type="button" onclick="logout()">Logout</button>
   </div>
@@ -421,7 +447,7 @@
   <div class="mobile-dashboard-nav" aria-label="Dashboard navigation">
     <button type="button" class="dashboard-nav-item active" onclick="showSection('overview', this)">Overview</button>
     <button type="button" class="dashboard-nav-item" onclick="showSection('bookings', this)">Bookings</button>
-    <button type="button" class="dashboard-nav-item" onclick="showSection('memberships', this)">Memberships</button>
+    <button type="button" class="dashboard-nav-item" onclick="showSection('subscriptions', this)">Plans</button>
     <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('services', this)">Services</button>
     <button type="button" class="dashboard-nav-item owner-only" onclick="showSection('addons', this)">Add-ons</button>
     <button type="button" class="dashboard-nav-item" onclick="showSection('schedule', this)">Schedule</button>
@@ -436,9 +462,7 @@
     <div class="sidebar-nav">
       <div class="sidebar-item active" onclick="showSection('overview', this)">📊 Overview</div>
       <div class="sidebar-item" onclick="showSection('bookings', this)">📅 Bookings</div>
-      <div class="sidebar-item" onclick="showSection('memberships', this)">♻️ Memberships</div>
-      <!-- Owner-only sections (Services, Add-ons, Content)
-           are hidden for dev role via JS below to limit dev access. -->
+      <div class="sidebar-item" onclick="showSection('subscriptions', this)">🔁 Maintenance Plans</div>
       <div class="sidebar-item owner-only" onclick="showSection('services', this)">🔧 Services</div>
       <div class="sidebar-item owner-only" onclick="showSection('addons', this)">➕ Add-ons</div>
       <div class="sidebar-item" onclick="showSection('schedule', this)">⏰ Schedule</div>
@@ -446,15 +470,6 @@
     </div>
     <!-- Sidebar footer removed — parent app.html top bar already
          provides Customer View + Logout, no need for a stray empty strip. -->
-    <script>
-      // Hide owner-only sections when the signed-in user is a dev.
-      try {
-        const u = JSON.parse(localStorage.getItem('user') || 'null');
-        if (u && u.role === 'dev') {
-          document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
-        }
-      } catch (e) {}
-    </script>
   </div>
 
   <!-- Main Content -->
@@ -495,6 +510,7 @@
           <h1 class="content-title">Manage Bookings</h1>
           <p class="content-sub">View, edit, and manage all bookings.</p>
         </div>
+        <button class="btn-primary" onclick="openAddBookingModal()">+ Add Booking</button>
       </div>
 
       <div class="table-section">
@@ -519,7 +535,6 @@
               <th>Time</th>
               <th>Customer</th>
               <th>Service</th>
-              <th>Vehicle</th>
               <th>Location</th>
               <th>Payment</th>
               <th>Status</th>
@@ -527,36 +542,46 @@
             </tr>
           </thead>
           <tbody id="bookingsTableBody">
-            <tr><td colspan="9">Loading...</td></tr>
+            <tr><td colspan="8">Loading...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- MEMBERSHIPS SECTION -->
-    <div id="memberships-section" class="section">
+    <!-- SUBSCRIPTIONS SECTION -->
+    <div id="subscriptions-section" class="section">
       <div class="content-header">
         <div>
-          <h1 class="content-title">Manage Memberships</h1>
-          <p class="content-sub">View and manage recurring maintenance customers.</p>
+          <h1 class="content-title">Maintenance Plans</h1>
+          <p class="content-sub">Manage recurring biweekly and monthly maintenance subscriptions.</p>
         </div>
       </div>
+
       <div class="table-section">
         <div class="table-header">
-          <h2 class="table-title">Maintenance Memberships</h2>
+          <h2 class="table-title">Active Subscriptions</h2>
+          <div class="table-controls">
+            <select class="table-filter" id="subscriptionStatusFilter" onchange="loadSubscriptions()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="text" class="table-filter" id="subscriptionSearchFilter" placeholder="Search name/email..." onkeyup="loadSubscriptions()">
+          </div>
         </div>
         <table>
           <thead>
             <tr>
               <th>Customer</th>
-              <th>Contact</th>
               <th>Plan</th>
               <th>Price</th>
               <th>Status</th>
+              <th>Started</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="membershipsTableBody">
+          <tbody id="subscriptionsTableBody">
             <tr><td colspan="6">Loading...</td></tr>
           </tbody>
         </table>
@@ -721,6 +746,91 @@
 
 <!-- MODALS -->
 
+<!-- Add Booking Modal -->
+<div class="modal" id="addBookingModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Add Booking</span>
+      <button class="modal-close" onclick="closeAddBookingModal()">&times;</button>
+    </div>
+    <div id="addBookingMessage" style="margin-bottom: 20px;"></div>
+    <form id="addBookingForm">
+      <div class="form-group">
+        <label class="form-label">Customer Name</label>
+        <input type="text" class="form-input" id="addBookingName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="addBookingEmail" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" class="form-input" id="addBookingPhone" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Type</label>
+        <select class="form-select" id="addBookingService" required>
+          <option value="">Select a service...</option>
+          <option>Full Motorcycle Service</option>
+          <option>Interior Detailing</option>
+          <option>Car Wash</option>
+          <option>Premium Wash</option>
+          <option>Premium Package</option>
+          <option>Premium Plus</option>
+          <option>Ultra Premium</option>
+          <option>Ceramic Coating</option>
+          <option>Full Vehicle Polish</option>
+          <option>Engine Bay Cleaning</option>
+          <option>Pet Hair / Odor Elimination</option>
+          <option>Headlight Restoration</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vehicle Type</label>
+        <select class="form-select" id="addBookingVehicleType" required>
+          <option value="">Select vehicle...</option>
+          <option value="Car">Car</option>
+          <option value="SUV">SUV</option>
+          <option value="Truck">Truck</option>
+          <option value="Motorcycle">Motorcycle</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Location</label>
+        <select class="form-select" id="addBookingLocationType" onchange="handleAddBookingLocationChange()" required>
+          <option value="mobile">Mobile - We come to them</option>
+          <option value="location">Geruso Location</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Address</label>
+        <input type="text" class="form-input" id="addBookingAddress" placeholder="Customer address" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Date</label>
+        <input type="date" class="form-input" id="addBookingDate" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Time</label>
+        <input type="time" class="form-input" id="addBookingTime" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="addBookingNotes" placeholder="Any notes for this booking..."></textarea>
+      </div>
+      <div class="form-group">
+        <div style="padding: 12px; border: 1px solid rgba(0,255,65,0.35); border-radius: 8px; color: var(--text-muted); background: rgba(0,255,65,0.08);">
+          Manual bookings save as <strong style="color: var(--primary);">confirmed</strong> with <strong style="color: var(--primary);">Pay After Service</strong>.
+        </div>
+      </div>
+      <div class="button-group">
+        <button type="button" class="btn-primary" onclick="saveManualBooking()">Save Booking</button>
+        <button type="button" class="btn-secondary" onclick="closeAddBookingModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Edit Booking Modal -->
 <div class="modal" id="editBookingModal">
   <div class="modal-content">
@@ -748,10 +858,8 @@
           <option>Full Motorcycle Service</option>
           <option>Interior Detailing</option>
           <option>Car Wash</option>
-          <option>Premium Wash</option>
           <option>Ceramic Coating</option>
           <option>Premium Package</option>
-          <option>Premium Plus</option>
           <option>Ultra Premium</option>
           <option>Pet Hair / Odor Elimination</option>
           <option>Headlight Restoration</option>
@@ -896,6 +1004,13 @@
   let currentEditingBookingId = null;
   const hasDashboardAccess = !!token && !!user && (user.role === 'dev' || user.role === 'owner');
 
+  if (user) {
+    const staffEmail = document.getElementById('staffEmail');
+    const staffRole = document.getElementById('staffRole');
+    if (staffEmail) staffEmail.textContent = user.email || user.name || 'Staff';
+    if (staffRole) staffRole.textContent = user.role === 'owner' ? 'Owner Dashboard' : 'Dev Dashboard';
+  }
+
   function getCurrentToken() {
     return localStorage.getItem('token') || token;
   }
@@ -966,28 +1081,19 @@
     })[char]);
   }
 
-  const locationOnlyServices = new Set();
+  const locationOnlyServices = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
   const dashboardServicePrices = {
-    'Full Motorcycle Service': { car: 70, suv: 70, truck: 70 },
-    'Interior Detailing': { car: 100, suv: 100, truck: 100 },
-    'Car Wash': { car: 95, suv: 110, truck: 110 },
-    'Premium Wash': { car: 130, suv: 155, truck: 180 },
-    'Ceramic Coating': { car: 600, suv: 625, truck: 650 },
-    'Premium Package': { car: 175, suv: 200, truck: 225 },
-    'Premium Plus': { car: 245, suv: 270, truck: 295 },
-    'Ultra Premium': { car: 335, suv: 360, truck: 385 },
-    'Engine Bay Cleaning': { car: 75, suv: 75, truck: 75 },
-    'Full Vehicle Polish': { car: 350, suv: 375, truck: 400 },
-    'Pet Hair / Odor Elimination': { car: 50, suv: 50, truck: 50 },
-    'Headlight Restoration': { car: 50, suv: 50, truck: 50 },
+    'Full Motorcycle Service': { car: 70, truck: 70 },
+    'Interior Detailing': { car: 100, truck: 100 },
+    'Car Wash': { car: 85, truck: 120 },
+    'Ceramic Coating': { car: 400, truck: 400 },
+    'Premium Package': { car: 175, truck: 215 },
+    'Ultra Premium': { car: 335, truck: 375 },
+    'Engine Bay Cleaning': { car: 75, truck: 75 },
+    'Full Vehicle Polish': { car: 250, truck: 250 },
+    'Pet Hair / Odor Elimination': { car: 50, truck: 50 },
+    'Headlight Restoration': { car: 50, truck: 50 },
   };
-
-  function getDashboardVehiclePrice(catalogPrice, vehicleType) {
-    const vehicleKey = String(vehicleType || '').toLowerCase();
-    if (vehicleKey === 'truck') return catalogPrice.truck;
-    if (vehicleKey === 'suv') return catalogPrice.suv;
-    return catalogPrice.car;
-  }
 
   function getCleanServiceName(serviceType) {
     return String(serviceType || '').split('-')[0].trim() || 'Service';
@@ -1043,7 +1149,9 @@
     services.forEach(serviceName => {
       const catalogPrice = dashboardServicePrices[serviceName];
       if (catalogPrice) {
-        total += getDashboardVehiclePrice(catalogPrice, booking.vehicle_type);
+        total += String(booking.vehicle_type || '').toLowerCase() === 'truck'
+          ? catalogPrice.truck
+          : catalogPrice.car;
       }
     });
     if (total > 0) return total;
@@ -1051,7 +1159,9 @@
     const serviceName = getCleanServiceName(booking.service_type);
     const catalogPrice = dashboardServicePrices[serviceName];
     if (catalogPrice) {
-      return getDashboardVehiclePrice(catalogPrice, booking.vehicle_type);
+      return String(booking.vehicle_type || '').toLowerCase() === 'truck'
+        ? catalogPrice.truck
+        : catalogPrice.car;
     }
     const match = String(booking.service_type || '').match(/\$(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
@@ -1108,7 +1218,7 @@
 
     // Load section data
     if (sectionName === 'bookings') loadBookings();
-    else if (sectionName === 'memberships') loadMemberships();
+    else if (sectionName === 'subscriptions') loadSubscriptions();
     else if (sectionName === 'services') loadServices();
     else if (sectionName === 'addons') loadAddons();
     else if (sectionName === 'schedule') loadScheduleBlocks();
@@ -1191,7 +1301,7 @@
       }
       const tbody = document.getElementById('bookingsTableBody');
       if (!bookings.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="9" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No real customer bookings yet.</td></tr>';
         return;
       }
       tbody.innerHTML = groupBookingsForDisplay(bookings).map(b => {
@@ -1210,9 +1320,8 @@
             </td>
             <td data-label="Service">
               <div class="booking-primary">${escapeHtml(b.service_type)}</div>
-              <div class="booking-secondary">$${Number(b.totalPrice || 0).toLocaleString()} total</div>
+              <div class="booking-secondary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')} • $${Number(b.totalPrice || 0).toLocaleString()} total</div>
             </td>
-            <td data-label="Vehicle"><div class="booking-primary">${escapeHtml(b.vehicle_type || 'Vehicle not specified')}</div></td>
             <td data-label="Location">
               <span class="location-pill ${escapeHtml(location.typeClass)}"><span class="location-dot"></span>${escapeHtml(location.label)}</span>
               ${location.detail ? `<div class="booking-secondary">${escapeHtml(location.detail)}</div>` : ''}
@@ -1234,7 +1343,197 @@
       const message = error.message && !/Failed to load bookings \(\d+\)/.test(error.message)
         ? error.message
         : 'Failed to load bookings. Please log out and sign back in.';
-      document.getElementById('bookingsTableBody').innerHTML = `<tr class="empty-row"><td colspan="9" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(message)}</td></tr>`;
+      document.getElementById('bookingsTableBody').innerHTML = `<tr class="empty-row"><td colspan="8" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(message)}</td></tr>`;
+    }
+  }
+
+  function formatMoneyFromCents(cents) {
+    return '$' + (Number(cents || 0) / 100).toFixed(0);
+  }
+
+  function formatShortDate(dateValue) {
+    if (!dateValue) return '-';
+    return formatDateForDisplay(String(dateValue).split('T')[0]);
+  }
+
+  async function loadSubscriptions() {
+    const tbody = document.getElementById('subscriptionsTableBody');
+    if (!tbody) return;
+    try {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">Loading maintenance plans...</td></tr>';
+      const res = await fetch('/api/maintenance/admin/subscriptions', {
+        headers: adminAuthHeaders()
+      });
+      if (res.status === 401) {
+        handleInvalidSession();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to load maintenance plans');
+
+      const statusFilter = String(document.getElementById('subscriptionStatusFilter')?.value || '').toLowerCase();
+      const search = String(document.getElementById('subscriptionSearchFilter')?.value || '').toLowerCase();
+      let subscriptions = data.subscriptions || [];
+      if (statusFilter) {
+        subscriptions = subscriptions.filter(item => String(item.status || '').toLowerCase() === statusFilter);
+      }
+      if (search) {
+        subscriptions = subscriptions.filter(item =>
+          String(item.customer_name || '').toLowerCase().includes(search) ||
+          String(item.customer_email || '').toLowerCase().includes(search) ||
+          String(item.customer_phone || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (!subscriptions.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6" data-label="" style="color: var(--text-muted); text-align: center; padding: 28px;">No maintenance subscriptions yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = subscriptions.map(item => {
+        const status = String(item.status || 'active').toLowerCase();
+        return `
+          <tr>
+            <td data-label="Customer">
+              <div class="booking-primary">${escapeHtml(item.customer_name)}</div>
+              <div class="booking-secondary">${escapeHtml(item.customer_email || 'No email on file')}</div>
+              <div class="booking-secondary">${escapeHtml(item.customer_phone || 'No phone number')}</div>
+            </td>
+            <td data-label="Plan">
+              <div class="booking-primary">${escapeHtml(item.plan_name)}</div>
+              <div class="booking-secondary">${escapeHtml(item.plan_interval)}</div>
+            </td>
+            <td data-label="Price"><span class="payment-pill subscription">${formatMoneyFromCents(item.price_cents)}</span></td>
+            <td data-label="Status"><span class="status-badge status-${escapeHtml(status)}">${escapeHtml(status)}</span></td>
+            <td data-label="Started">${formatShortDate(item.created_at)}</td>
+            <td data-label="Actions"><div class="action-buttons">
+              <button class="action-btn success" onclick="updateSubscriptionStatus('${item.id}', 'active')">Active</button>
+              <button class="action-btn" onclick="updateSubscriptionStatus('${item.id}', 'paused')">Pause</button>
+              <button class="action-btn error" onclick="cancelMaintenanceSubscription('${item.id}')">Cancel</button>
+            </div></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Load subscriptions error:', error);
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6" data-label="" style="color: var(--error); text-align: center; padding: 28px;">${escapeHtml(error.message || 'Failed to load subscriptions.')}</td></tr>`;
+    }
+  }
+
+  async function updateSubscriptionStatus(id, status) {
+    try {
+      const res = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        headers: adminAuthHeaders(),
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to update subscription');
+      loadSubscriptions();
+    } catch (error) {
+      alert('Failed to update subscription: ' + error.message);
+    }
+  }
+
+  async function cancelMaintenanceSubscription(id) {
+    if (!confirm('Cancel this maintenance subscription?')) return;
+    try {
+      const res = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: adminAuthHeaders()
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to cancel subscription');
+      alert('✓ Subscription cancelled');
+      loadSubscriptions();
+    } catch (error) {
+      alert('Failed to cancel subscription: ' + error.message);
+    }
+  }
+
+  const GERUSO_LOCATION_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
+
+  function openAddBookingModal() {
+    const form = document.getElementById('addBookingForm');
+    if (form) form.reset();
+    const message = document.getElementById('addBookingMessage');
+    if (message) message.innerHTML = '';
+    const dateInput = document.getElementById('addBookingDate');
+    if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+    handleAddBookingLocationChange();
+    document.getElementById('addBookingModal').classList.add('active');
+  }
+
+  function closeAddBookingModal() {
+    document.getElementById('addBookingModal').classList.remove('active');
+  }
+
+  function handleAddBookingLocationChange() {
+    const locationType = document.getElementById('addBookingLocationType')?.value || 'mobile';
+    const addressInput = document.getElementById('addBookingAddress');
+    if (!addressInput) return;
+
+    if (locationType === 'location') {
+      addressInput.value = GERUSO_LOCATION_ADDRESS;
+      addressInput.readOnly = true;
+      addressInput.placeholder = GERUSO_LOCATION_ADDRESS;
+    } else {
+      if (addressInput.value === GERUSO_LOCATION_ADDRESS) addressInput.value = '';
+      addressInput.readOnly = false;
+      addressInput.placeholder = 'Customer address';
+    }
+  }
+
+  function setAddBookingMessage(message, isError = false) {
+    const messageBox = document.getElementById('addBookingMessage');
+    if (!messageBox) return;
+    messageBox.innerHTML = `<div style="padding: 12px; border-radius: 8px; border: 1px solid ${isError ? 'rgba(255,68,68,0.45)' : 'rgba(0,255,65,0.45)'}; color: ${isError ? 'var(--error)' : 'var(--primary)'}; background: ${isError ? 'rgba(255,68,68,0.12)' : 'rgba(0,255,65,0.10)'};">${escapeHtml(message)}</div>`;
+  }
+
+  async function saveManualBooking() {
+    const payload = {
+      customer_name: document.getElementById('addBookingName').value.trim(),
+      customer_email: document.getElementById('addBookingEmail').value.trim(),
+      customer_phone: document.getElementById('addBookingPhone').value.trim(),
+      service_type: document.getElementById('addBookingService').value,
+      vehicle_type: document.getElementById('addBookingVehicleType').value,
+      service_location: document.getElementById('addBookingLocationType').value,
+      service_address: document.getElementById('addBookingAddress').value.trim(),
+      booking_date: document.getElementById('addBookingDate').value,
+      booking_time: document.getElementById('addBookingTime').value,
+      notes: document.getElementById('addBookingNotes').value.trim()
+    };
+
+    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type || !payload.booking_date || !payload.booking_time) {
+      setAddBookingMessage('Please fill out all required booking fields.', true);
+      return;
+    }
+
+    if (payload.service_location === 'mobile' && !payload.service_address) {
+      setAddBookingMessage('Mobile bookings need a customer service address.', true);
+      return;
+    }
+
+    try {
+      setAddBookingMessage('Saving booking...');
+      const res = await fetch('/api/admin/bookings/manual', {
+        method: 'POST',
+        headers: adminAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (isInvalidSessionResponse(res, data)) {
+        handleInvalidSession();
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || 'Failed to add booking');
+
+      closeAddBookingModal();
+      await loadBookings();
+      await loadDashboard();
+      alert('✓ Booking added and confirmed');
+    } catch (error) {
+      setAddBookingMessage(error.message || 'Failed to add booking.', true);
     }
   }
 
@@ -1674,64 +1973,6 @@
       loadContent();
     } catch (error) {
       alert('Failed to save content: ' + error.message);
-    }
-  }
-
-  function escapeMembershipText(value) {
-    return String(value || '').replace(/[&<>"']/g, char => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[char]));
-  }
-
-  async function loadMemberships() {
-    const tbody = document.getElementById('membershipsTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
-    try {
-      const res = await fetch('/api/maintenance/admin/subscriptions', {
-        headers: adminAuthHeaders()
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Failed to load memberships');
-      if (!data.subscriptions?.length) {
-        tbody.innerHTML = '<tr><td colspan="6">No maintenance memberships yet.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = data.subscriptions.map(subscription => {
-        const amount = `$${(Number(subscription.price_cents || 0) / 100).toFixed(0)}`;
-        const status = escapeMembershipText(subscription.status || 'pending');
-        return `
-          <tr>
-            <td data-label="Customer"><strong>${escapeMembershipText(subscription.customer_name)}</strong><br><small>${escapeMembershipText(subscription.customer_email)}</small></td>
-            <td data-label="Contact">${escapeMembershipText(subscription.customer_phone)}</td>
-            <td data-label="Plan"><strong>${escapeMembershipText(subscription.plan_name)}</strong><br><small>${escapeMembershipText(subscription.plan_interval)}</small></td>
-            <td data-label="Price">${amount}</td>
-            <td data-label="Status"><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
-            <td data-label="Actions">
-              <button class="btn-small btn-success" onclick="updateMembershipStatus('${subscription.id}', 'active')">Active</button>
-              <button class="btn-small" onclick="updateMembershipStatus('${subscription.id}', 'paused')">Pause</button>
-              <button class="btn-small btn-danger" onclick="updateMembershipStatus('${subscription.id}', 'cancelled')">Cancel</button>
-            </td>
-          </tr>`;
-      }).join('');
-    } catch (error) {
-      tbody.innerHTML = `<tr><td colspan="6">${escapeMembershipText(error.message)}</td></tr>`;
-    }
-  }
-
-  async function updateMembershipStatus(id, status) {
-    if (status === 'cancelled' && !confirm('Cancel this maintenance membership?')) return;
-    try {
-      const res = await fetch(`/api/maintenance/admin/subscriptions/${encodeURIComponent(id)}/status`, {
-        method: 'POST',
-        headers: adminAuthHeaders(),
-        body: JSON.stringify({ status })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Failed to update membership');
-      loadMemberships();
-    } catch (error) {
-      alert('Membership update failed: ' + error.message);
     }
   }
 

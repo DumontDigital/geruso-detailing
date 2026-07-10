@@ -608,25 +608,6 @@
       height: auto !important;
       min-height: 56px !important;
       padding: 12px 14px !important;
-      gap: 10px !important;
-      flex-wrap: wrap !important;
-    }
-
-    #ownerDashboard > nav > div:last-child {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 8px !important;
-      width: 100% !important;
-    }
-
-    #ownerDashboard > nav > div:last-child a,
-    #ownerDashboard > nav > div:last-child button {
-      width: 100% !important;
-      min-height: 40px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      touch-action: manipulation;
     }
 
     #ownerDashboard > div[style*="display: flex"] {
@@ -667,7 +648,6 @@
       font-size: 12px !important;
       font-weight: 800 !important;
       white-space: nowrap !important;
-      touch-action: manipulation;
     }
 
     .owner-nav-btn[style*="var(--primary)"] {
@@ -681,32 +661,6 @@
       width: 100% !important;
       padding: 18px 12px 36px !important;
       overflow-x: hidden !important;
-    }
-
-    #ownerDashboard input,
-    #ownerDashboard select,
-    #ownerDashboard textarea,
-    #ownerDashboard button {
-      max-width: 100% !important;
-      min-width: 0 !important;
-    }
-
-    #ownerDashboard input,
-    #ownerDashboard select,
-    #ownerDashboard textarea {
-      width: 100% !important;
-      min-height: 44px !important;
-      font-size: 16px !important;
-    }
-
-    #servicesTab div[style*="grid-template-columns: 1fr 1fr"],
-    #contentTab div[style*="grid-template-columns: 1fr 1fr"],
-    #galleryTab div[style*="grid-template-columns: 1fr 1fr"] {
-      grid-template-columns: 1fr !important;
-    }
-
-    #scheduleTab div[style*="grid-template-columns: repeat(auto-fit"] {
-      grid-template-columns: 1fr !important;
     }
 
     #bookingsTab > div[style*="display: flex"] {
@@ -849,6 +803,7 @@
   <ul class="nav-links">
     <li><a href="services.html">Services</a></li>
     <li><a href="work.html">Our Work</a></li>
+    <li><a href="booking.html">Schedule</a></li>
     <li><a href="reviews.html">Reviews</a></li>
   </ul>
   <div class="nav-actions">
@@ -909,10 +864,8 @@
   <div id="ownerDashboard" style="display: none;">
     <nav style="position: sticky; top: 0; background: var(--light-bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; z-index: 99;">
       <div style="font-weight: 700; color: var(--primary);">Owner Dashboard</div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <a href="/home.html" style="padding: 8px 14px; color: var(--primary); border: 1px solid var(--primary); border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700;">Customer View</a>
-        <button type="button" id="ownerLogoutBtn" style="padding: 9px 14px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700;">Logout</button>
-      </div>
+      <!-- Logout intentionally removed — the parent app.html top bar
+           provides "Customer View" + "Logout" so we don't double up. -->
     </nav>
 
     <!-- Debug strip removed for cleaner production UI. -->
@@ -922,12 +875,12 @@
     <div style="display: flex;">
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
-        <button type="button" class="owner-nav-btn" data-tab="bookings" onclick="ownerShowTab('bookings', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
-        <button type="button" class="owner-nav-btn" data-tab="subscriptions" onclick="ownerShowTab('subscriptions', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Memberships</button>
-        <button type="button" class="owner-nav-btn" data-tab="services" onclick="ownerShowTab('services', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
-        <button type="button" class="owner-nav-btn" data-tab="schedule" onclick="ownerShowTab('schedule', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
-        <button type="button" class="owner-nav-btn" data-tab="content" onclick="ownerShowTab('content', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
-        <button type="button" class="owner-nav-btn" data-tab="gallery" onclick="ownerShowTab('gallery', this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
+        <button class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Subscriptions</button>
+        <button class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
+        <button class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
+        <button class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
+        <button class="owner-nav-btn" data-tab="gallery" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
       </div>
 
       <!-- Main Content -->
@@ -946,6 +899,7 @@
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
+            <button type="button" class="btn-primary" onclick="openOwnerAddBookingModal()" style="white-space: nowrap;">+ Add Booking</button>
           </div>
 
           <!-- UPCOMING BOOKINGS SECTION -->
@@ -961,7 +915,6 @@
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Vehicle</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Payment</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
@@ -987,7 +940,6 @@
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Phone</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Address</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Service</th>
-                  <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Vehicle</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Payment</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Date</th>
                   <th style="padding: 12px; text-align: left; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border);">Time</th>
@@ -1001,9 +953,9 @@
           </div>
         </div>
 
-        <!-- Memberships Tab -->
+        <!-- Subscriptions Tab -->
         <div id="subscriptionsTab" class="owner-tab" style="display: none;">
-          <h2 style="margin-bottom: 24px;">Manage Memberships</h2>
+          <h2 style="margin-bottom: 24px;">Manage Subscriptions</h2>
 
           <div style="margin-bottom: 24px; display: flex; gap: 12px;">
             <input type="text" id="subscriptionSearch" placeholder="Search by customer name, email, or phone..." style="flex: 1; padding: 10px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
@@ -1017,7 +969,7 @@
 
           <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
             <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--light-bg);">
-              <h3 style="color: var(--primary); margin: 0;">Maintenance Memberships <span id="subscriptionCount" style="color: var(--text-muted);">(0)</span></h3>
+              <h3 style="color: var(--primary); margin: 0;">Maintenance Subscriptions <span id="subscriptionCount" style="color: var(--text-muted);">(0)</span></h3>
             </div>
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
@@ -1284,6 +1236,89 @@
   </div>
 </div>
 
+<div id="ownerAddBookingModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.45);">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px;">
+      <div>
+        <h2 style="margin: 0; color: var(--primary);">Add Booking</h2>
+        <p style="margin: 6px 0 0; color: var(--text-muted);">Manual bookings save as confirmed and block the selected time.</p>
+      </div>
+      <button type="button" onclick="closeOwnerAddBookingModal()" style="background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 12px; cursor: pointer;">Close</button>
+    </div>
+
+    <div id="ownerAddBookingMessage" style="display: none; margin-bottom: 14px;"></div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Customer Name *</label>
+        <input id="ownerAddBookingName" type="text" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Phone *</label>
+        <input id="ownerAddBookingPhone" type="tel" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Email *</label>
+        <input id="ownerAddBookingEmail" type="email" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Vehicle Type *</label>
+        <select id="ownerAddBookingVehicleType" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+          <option value="Car">Car</option>
+          <option value="SUV">SUV</option>
+          <option value="Truck">Truck</option>
+          <option value="Motorcycle">Motorcycle</option>
+        </select>
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Service *</label>
+        <select id="ownerAddBookingService" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+          <option value="Full Motorcycle Service">Full Motorcycle Service</option>
+          <option value="Interior Detailing">Interior Detailing</option>
+          <option value="Car Wash">Car Wash</option>
+          <option value="Premium Wash">Premium Wash</option>
+          <option value="Premium Package">Premium Package</option>
+          <option value="Premium Plus">Premium Plus</option>
+          <option value="Ultra Premium">Ultra Premium</option>
+          <option value="Ceramic Coating">Ceramic Coating</option>
+          <option value="Full Vehicle Polish">Full Vehicle Polish</option>
+          <option value="Engine Bay Cleaning">Engine Bay Cleaning</option>
+          <option value="Pet Hair / Odor Elimination">Pet Hair / Odor Elimination</option>
+          <option value="Headlight Restoration">Headlight Restoration</option>
+        </select>
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Location *</label>
+        <select id="ownerAddBookingLocationType" onchange="handleOwnerAddBookingLocationChange()" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+          <option value="mobile">Mobile</option>
+          <option value="location">Geruso Location</option>
+        </select>
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Date *</label>
+        <input id="ownerAddBookingDate" type="date" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Time *</label>
+        <input id="ownerAddBookingTime" type="time" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Service Address *</label>
+        <input id="ownerAddBookingAddress" type="text" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 700;">Notes</label>
+        <textarea id="ownerAddBookingNotes" rows="3" placeholder="Optional note for this booking..." style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box; resize: vertical;"></textarea>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px;">
+      <button type="button" onclick="closeOwnerAddBookingModal()" style="padding: 12px 18px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button type="button" class="btn-primary" onclick="saveOwnerManualBooking()">Save Booking</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/auth-helper.js"></script>
 <script>
 // Owner Dashboard - Unified Authentication
@@ -1344,6 +1379,12 @@
     dashboard.style.display = 'block';
     updateEasternTimeDisplay();
     loadBookings();
+    loadSubscriptions();
+    loadServices();
+    loadSchedule();
+    loadWebsiteContent();
+    loadGallery();
+    setupTabNavigation();
     setupAutoRotation();
     // Update Eastern time display every second
     setInterval(updateEasternTimeDisplay, 1000);
@@ -1358,27 +1399,151 @@
     };
   }
 
-  window.ownerShowTab = function(tab, btn) {
-    const tabPanel = document.getElementById(tab + 'Tab');
-    if (!tabPanel) return;
+  const OWNER_GERUSO_LOCATION_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
 
-    document.querySelectorAll('.owner-tab').forEach(panel => panel.style.display = 'none');
-    tabPanel.style.display = 'block';
+  function ownerEscapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
 
-    document.querySelectorAll('.owner-nav-btn').forEach(button => {
-      button.style.background = 'transparent';
-      button.style.color = 'var(--text)';
+  function setOwnerAddBookingMessage(message, isError = false) {
+    const messageBox = document.getElementById('ownerAddBookingMessage');
+    if (!messageBox) return;
+    if (!message) {
+      messageBox.style.display = 'none';
+      messageBox.innerHTML = '';
+      return;
+    }
+    messageBox.style.display = 'block';
+    messageBox.innerHTML = `<div style="padding: 12px; border-radius: 8px; border: 1px solid ${isError ? 'rgba(255,68,68,0.45)' : 'rgba(0,255,65,0.45)'}; color: ${isError ? 'var(--error)' : 'var(--primary)'}; background: ${isError ? 'rgba(255,68,68,0.12)' : 'rgba(0,255,65,0.10)'};">${ownerEscapeHtml(message)}</div>`;
+  }
+
+  window.openOwnerAddBookingModal = function() {
+    const modal = document.getElementById('ownerAddBookingModal');
+    if (!modal) return;
+
+    [
+      'ownerAddBookingName',
+      'ownerAddBookingEmail',
+      'ownerAddBookingPhone',
+      'ownerAddBookingAddress',
+      'ownerAddBookingDate',
+      'ownerAddBookingTime',
+      'ownerAddBookingNotes'
+    ].forEach((id) => {
+      const field = document.getElementById(id);
+      if (field) field.value = '';
     });
-    btn.style.background = 'var(--primary)';
-    btn.style.color = '#000';
 
-    if (tab === 'schedule') loadSchedule();
-    if (tab === 'bookings') loadBookings();
-    if (tab === 'subscriptions') loadSubscriptions();
-    if (tab === 'services') loadServices();
-    if (tab === 'content') loadWebsiteContent();
-    if (tab === 'gallery') loadGallery();
+    const serviceField = document.getElementById('ownerAddBookingService');
+    const vehicleField = document.getElementById('ownerAddBookingVehicleType');
+    const locationField = document.getElementById('ownerAddBookingLocationType');
+    const dateField = document.getElementById('ownerAddBookingDate');
+    if (serviceField) serviceField.value = 'Full Motorcycle Service';
+    if (vehicleField) vehicleField.value = 'Car';
+    if (locationField) locationField.value = 'mobile';
+    if (dateField) dateField.min = new Date().toISOString().split('T')[0];
+
+    setOwnerAddBookingMessage('');
+    window.handleOwnerAddBookingLocationChange();
+    modal.style.display = 'flex';
   };
+
+  window.closeOwnerAddBookingModal = function() {
+    const modal = document.getElementById('ownerAddBookingModal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.handleOwnerAddBookingLocationChange = function() {
+    const locationType = document.getElementById('ownerAddBookingLocationType')?.value || 'mobile';
+    const addressField = document.getElementById('ownerAddBookingAddress');
+    if (!addressField) return;
+
+    if (locationType === 'location') {
+      addressField.value = OWNER_GERUSO_LOCATION_ADDRESS;
+      addressField.readOnly = true;
+      addressField.style.opacity = '0.75';
+    } else {
+      if (addressField.value === OWNER_GERUSO_LOCATION_ADDRESS) addressField.value = '';
+      addressField.readOnly = false;
+      addressField.style.opacity = '1';
+    }
+  };
+
+  window.saveOwnerManualBooking = async function() {
+    const payload = {
+      customer_name: document.getElementById('ownerAddBookingName')?.value.trim(),
+      customer_email: document.getElementById('ownerAddBookingEmail')?.value.trim(),
+      customer_phone: document.getElementById('ownerAddBookingPhone')?.value.trim(),
+      service_type: document.getElementById('ownerAddBookingService')?.value,
+      vehicle_type: document.getElementById('ownerAddBookingVehicleType')?.value,
+      service_location: document.getElementById('ownerAddBookingLocationType')?.value,
+      service_address: document.getElementById('ownerAddBookingAddress')?.value.trim(),
+      booking_date: document.getElementById('ownerAddBookingDate')?.value,
+      booking_time: document.getElementById('ownerAddBookingTime')?.value,
+      notes: document.getElementById('ownerAddBookingNotes')?.value.trim()
+    };
+
+    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type || !payload.booking_date || !payload.booking_time) {
+      setOwnerAddBookingMessage('Please fill in the customer, vehicle, service, date, and time.', true);
+      return;
+    }
+
+    if (payload.service_location === 'mobile' && !payload.service_address) {
+      setOwnerAddBookingMessage('Please enter the customer address for mobile service.', true);
+      return;
+    }
+
+    try {
+      setOwnerAddBookingMessage('Saving booking...');
+      const response = await fetch('/api/admin/bookings/manual', {
+        method: 'POST',
+        headers: ownerAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to save this booking.');
+      }
+
+      window.closeOwnerAddBookingModal();
+      await loadBookings();
+      alert('Booking added and confirmed.');
+    } catch (error) {
+      setOwnerAddBookingMessage(error.message || 'Unable to save this booking.', true);
+    }
+  };
+
+  function setupTabNavigation() {
+    document.querySelectorAll('.owner-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+
+        document.querySelectorAll('.owner-tab').forEach(t => t.style.display = 'none');
+        document.getElementById(tab + 'Tab').style.display = 'block';
+
+        document.querySelectorAll('.owner-nav-btn').forEach(b => {
+          b.style.background = 'transparent';
+          b.style.color = 'var(--text)';
+        });
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#000';
+
+        if (tab === 'schedule') loadSchedule();
+        if (tab === 'bookings') loadBookings();
+        if (tab === 'subscriptions') loadSubscriptions();
+        if (tab === 'services') loadServices();
+        if (tab === 'content') loadWebsiteContent();
+        if (tab === 'gallery') loadGallery();
+      });
+    });
+  }
 
   // Setup auto-rotation: refresh bookings every 60 seconds to maintain live rotating schedule
   function setupAutoRotation() {
@@ -1609,7 +1774,6 @@
             <div style="font-weight: 700;">${booking.service_type || '—'}</div>
             <div style="color: var(--text-muted); font-size: 12px;">$${Number(booking.totalPrice || 0).toLocaleString()} total</div>
           </td>
-          <td data-label="Vehicle" style="padding: 12px; font-weight: 700;">${booking.vehicle_type || 'Not specified'}</td>
           <td data-label="Payment" style="padding: 12px;">
             <span style="${getOwnerPaymentStyle(booking)} padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap;">${getOwnerPaymentLabel(booking)}</span>
           </td>
@@ -1656,26 +1820,17 @@
   }
 
   const ownerServicePrices = {
-    'Full Motorcycle Service': { car: 70, suv: 70, truck: 70 },
-    'Interior Detailing': { car: 100, suv: 100, truck: 100 },
-    'Car Wash': { car: 95, suv: 110, truck: 110 },
-    'Premium Wash': { car: 130, suv: 155, truck: 180 },
-    'Ceramic Coating': { car: 600, suv: 625, truck: 650 },
-    'Premium Package': { car: 175, suv: 200, truck: 225 },
-    'Premium Plus': { car: 245, suv: 270, truck: 295 },
-    'Ultra Premium': { car: 335, suv: 360, truck: 385 },
-    'Engine Bay Cleaning': { car: 75, suv: 75, truck: 75 },
-    'Full Vehicle Polish': { car: 350, suv: 375, truck: 400 },
-    'Pet Hair / Odor Elimination': { car: 50, suv: 50, truck: 50 },
-    'Headlight Restoration': { car: 50, suv: 50, truck: 50 },
+    'Full Motorcycle Service': { car: 70, truck: 70 },
+    'Interior Detailing': { car: 100, truck: 100 },
+    'Car Wash': { car: 85, truck: 120 },
+    'Ceramic Coating': { car: 400, truck: 400 },
+    'Premium Package': { car: 175, truck: 215 },
+    'Ultra Premium': { car: 335, truck: 375 },
+    'Engine Bay Cleaning': { car: 75, truck: 75 },
+    'Full Vehicle Polish': { car: 250, truck: 250 },
+    'Pet Hair / Odor Elimination': { car: 50, truck: 50 },
+    'Headlight Restoration': { car: 50, truck: 50 },
   };
-
-  function getOwnerVehiclePrice(catalogPrice, vehicleType) {
-    const vehicleKey = String(vehicleType || '').toLowerCase();
-    if (vehicleKey === 'truck') return catalogPrice.truck;
-    if (vehicleKey === 'suv') return catalogPrice.suv;
-    return catalogPrice.car;
-  }
 
   function getOwnerCleanServiceName(serviceType) {
     return String(serviceType || '').split('-')[0].trim() || 'Service';
@@ -1690,7 +1845,9 @@
     services.forEach(serviceName => {
       const catalogPrice = ownerServicePrices[serviceName];
       if (catalogPrice) {
-        total += getOwnerVehiclePrice(catalogPrice, booking.vehicle_type);
+        total += String(booking.vehicle_type || '').toLowerCase() === 'truck'
+          ? catalogPrice.truck
+          : catalogPrice.car;
       }
     });
     if (total > 0) return total;
@@ -1698,7 +1855,9 @@
     const serviceName = getOwnerCleanServiceName(booking.service_type);
     const catalogPrice = ownerServicePrices[serviceName];
     if (catalogPrice) {
-      return getOwnerVehiclePrice(catalogPrice, booking.vehicle_type);
+      return String(booking.vehicle_type || '').toLowerCase() === 'truck'
+        ? catalogPrice.truck
+        : catalogPrice.car;
     }
     const match = String(booking.service_type || '').match(/\$(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
