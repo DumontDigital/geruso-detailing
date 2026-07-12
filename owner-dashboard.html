@@ -609,6 +609,12 @@
     touch-action: manipulation;
   }
 
+  #cartModal[style*="display: none"],
+  #ownerLoginScreen[style*="display: none"],
+  #ownerAddBookingModal[style*="display: none"] {
+    pointer-events: none !important;
+  }
+
   @media (max-width: 760px) {
     #ownerPanel {
       overflow-x: hidden !important;
@@ -889,12 +895,12 @@
     <div style="display: flex;">
       <!-- Sidebar Navigation -->
       <div style="width: 200px; background: var(--light-bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;">
-        <button type="button" class="owner-nav-btn" data-tab="bookings" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
-        <button type="button" class="owner-nav-btn" data-tab="subscriptions" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Subscriptions</button>
-        <button type="button" class="owner-nav-btn" data-tab="services" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
-        <button type="button" class="owner-nav-btn" data-tab="schedule" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
-        <button type="button" class="owner-nav-btn" data-tab="content" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
-        <button type="button" class="owner-nav-btn" data-tab="gallery" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
+        <button type="button" class="owner-nav-btn" data-tab="bookings" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: var(--primary); color: #000; border: none; cursor: pointer; font-weight: 700;">📅 Bookings</button>
+        <button type="button" class="owner-nav-btn" data-tab="subscriptions" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔁 Subscriptions</button>
+        <button type="button" class="owner-nav-btn" data-tab="services" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🔧 Services</button>
+        <button type="button" class="owner-nav-btn" data-tab="schedule" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">⏰ Schedule</button>
+        <button type="button" class="owner-nav-btn" data-tab="content" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">📝 Content</button>
+        <button type="button" class="owner-nav-btn" data-tab="gallery" onclick="activateOwnerTab(this)" style="width: 100%; padding: 12px 24px; text-align: left; background: transparent; color: var(--text); border: none; cursor: pointer; margin-top: 8px;">🖼️ Gallery</button>
       </div>
 
       <!-- Main Content -->
@@ -1360,7 +1366,18 @@
 
     ownerPanel.style.display = 'block';
     document.body.style.overflow = 'hidden';
-    showDashboard();
+    try {
+      showDashboard();
+    } catch (error) {
+      console.error(error);
+      loginScreen.style.display = 'none';
+      dashboard.style.display = 'block';
+      setupOwnerDashboardControls();
+      const bookingsTab = document.getElementById('bookingsTab');
+      if (bookingsTab) {
+        bookingsTab.insertAdjacentHTML('afterbegin', '<div style="margin-bottom: 16px; padding: 14px; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); background: rgba(255,107,107,0.12);">Dashboard loaded, but some data could not load. Try Customer View, Logout, or refresh after Render finishes deploying.</div>');
+      }
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -1605,6 +1622,7 @@
     if (tab === 'content') loadWebsiteContent();
     if (tab === 'gallery') loadGallery();
   }
+  window.activateOwnerTab = activateOwnerTab;
 
   function setupTabNavigation() {
     document.addEventListener('click', (event) => {
