@@ -1316,11 +1316,11 @@
       </div>
       <div>
         <label style="display: block; margin-bottom: 6px; font-weight: 700;">Date *</label>
-        <input id="ownerAddBookingDate" type="date" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+        <input id="ownerAddBookingDate" type="text" inputmode="numeric" placeholder="MM/DD/YYYY" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
       </div>
       <div>
         <label style="display: block; margin-bottom: 6px; font-weight: 700;">Time *</label>
-        <input id="ownerAddBookingTime" type="time" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
+        <input id="ownerAddBookingTime" type="text" inputmode="numeric" placeholder="12:30 PM" style="width: 100%; padding: 11px; background: var(--light-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box;">
       </div>
       <div style="grid-column: 1 / -1;">
         <label style="display: block; margin-bottom: 6px; font-weight: 700;">Service Address *</label>
@@ -1548,22 +1548,75 @@
     }
   };
 
+  function ownerReadInputValue(id) {
+    const field = document.getElementById(id);
+    if (!field) return '';
+    return String(field.value || field.getAttribute('value') || '').trim();
+  }
+
+  function ownerNormalizeManualDate(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    const match = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (!match) return '';
+
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 2024) return '';
+
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  function ownerNormalizeManualTime(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) return '';
+
+    let match = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (hours > 23 || minutes > 59) return '';
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+    if (!match) return '';
+
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] || '00');
+    const meridiem = match[3];
+    if (hours < 1 || hours > 12 || minutes > 59) return '';
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
   window.saveOwnerManualBooking = async function() {
+    const bookingDate = ownerNormalizeManualDate(ownerReadInputValue('ownerAddBookingDate'));
+    const bookingTime = ownerNormalizeManualTime(ownerReadInputValue('ownerAddBookingTime'));
     const payload = {
-      customer_name: document.getElementById('ownerAddBookingName')?.value.trim(),
-      customer_email: document.getElementById('ownerAddBookingEmail')?.value.trim(),
-      customer_phone: document.getElementById('ownerAddBookingPhone')?.value.trim(),
-      service_type: document.getElementById('ownerAddBookingService')?.value,
-      vehicle_type: document.getElementById('ownerAddBookingVehicleType')?.value,
-      service_location: document.getElementById('ownerAddBookingLocationType')?.value,
-      service_address: document.getElementById('ownerAddBookingAddress')?.value.trim(),
-      booking_date: document.getElementById('ownerAddBookingDate')?.value,
-      booking_time: document.getElementById('ownerAddBookingTime')?.value,
-      notes: document.getElementById('ownerAddBookingNotes')?.value.trim()
+      customer_name: ownerReadInputValue('ownerAddBookingName'),
+      customer_email: ownerReadInputValue('ownerAddBookingEmail'),
+      customer_phone: ownerReadInputValue('ownerAddBookingPhone'),
+      service_type: ownerReadInputValue('ownerAddBookingService'),
+      vehicle_type: ownerReadInputValue('ownerAddBookingVehicleType'),
+      service_location: ownerReadInputValue('ownerAddBookingLocationType'),
+      service_address: ownerReadInputValue('ownerAddBookingAddress'),
+      booking_date: bookingDate,
+      booking_time: bookingTime,
+      notes: ownerReadInputValue('ownerAddBookingNotes')
     };
 
-    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type || !payload.booking_date || !payload.booking_time) {
-      setOwnerAddBookingMessage('Please fill in the customer, vehicle, service, date, and time.', true);
+    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type) {
+      setOwnerAddBookingMessage('Please fill in the customer, vehicle, and service information.', true);
+      return;
+    }
+
+    if (!payload.booking_date || !payload.booking_time) {
+      setOwnerAddBookingMessage('Please enter a valid date and time. Example: 07/13/2026 and 12:30 PM.', true);
       return;
     }
 
