@@ -1350,6 +1350,10 @@
   const logoutBtn = document.getElementById('ownerLogoutBtn');
   let ownerDashboardControlsReady = false;
   let ownerDashboardStarted = false;
+  let ownerEasternTimeTimerId = null;
+  let ownerBookingsRefreshId = null;
+  let ownerBookingsLoading = false;
+  const ownerLoadedTabs = new Set();
 
   // Check authentication on page load
   function startOwnerDashboard() {
@@ -1422,14 +1426,30 @@
     dashboard.style.display = 'block';
     setupOwnerDashboardControls();
     updateEasternTimeDisplay();
-    Promise.resolve().then(() => loadBookings()).catch(console.error);
-    Promise.resolve().then(() => loadSubscriptions()).catch(console.error);
-    Promise.resolve().then(() => loadServices()).catch(console.error);
-    Promise.resolve().then(() => loadSchedule()).catch(console.error);
-    Promise.resolve().then(() => loadWebsiteContent()).catch(console.error);
-    Promise.resolve().then(() => loadGallery()).catch(console.error);
-    // Update Eastern time display every second
-    setInterval(updateEasternTimeDisplay, 1000);
+    loadOwnerDashboardTab('bookings', true);
+    if (!ownerEasternTimeTimerId) {
+      ownerEasternTimeTimerId = setInterval(updateEasternTimeDisplay, 1000);
+    }
+  }
+
+  function loadOwnerDashboardTab(tab, force = false) {
+    if (!force && ownerLoadedTabs.has(tab)) return;
+    ownerLoadedTabs.add(tab);
+
+    const loaders = {
+      bookings: loadBookings,
+      subscriptions: loadSubscriptions,
+      services: loadServices,
+      schedule: loadSchedule,
+      content: loadWebsiteContent,
+      gallery: loadGallery
+    };
+
+    const loader = loaders[tab];
+    if (!loader) return;
+    window.setTimeout(() => {
+      Promise.resolve().then(loader).catch(console.error);
+    }, 0);
   }
 
   function readOwnerJwtPayload(candidateToken) {
@@ -1668,12 +1688,7 @@
     btn.style.background = 'var(--primary)';
     btn.style.color = '#000';
 
-    if (tab === 'schedule') loadSchedule();
-    if (tab === 'bookings') loadBookings();
-    if (tab === 'subscriptions') loadSubscriptions();
-    if (tab === 'services') loadServices();
-    if (tab === 'content') loadWebsiteContent();
-    if (tab === 'gallery') loadGallery();
+    loadOwnerDashboardTab(tab, tab === 'bookings');
   }
   window.activateOwnerTab = activateOwnerTab;
 
@@ -1696,17 +1711,21 @@
 
   // Setup auto-rotation: refresh bookings every 60 seconds to maintain live rotating schedule
   function setupAutoRotation() {
+    if (ownerBookingsRefreshId) return;
+
     // Refresh bookings every 60 seconds when dashboard is active
-    const rotationInterval = setInterval(() => {
-      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block') {
-        loadBookings();
+    ownerBookingsRefreshId = setInterval(() => {
+      const bookingsTab = document.getElementById('bookingsTab');
+      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block' && bookingsTab?.style.display !== 'none') {
+        loadOwnerDashboardTab('bookings', true);
       }
     }, 60000); // 60 seconds
 
     // Also refresh when the page regains focus
     window.addEventListener('focus', () => {
-      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block') {
-        loadBookings();
+      const bookingsTab = document.getElementById('bookingsTab');
+      if (ownerPanel.style.display === 'block' && dashboard.style.display === 'block' && bookingsTab?.style.display !== 'none') {
+        loadOwnerDashboardTab('bookings', true);
       }
     });
   }
@@ -1820,6 +1839,8 @@
   }
 
   async function loadBookings() {
+    if (ownerBookingsLoading) return;
+    ownerBookingsLoading = true;
     try {
       const response = await fetch('/api/owner/bookings', {
         headers: ownerAuthHeaders()
@@ -1890,6 +1911,8 @@
 
     } catch (error) {
       console.error('Error loading bookings:', error);
+    } finally {
+      ownerBookingsLoading = false;
     }
   }
 
