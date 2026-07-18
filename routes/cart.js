@@ -132,90 +132,9 @@ router.post('/pay-later', async (req, res) => {
 });
 
 router.post('/checkout', async (req, res) => {
-  return res.status(410).json({
+  res.status(410).json({
     error: 'Online payment is no longer offered for service bookings. Please choose Pay After Service.',
   });
-
-  try {
-    const { items, customer = {} } = req.body;
-    const cartItems = normalizeCartItems(items);
-
-    if (cartItems.length === 0) {
-      return res.status(400).json({ error: 'Your cart is empty or contains unavailable services.' });
-    }
-
-    const validationError = validateCartItems(cartItems);
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
-    }
-
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(503).json({
-        error: 'Online payment is not connected yet. Please contact Geruso Detailing to complete checkout.',
-      });
-    }
-
-    const customerEmail = String(customer.email || '').trim();
-    const bookingId = String(customer.bookingId || '').trim();
-    const orderId = uuidv4();
-    const stripeClient = initializeStripe();
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || `${req.protocol}://${req.get('host')}`;
-
-    const lineItems = cartItems.map(item => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.name,
-          description: item.tag,
-          metadata: {
-            service_tag: item.tag,
-          },
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
-
-    const metadata = {
-      order_id: orderId,
-      customer_name: String(customer.name || '').trim(),
-      customer_phone: String(customer.phone || '').trim(),
-      service_address: String(customer.serviceAddress || '').trim(),
-      source: 'cart_checkout',
-    };
-    if (bookingId) metadata.booking_id = bookingId;
-
-    const session = await stripeClient.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      customer_email: customerEmail || undefined,
-      client_reference_id: orderId,
-      metadata,
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/checkout?cancelled=true`,
-    });
-
-    if (bookingId) {
-      await pool.query(
-        `UPDATE bookings
-         SET stripe_session_id = $1, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $2 AND status <> 'cancelled'`,
-        [session.id, bookingId]
-      );
-    }
-
-    res.json({
-      success: true,
-      checkoutUrl: session.url,
-      orderId,
-    });
-  } catch (error) {
-    console.error('[Cart Checkout] Error:', error.message);
-    res.status(500).json({
-      error: error && error.type ? error.message : 'Unable to start checkout. Please try again.',
-    });
-  }
 });
 
 router.get('/session/:sessionId', async (req, res) => {
