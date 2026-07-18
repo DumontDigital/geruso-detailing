@@ -1462,6 +1462,23 @@
     }
   }
 
+  function clearOwnerDashboardAuth() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('ownerToken');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    if (window.auth) {
+      auth.token = null;
+      auth.user = null;
+    }
+  }
+
+  function handleOwnerInvalidSession() {
+    clearOwnerDashboardAuth();
+    window.location.href = '/login';
+  }
+
   function getOwnerCurrentToken() {
     const candidates = [
       localStorage.getItem('token'),
@@ -1480,7 +1497,8 @@
       }
     }
 
-    return candidates[0] || '';
+    if (candidates.length) clearOwnerDashboardAuth();
+    return '';
   }
 
   function ownerAuthHeaders(extraHeaders = {}) {
@@ -1657,6 +1675,7 @@
       const message = String(result.error || result.message || '');
       if (response.status === 401 || /invalid token|jwt expired|jwt malformed/i.test(message)) {
         setOwnerAddBookingMessage('Your dashboard session expired. Please log out, sign back in, and try again.', true);
+        window.setTimeout(handleOwnerInvalidSession, 900);
         return;
       }
 

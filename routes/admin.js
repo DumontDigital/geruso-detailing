@@ -62,6 +62,21 @@ function normalizeBookingTime(timeString) {
   return minutes === null ? String(timeString || '').trim() : formatBookingMinutes(minutes);
 }
 
+function normalizeBookingDate(dateString) {
+  const raw = String(dateString || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return raw;
+
+  const month = Number.parseInt(match[1], 10);
+  const day = Number.parseInt(match[2], 10);
+  const year = Number.parseInt(match[3], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return raw;
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 function isLongDetailService(serviceType) {
   return /(Ceramic Coating|Full Vehicle Polish)/i.test(String(serviceType || ''));
 }
@@ -256,7 +271,7 @@ router.post('/bookings/manual', staffOnly, async (req, res) => {
     const customerEmail = String(customer_email || '').trim();
     const customerPhone = String(customer_phone || '').trim();
     const serviceType = String(service_type || '').trim();
-    const bookingDate = String(booking_date || '').trim();
+    const bookingDate = normalizeBookingDate(booking_date);
     const normalizedBookingTime = normalizeBookingTime(booking_time);
     const serviceLocation = String(service_location || '').toLowerCase().includes('mobile') ? 'mobile' : 'location';
     const serviceAddress = serviceLocation === 'location'
@@ -265,6 +280,10 @@ router.post('/bookings/manual', staffOnly, async (req, res) => {
 
     if (!customerName || !customerEmail || !customerPhone || !serviceType || !bookingDate || !normalizedBookingTime) {
       return res.status(400).json({ error: 'Name, email, phone, service, date, and time are required.' });
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate)) {
+      return res.status(400).json({ error: 'Please enter a valid booking date.' });
     }
 
     if (serviceLocation === 'mobile' && !serviceAddress) {

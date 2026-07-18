@@ -1002,6 +1002,14 @@
     }
   }
 
+  function clearDashboardAuth() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('ownerToken');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+  }
+
   function getCurrentToken() {
     const candidates = [
       localStorage.getItem('token'),
@@ -1019,7 +1027,8 @@
       }
     }
 
-    return candidates[0] || '';
+    if (candidates.length) clearDashboardAuth();
+    return '';
   }
 
   const token = getCurrentToken();
@@ -1062,8 +1071,7 @@
   }
 
   function handleInvalidSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearDashboardAuth();
     if (window.top && window.top !== window.self) {
       window.top.location.href = '/login';
     } else {
@@ -1528,22 +1536,73 @@
     messageBox.innerHTML = `<div style="padding: 12px; border-radius: 8px; border: 1px solid ${isError ? 'rgba(255,68,68,0.45)' : 'rgba(0,255,65,0.45)'}; color: ${isError ? 'var(--error)' : 'var(--primary)'}; background: ${isError ? 'rgba(255,68,68,0.12)' : 'rgba(0,255,65,0.10)'};">${escapeHtml(message)}</div>`;
   }
 
+  function readManualInputValue(id) {
+    const input = document.getElementById(id);
+    return String(input?.value || input?.getAttribute('value') || '').trim();
+  }
+
+  function normalizeManualDate(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) return '';
+
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return '';
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  function normalizeManualTime(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) return '';
+
+    let match = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (hours > 23 || minutes > 59) return '';
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+    if (!match) return '';
+
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] || '00');
+    const meridiem = match[3];
+    if (hours < 1 || hours > 12 || minutes > 59) return '';
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
   async function saveManualBooking() {
+    const bookingDate = normalizeManualDate(readManualInputValue('addBookingDate'));
+    const bookingTime = normalizeManualTime(readManualInputValue('addBookingTime'));
     const payload = {
-      customer_name: document.getElementById('addBookingName').value.trim(),
-      customer_email: document.getElementById('addBookingEmail').value.trim(),
-      customer_phone: document.getElementById('addBookingPhone').value.trim(),
-      service_type: document.getElementById('addBookingService').value,
-      vehicle_type: document.getElementById('addBookingVehicleType').value,
-      service_location: document.getElementById('addBookingLocationType').value,
-      service_address: document.getElementById('addBookingAddress').value.trim(),
-      booking_date: document.getElementById('addBookingDate').value,
-      booking_time: document.getElementById('addBookingTime').value,
-      notes: document.getElementById('addBookingNotes').value.trim()
+      customer_name: readManualInputValue('addBookingName'),
+      customer_email: readManualInputValue('addBookingEmail'),
+      customer_phone: readManualInputValue('addBookingPhone'),
+      service_type: readManualInputValue('addBookingService'),
+      vehicle_type: readManualInputValue('addBookingVehicleType'),
+      service_location: readManualInputValue('addBookingLocationType'),
+      service_address: readManualInputValue('addBookingAddress'),
+      booking_date: bookingDate,
+      booking_time: bookingTime,
+      notes: readManualInputValue('addBookingNotes')
     };
 
-    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type || !payload.booking_date || !payload.booking_time) {
-      setAddBookingMessage('Please fill out all required booking fields.', true);
+    if (!payload.customer_name || !payload.customer_email || !payload.customer_phone || !payload.service_type || !payload.vehicle_type) {
+      setAddBookingMessage('Please fill in the customer, vehicle, and service information.', true);
+      return;
+    }
+
+    if (!payload.booking_date || !payload.booking_time) {
+      setAddBookingMessage('Please enter a valid date and time. Example: 07/13/2026 and 12:30 PM.', true);
       return;
     }
 
@@ -1562,6 +1621,7 @@
       const data = await res.json().catch(() => ({}));
       if (isInvalidSessionResponse(res, data)) {
         setAddBookingMessage('Your dashboard session expired. Please log out, sign back in, and try again.', true);
+        window.setTimeout(handleInvalidSession, 900);
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Failed to add booking');

@@ -63,10 +63,16 @@ class AuthHelper {
       localStorage.getItem('ownerToken')
     ].filter(Boolean);
 
-    return candidates.find((candidate) => this.isFreshStaffToken(candidate))
-      || candidates.find((candidate) => this.isFreshToken(candidate))
-      || candidates[0]
-      || null;
+    const freshToken = candidates.find((candidate) => this.isFreshStaffToken(candidate))
+      || candidates.find((candidate) => this.isFreshToken(candidate));
+
+    if (freshToken) return freshToken;
+
+    if (candidates.length) {
+      this.clearStoredAuth();
+    }
+
+    return null;
   }
 
   isLoggedIn() {
@@ -150,11 +156,16 @@ class AuthHelper {
    * Logout and redirect to login
    */
   logout() {
+    this.clearStoredAuth();
+    window.location.href = '/login';
+  }
+
+  clearStoredAuth() {
     localStorage.removeItem('token');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('ownerToken');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    sessionStorage.removeItem('token');
   }
 
   /**
