@@ -297,19 +297,39 @@ router.post('/checkout', async (req, res) => {
     const bookingId = uuidv4();
     const result = await pool.query(
       `INSERT INTO bookings (id, customer_name, customer_email, customer_phone, service_address, service_type, booking_date, booking_time, vehicle_type, notes, vehicle_photo, status, payment_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'confirmed', 'pay_later')
        RETURNING *`,
-      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, normalizedBookingTime, vehicleType || null, notes || null, vehiclePhoto || null, 'pending', 'unpaid']
+      [bookingId, customerName, customerEmail, customerPhone, serviceAddress, serviceType, bookingDate, normalizedBookingTime, vehicleType || null, notes || null, vehiclePhoto || null]
     );
 
     const booking = result.rows[0];
     console.log('[Bookings API] Real customer booking created:', booking.id);
-    console.log('[Bookings API] Booking is pending pay-after-service confirmation.');
+    console.log('[Bookings API] Booking confirmed as pay-after-service.');
+
+    const ownerResult = await sendOwnerNotification({
+      customerName,
+      customerEmail,
+      customerPhone,
+      bookingDate,
+      bookingTime: normalizedBookingTime,
+      serviceType,
+      serviceAddress,
+      vehicleType,
+      notes,
+      hasPhoto: !!vehiclePhoto,
+      paymentConfirmed: false
+    });
+
+    if (!ownerResult.success) {
+      console.error('[Bookings API] Failed to send owner notification email:', ownerResult.error);
+    } else {
+      console.log('[Bookings API] Owner notification email sent successfully');
+    }
 
     res.json({
       success: true,
       bookingId: booking.id,
-      message: 'Booking saved. Continue to checkout to confirm pay after service.',
+      message: 'Booking confirmed. Continue to checkout for your confirmation.',
       payAfterServiceOnly: true
     });
 
