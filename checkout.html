@@ -235,7 +235,7 @@
     <div class="checkout-header">
       <span class="section-eyebrow">Checkout</span>
       <h1>Complete Your Purchase</h1>
-      <p>Review your cart, then pay now with Stripe or choose to pay after the work is complete.</p>
+      <p>Review your cart, then confirm your booking. Payment is collected after the work is complete.</p>
     </div>
 
     <div class="checkout-wrap">
@@ -267,27 +267,19 @@
             </div>
           </div>
 
-          <button class="stripe-panel payment-option active" type="button" data-payment-option="stripe" aria-pressed="true" aria-label="Choose secure Stripe checkout">
-            <div class="stripe-mark">S</div>
-            <div class="stripe-copy">
-              <strong>Secure Stripe Checkout</strong>
-              <span>You will be sent to Stripe to enter payment details and complete your purchase.</span>
-            </div>
-          </button>
-
-          <button class="stripe-panel pay-later-panel payment-option" type="button" data-payment-option="pay_later" aria-pressed="false" aria-label="Choose pay after service">
+          <div class="stripe-panel pay-later-panel">
             <div class="stripe-mark">$</div>
             <div class="stripe-copy">
               <strong>Pay After Service</strong>
-              <span>Your booking will be saved now, and payment can be collected after the work is complete.</span>
+              <span>Your booking will be confirmed now, and payment can be collected after the work is complete.</span>
             </div>
-          </button>
+          </div>
 
           <div id="checkoutMessage" class="message"></div>
           <div class="checkout-actions">
-            <button class="btn btn-primary" id="checkoutSubmitBtn" type="submit">Continue to Stripe</button>
+            <button class="btn btn-primary" id="checkoutSubmitBtn" type="submit">Confirm Booking</button>
             <a class="btn btn-outline" href="/services.html">Keep Shopping</a>
-            <div class="checkout-note">Stripe payments are processed securely. Pay-after-service bookings are paid after the appointment.</div>
+            <div class="checkout-note">Pay-after-service bookings are confirmed now and paid after the appointment.</div>
           </div>
         </form>
       </section>
@@ -387,7 +379,7 @@
     }
 
     let cart = getStoredCart();
-    let selectedPaymentMethod = 'stripe';
+    let selectedPaymentMethod = 'pay_later';
 
     function saveCart() {
       localStorage.setItem(CHECKOUT_CART_STORAGE_KEY, JSON.stringify(cart));
@@ -399,7 +391,7 @@
     }
 
     function setPaymentMethod(method) {
-      selectedPaymentMethod = method === 'pay_later' ? 'pay_later' : 'stripe';
+      selectedPaymentMethod = 'pay_later';
       getPaymentOptionButtons().forEach(button => {
         const isActive = button.dataset.paymentOption === selectedPaymentMethod;
         button.classList.toggle('active', isActive);
@@ -408,9 +400,7 @@
 
       const submitBtn = document.getElementById('checkoutSubmitBtn');
       if (submitBtn) {
-        submitBtn.textContent = selectedPaymentMethod === 'pay_later'
-          ? 'Confirm Booking and Pay Later'
-          : 'Continue to Stripe';
+        submitBtn.textContent = 'Confirm Booking';
       }
     }
 
@@ -418,9 +408,7 @@
       const submitBtn = document.getElementById('checkoutSubmitBtn');
       if (submitBtn) {
         submitBtn.disabled = isLoading || !cart.items.length;
-        submitBtn.textContent = text || (selectedPaymentMethod === 'pay_later'
-          ? 'Confirm Booking and Pay Later'
-          : 'Continue to Stripe');
+        submitBtn.textContent = text || 'Confirm Booking';
       }
       getPaymentOptionButtons().forEach(button => {
         button.disabled = isLoading || !cart.items.length;
@@ -509,30 +497,6 @@
       };
     }
 
-    async function startStripeCheckout(form) {
-      setCheckoutLoading(true, 'Starting Stripe...');
-      showMessage('Preparing secure payment...', 'success');
-
-      try {
-        const response = await fetch('/api/cart/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart.items,
-            customer: getCheckoutCustomerPayload(form),
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok || !data.checkoutUrl) {
-          throw new Error(data.error || 'Checkout could not be started.');
-        }
-        window.location.href = data.checkoutUrl;
-      } catch (error) {
-        showMessage(error.message, 'error');
-        setCheckoutLoading(false);
-      }
-    }
-
     async function confirmPayLater(form) {
       setCheckoutLoading(true, 'Confirming Booking...');
       showMessage('Saving your booking for pay after service...', 'success');
@@ -572,15 +536,11 @@
       }
 
       const form = new FormData(event.currentTarget);
-      if (selectedPaymentMethod === 'pay_later') {
-        await confirmPayLater(form);
-      } else {
-        await startStripeCheckout(form);
-      }
+      await confirmPayLater(form);
     });
 
     hydrateCustomerFields();
-    setPaymentMethod('stripe');
+    setPaymentMethod('pay_later');
     renderSummary();
   </script>
 </body>

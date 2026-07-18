@@ -1602,9 +1602,8 @@
           saveCheckoutDetails({ ...bookingData, bookingId: data.bookingId });
         }
 
-        // Booking was saved server-side and the confirmation email has
-        // been sent. Add the booked service to the cart, then send the
-        // customer straight to the secure checkout page.
+        // Booking was saved server-side. Add the booked service to the cart,
+        // then send the customer to confirm pay-after-service checkout.
         const serviceName = serviceType;
         const price = getServiceNumericPrice(serviceName, bookingData.vehicleType);
         const serviceTag = getCurrentServiceTag();
@@ -1614,7 +1613,7 @@
           return;
         }
 
-        showMessage('Booking saved. Sending you to secure payment...', 'success');
+        showMessage('Booking saved. Sending you to confirm your booking...', 'success');
 
         // Reload calendar so the just-booked slot grays out for the next visitor.
         await loadBookedTimeSlots();

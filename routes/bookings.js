@@ -3,7 +3,6 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
 const { verifyToken } = require('../middleware/auth');
-const { createCheckoutSession } = require('../stripe');
 
 const router = express.Router();
 
@@ -305,46 +304,13 @@ router.post('/checkout', async (req, res) => {
 
     const booking = result.rows[0];
     console.log('[Bookings API] Real customer booking created:', booking.id);
-    console.log('[Bookings API] Booking is pending checkout; emails are sent only after Stripe is paid or Pay After Service is confirmed.');
+    console.log('[Bookings API] Booking is pending pay-after-service confirmation.');
 
-    // Check if Stripe is configured
-    const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (stripeConfigured) {
-      console.log('[Bookings API] Stripe is configured, creating checkout session...');
-      try {
-        // Create Stripe checkout session
-        const stripeSession = await createCheckoutSession(booking);
-
-        // Update booking with Stripe session ID
-        await pool.query(
-          'UPDATE bookings SET stripe_session_id = $1 WHERE id = $2',
-          [stripeSession.id, booking.id]
-        );
-
-        console.log('[Bookings API] Stripe session created:', stripeSession.id);
-
-        // Return checkout URL for Stripe
-        return res.json({
-          success: true,
-          checkoutUrl: stripeSession.url,
-          bookingId: booking.id,
-          message: 'Redirecting to payment...'
-        });
-      } catch (stripeError) {
-        console.error('[Bookings API] Error creating Stripe session:', stripeError.message);
-        // Fall through to return success with pending status
-      }
-    } else {
-      console.log('[Bookings API] Stripe is NOT configured - booking saved as unpaid');
-    }
-
-    // Return success - booking is saved, Stripe is optional
     res.json({
       success: true,
       bookingId: booking.id,
-      message: 'Booking request received. Payment is not connected yet.',
-      stripeConfigured: false
+      message: 'Booking saved. Continue to checkout to confirm pay after service.',
+      payAfterServiceOnly: true
     });
 
   } catch (error) {

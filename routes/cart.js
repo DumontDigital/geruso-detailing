@@ -132,6 +132,10 @@ router.post('/pay-later', async (req, res) => {
 });
 
 router.post('/checkout', async (req, res) => {
+  return res.status(410).json({
+    error: 'Online payment is no longer offered for service bookings. Please choose Pay After Service.',
+  });
+
   try {
     const { items, customer = {} } = req.body;
     const cartItems = normalizeCartItems(items);
