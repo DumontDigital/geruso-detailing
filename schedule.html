@@ -98,6 +98,7 @@
     .booking-container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 60px; align-items: start; }
     .booking-flow { order: 1; }
     .calendar-flow { order: 2; }
+    .booking-final-actions { order: 3; grid-column: 1 / -1; max-width: 760px; width: 100%; margin: -20px auto 0; }
 
     .calendar-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
@@ -203,6 +204,7 @@
 
     @media(max-width:960px) {
       .booking-container { grid-template-columns: 1fr; gap: 40px; }
+      .booking-final-actions { margin: 0; max-width: none; }
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -501,8 +503,31 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" id="submitBtn">Book and Continue to Payment</button>
         </form>
+      </div>
+
+      <div class="booking-final-actions">
+        <div class="form-group" id="serviceModeGroup">
+          <label class="form-label">Service Location</label>
+          <div class="service-mode-lock" aria-label="Choose service location">
+            <div class="service-mode-option" id="mobileModeOption" data-service-mode="mobile">
+              <span class="service-mode-dot"></span>
+              <div>
+                <strong>Mobile</strong>
+                <span>We come to you</span>
+              </div>
+            </div>
+            <div class="service-mode-option" id="locationModeOption" data-service-mode="location">
+              <span class="service-mode-dot"></span>
+              <div>
+                <strong>Geruso Location</strong>
+                <span>313 Lynne Lane, Mapleville, Rhode Island</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" form="bookingForm" class="btn-submit" id="submitBtn">Book and Continue to Payment</button>
       </div>
     </div>
   </div>
