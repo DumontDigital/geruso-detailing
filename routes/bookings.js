@@ -306,6 +306,23 @@ router.post('/checkout', async (req, res) => {
     console.log('[Bookings API] Real customer booking created:', booking.id);
     console.log('[Bookings API] Booking confirmed as pay-after-service.');
 
+    const customerConfirmationResult = await sendBookingConfirmation({
+      customerName,
+      customerEmail,
+      bookingDate,
+      bookingTime: normalizedBookingTime,
+      serviceType,
+      serviceAddress,
+      vehicleType,
+      hasPhoto: !!vehiclePhoto
+    });
+
+    if (!customerConfirmationResult.success) {
+      console.error('[Bookings API] Failed to send customer confirmation email:', customerConfirmationResult.error);
+    } else {
+      console.log('[Bookings API] Customer confirmation email sent successfully');
+    }
+
     const ownerResult = await sendOwnerNotification({
       customerName,
       customerEmail,
@@ -329,7 +346,7 @@ router.post('/checkout', async (req, res) => {
     res.json({
       success: true,
       bookingId: booking.id,
-      message: 'Booking confirmed. Continue to checkout for your confirmation.',
+      message: 'Booking confirmed. A confirmation email has been sent.',
       payAfterServiceOnly: true
     });
 
