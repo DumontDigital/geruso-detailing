@@ -215,6 +215,18 @@ const sendQuoteEmail = async (quoteData) => {
 const sendBookingConfirmation = async (bookingData) => {
   const { customerName, customerEmail, bookingDate, bookingTime, serviceType, serviceAddress, vehicleType, hasPhoto } = bookingData;
 
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[Booking Confirmation] FAILED - Missing RESEND_API_KEY');
+    return { success: false, error: 'Email service is missing RESEND_API_KEY.' };
+  }
+
+  if (!customerEmail) {
+    console.error('[Booking Confirmation] FAILED - Missing customer email');
+    return { success: false, error: 'Customer email is missing.' };
+  }
+
+  const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+
   // Extract price from service type
   const priceDisplay = extractPrice(serviceType, vehicleType);
 
@@ -239,21 +251,32 @@ const sendBookingConfirmation = async (bookingData) => {
   `;
 
   try {
+    console.log('[Booking Confirmation] Calling Resend API:', {
+      from: fromEmail,
+      to: customerEmail,
+      serviceType,
+      bookingDate,
+      bookingTime
+    });
+
     const result = await resend.emails.send({
-      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+      from: fromEmail,
       to: customerEmail,
       subject: `Booking Confirmation - ${serviceType}`,
       html: htmlContent,
     });
 
     if (result.error) {
-      console.error('Booking confirmation email error:', result.error);
-      return { success: false, error: result.error.message };
+      const resendError = result.error.message || JSON.stringify(result.error);
+      console.error('[Booking Confirmation] FAILED - Resend error:', result.error);
+      return { success: false, error: resendError };
     }
 
-    return { success: true };
+    const emailId = result.data && result.data.id ? result.data.id : 'unknown';
+    console.log('[Booking Confirmation] SUCCESS - Email ID:', emailId);
+    return { success: true, emailId };
   } catch (error) {
-    console.error('Booking confirmation email error:', error);
+    console.error('[Booking Confirmation] FAILED - Error:', error.message);
     return { success: false, error: error.message };
   }
 };

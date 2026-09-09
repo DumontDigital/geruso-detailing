@@ -346,7 +346,11 @@ router.post('/checkout', async (req, res) => {
     res.json({
       success: true,
       bookingId: booking.id,
-      message: 'Booking confirmed. A confirmation email has been sent.',
+      message: customerConfirmationResult.success
+        ? 'Booking confirmed. A confirmation email has been sent.'
+        : 'Booking confirmed, but the confirmation email could not be sent. Geruso Detailing has your booking.',
+      customerEmailSent: !!customerConfirmationResult.success,
+      customerEmailError: customerConfirmationResult.success ? null : customerConfirmationResult.error,
       payAfterServiceOnly: true
     });
 
@@ -474,7 +478,11 @@ router.post('/', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Booking confirmed! Check your email for details.',
+      message: confirmationResult.success
+        ? 'Booking confirmed! Check your email for details.'
+        : 'Booking confirmed, but the confirmation email could not be sent. Geruso Detailing has your booking.',
+      customerEmailSent: !!confirmationResult.success,
+      customerEmailError: confirmationResult.success ? null : confirmationResult.error,
       booking
     });
   } catch (error) {

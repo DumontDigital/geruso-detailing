@@ -82,8 +82,9 @@ async function sendCustomerBookingEmail(booking) {
   if (!result.success) {
     console.error('[Cart Email] Failed to send customer booking confirmation email:', result.error);
   } else {
-    console.log('[Cart Email] Customer booking confirmation email sent successfully');
+    console.log('[Cart Email] Customer booking confirmation email sent successfully:', result.emailId || 'unknown');
   }
+  return result;
 }
 
 router.post('/pay-later', async (req, res) => {
@@ -125,7 +126,7 @@ router.post('/pay-later', async (req, res) => {
     if (String(booking.previous_payment_status || '').toLowerCase() !== 'pay_later') {
       await sendOwnerBookingEmail(booking, false);
     }
-    await sendCustomerBookingEmail(booking);
+    const customerEmailResult = await sendCustomerBookingEmail(booking);
 
     const orderId = uuidv4();
     res.json({
@@ -133,6 +134,8 @@ router.post('/pay-later', async (req, res) => {
       paymentStatus: 'pay_later',
       bookingId,
       orderId,
+      customerEmailSent: !!customerEmailResult.success,
+      customerEmailError: customerEmailResult.success ? null : customerEmailResult.error,
       successUrl: `/success?pay_later=true&booking_id=${encodeURIComponent(bookingId)}&order_id=${encodeURIComponent(orderId)}`,
     });
   } catch (error) {
