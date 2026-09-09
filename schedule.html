@@ -95,7 +95,9 @@
     @media (max-width: 960px) { nav { padding: 0 20px; } .nav-toggle-label { display: flex; } .nav-links { display: none; } .nav-actions { display: none; } section { padding: 60px 24px; } .footer-inner { grid-template-columns: 1fr; gap: 40px; } footer { padding: 60px 24px 0; } }
 
     /* Booking Specific Styles */
-    .booking-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+    .booking-container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 60px; align-items: start; }
+    .booking-flow { order: 1; }
+    .calendar-flow { order: 2; }
 
     .calendar-section { background: var(--light-bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
@@ -327,11 +329,7 @@
 
     <div class="booking-container">
       <!-- Calendar & Time Slots -->
-      <div>
-        <div class="booking-step-note">
-          <strong>Quick note:</strong> Fill out your information first, choose a service, then select an available day and time on the calendar.
-        </div>
-
+      <div class="calendar-flow">
         <div class="calendar-section">
           <div class="calendar-header">
             <h3 class="calendar-month" id="calendarMonth">January 2026</h3>
@@ -363,10 +361,14 @@
       </div>
 
       <!-- Booking Form -->
-      <div class="booking-form">
+      <div class="booking-form booking-flow">
         <h2 class="form-title">Complete Your Booking</h2>
 
         <div id="messageBox"></div>
+
+        <div class="booking-step-note">
+          <strong>Start here:</strong> Fill out your information and choose a service first. Then select an available day and time on the calendar.
+        </div>
 
         <form id="bookingForm">
           <div class="booking-summary" id="bookingSummary" style="display: none;">
@@ -1503,7 +1505,7 @@
 
     const bookingKey = `${dateStr} ${selectedTime}`;
     await loadBookedTimeSlots();
-    if (blockedDates[dateStr] || bookedTimeSlots[bookingKey]) {
+    if (blockedDates[dateStr] || bookedTimeSlots[bookingKey] || isSlotOverlappingBookedAppointment(dateStr, selectedTime)) {
       showMessage('The selected time slot is no longer available. Please choose another time.', 'error');
       renderCalendar();
       renderTimeSlots(dayOfWeek, selectedDate);
