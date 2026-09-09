@@ -162,6 +162,21 @@
       line-height: 1.5;
     }
     .mobile-water-note strong { color: var(--primary); }
+
+    .mobile-location-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .mobile-area-note {
+      display: block;
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
     .location-policy-line { white-space: nowrap; }
 
     .booking-step-note {
@@ -253,6 +268,7 @@
       .form-select,
       .form-textarea { font-size: 16px; min-height: 48px; }
       .service-mode-lock { grid-template-columns: 1fr; }
+      .mobile-location-grid { grid-template-columns: 1fr; }
       .add-on-box { padding: 12px; }
       .add-on-option { align-items: center; }
       .booking-step-note,
@@ -762,6 +778,39 @@
   const SHOP_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
   const MOBILE_SERVICE_DAYS = ['Thu', 'Fri'];
   const LOCATION_SERVICE_DAYS = ['Sat', 'Sun'];
+
+  const MA_MOBILE_ZIPS = new Set([
+    '01501','01516','01519','01524','01527','01532','01534','01536','01540','01542',
+    '01545','01560','01568','01569','01570','01581','01588','01590','01602','01603',
+    '01604','01605','01606','01607','01608','01609','01610','01653','01655'
+  ]);
+
+  const CT_MOBILE_ZIPS = new Set([
+    '06234','06239','06241','06243','06255','06259','06260','06277','06281',
+    '06331','06354','06374','06377'
+  ]);
+
+  function normalizeZip(value) {
+    return String(value || '').replace(/\D/g, '').slice(0, 5);
+  }
+
+  function isMobileServiceAreaAllowed(state, zip) {
+    const cleanState = String(state || '').trim().toUpperCase();
+    const cleanZip = normalizeZip(zip);
+    if (!/^\d{5}$/.test(cleanZip)) return false;
+    if (cleanState === 'RI') return cleanZip.startsWith('02');
+    if (cleanState === 'MA') return MA_MOBILE_ZIPS.has(cleanZip);
+    if (cleanState === 'CT') return CT_MOBILE_ZIPS.has(cleanZip);
+    return false;
+  }
+
+  function getMobileServiceAreaMessage(state) {
+    const cleanState = String(state || '').trim().toUpperCase();
+    if (cleanState === 'RI') return 'Rhode Island mobile service area. Enter your 5-digit RI ZIP code.';
+    if (cleanState === 'MA') return 'Select Worcester-area MA towns only.';
+    if (cleanState === 'CT') return 'Select northeast CT towns only.';
+    return 'Rhode Island, select Worcester-area MA towns, and select northeast CT towns.';
+  }
   const LONG_MOBILE_SERVICE_NAMES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
   const COMBINABLE_SERVICE_NAMES = [
     'Full Motorcycle Service',
@@ -1541,6 +1590,8 @@
     }
 
     const serviceAddress = document.getElementById('serviceAddressInput').value.trim();
+    const serviceState = document.getElementById('serviceStateSelect').value.trim().toUpperCase();
+    const serviceZip = normalizeZip(document.getElementById('serviceZipInput').value);
     const needsMobileAddress = requiresMobileAddress(serviceType, dayOfWeek);
 
     // Mobile appointments require the customer's address on supported mobile days.
@@ -1550,7 +1601,7 @@
     }
 
     // Geruso Location appointments use the shop address.
-    const finalAddress = needsMobileAddress ? serviceAddress : SHOP_ADDRESS;
+    const finalAddress = needsMobileAddress ? `${serviceAddress}, ${serviceState} ${serviceZip}` : SHOP_ADDRESS;
 
     // Build booking data with all required fields
     // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
@@ -1564,6 +1615,8 @@
       customerEmail,
       customerPhone,
       serviceAddress: finalAddress,
+      serviceState: needsMobileAddress ? serviceState : '',
+      serviceZip: needsMobileAddress ? serviceZip : '',
       serviceType: combinedServiceNames.join(' + '),
       bookingDate: localDateStr, // Plain string: YYYY-MM-DD (NO UTC conversion)
       bookingTime: selectedTime,
@@ -1767,6 +1820,9 @@
     const addressFieldGroup = document.getElementById('addressFieldGroup');
     const locationNoteGroup = document.getElementById('locationNoteGroup');
     const serviceAddressInput = document.getElementById('serviceAddressInput');
+    const serviceStateSelect = document.getElementById('serviceStateSelect');
+    const serviceZipInput = document.getElementById('serviceZipInput');
+    const mobileAreaHelp = document.getElementById('mobileAreaHelp');
     const locationNoteTitle = document.getElementById('locationNoteTitle');
     const locationNoteText = document.getElementById('locationNoteText');
     const selectedService = document.querySelector('select[name="serviceType"]').value;
@@ -1777,7 +1833,7 @@
     if (!selectedService) {
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
+      setMobileLocationRequired(false);
       updateServiceModeIndicator('');
       return;
     }
@@ -1787,7 +1843,7 @@
     if (!selectedDate || !selectedServiceMode) {
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = false;
+      setMobileLocationRequired(false);
       return;
     }
 
@@ -1795,14 +1851,13 @@
       // Mobile services need the customer's address.
       addressFieldGroup.style.display = 'block';
       locationNoteGroup.style.display = 'none';
-      serviceAddressInput.required = true;
+      setMobileLocationRequired(true);
       console.log('[Booking] Address field shown (required)');
     } else {
       // Geruso Location appointments use the shop address.
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'block';
-      serviceAddressInput.required = false;
-      serviceAddressInput.value = ''; // Clear previous address
+      setMobileLocationRequired(false);
       locationNoteTitle.textContent = 'Geruso Location';
       locationNoteText.innerHTML = `Service at ${SHOP_ADDRESS}<br><span class="location-policy-line">By appointment only. No&nbsp;walk-ins.</span>`;
       console.log('[Booking] Address field hidden, shop note shown');
@@ -1852,10 +1907,32 @@
     } catch (e) {}
   }
 
+  function setupMobileLocationFields() {
+    const serviceStateSelect = document.getElementById('serviceStateSelect');
+    const serviceZipInput = document.getElementById('serviceZipInput');
+    const mobileAreaHelp = document.getElementById('mobileAreaHelp');
+
+    if (serviceStateSelect) {
+      serviceStateSelect.addEventListener('change', () => {
+        if (mobileAreaHelp) {
+          mobileAreaHelp.innerHTML = `<strong>Mobile service area:</strong> ${getMobileServiceAreaMessage(serviceStateSelect.value)}`;
+        }
+      });
+    }
+
+    if (serviceZipInput) {
+      serviceZipInput.addEventListener('input', () => {
+        serviceZipInput.value = normalizeZip(serviceZipInput.value);
+      });
+    }
+  }
+
   // Load cart when page initializes
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      setupServiceModeControls();
+      setupMobileLocationFields();
+      setupMobileLocationFields();
+    setupServiceModeControls();
       updateAddressFieldVisibility();
       loadCartOnPageLoad();
       applyServiceFromUrl();
