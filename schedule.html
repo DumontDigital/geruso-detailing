@@ -865,6 +865,7 @@
     const serviceValue = e.target.value;
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
+    if (!selectedDate) selectedServiceMode = '';
     updateServiceModeIndicator(serviceValue);
     updateAdditionalServicesList();
 
@@ -1123,6 +1124,7 @@
   function clearSelectedDate(message) {
     selectedDate = null;
     selectedTime = null;
+    selectedServiceMode = '';
     document.getElementById('summaryDate').textContent = 'Not selected';
     document.getElementById('summaryTime').textContent = 'Not selected';
 
@@ -1775,6 +1777,13 @@
     }
 
     updateServiceModeIndicator(selectedService);
+
+    if (!selectedDate || !selectedServiceMode) {
+      addressFieldGroup.style.display = 'none';
+      locationNoteGroup.style.display = 'none';
+      serviceAddressInput.required = false;
+      return;
+    }
 
     if (requiresMobileAddress(selectedService, dayOfWeek)) {
       // Mobile services need the customer's address.
