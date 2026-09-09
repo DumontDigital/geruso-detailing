@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { initializeStripe } = require('../stripe');
-const { sendOwnerNotification } = require('../email');
+const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
 
 const router = express.Router();
 
@@ -77,6 +77,15 @@ async function sendOwnerBookingEmail(booking, paymentConfirmed = false) {
   }
 }
 
+async function sendCustomerBookingEmail(booking) {
+  const result = await sendBookingConfirmation(buildBookingEmailData(booking, false));
+  if (!result.success) {
+    console.error('[Cart Email] Failed to send customer booking confirmation email:', result.error);
+  } else {
+    console.log('[Cart Email] Customer booking confirmation email sent successfully');
+  }
+}
+
 router.post('/pay-later', async (req, res) => {
   try {
     const { items, customer = {} } = req.body;
@@ -116,6 +125,7 @@ router.post('/pay-later', async (req, res) => {
     if (String(booking.previous_payment_status || '').toLowerCase() !== 'pay_later') {
       await sendOwnerBookingEmail(booking, false);
     }
+    await sendCustomerBookingEmail(booking);
 
     const orderId = uuidv4();
     res.json({
