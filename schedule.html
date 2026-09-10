@@ -1314,7 +1314,7 @@
     updateAddressFieldVisibility();
   }
 
-  async function selectDate(date) {
+  function selectDate(date) {
     const selectedService = getSelectedServiceName();
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     if (!selectedService) {
@@ -1344,9 +1344,14 @@
 
     updateAddressFieldVisibility();
 
-    await loadBookedTimeSlots();
     renderCalendar();
     renderTimeSlots(dayOfWeek, date);
+    loadBookedTimeSlots().then(() => {
+      if (selectedDate && selectedDate.toDateString() === date.toDateString()) {
+        renderCalendar();
+        renderTimeSlots(dayOfWeek, date);
+      }
+    });
   }
 
   function renderTimeSlots(dayOfWeek, date) {
