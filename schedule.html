@@ -425,7 +425,7 @@
 
           <div class="form-group">
             <label class="form-label">Service Type</label>
-            <select class="form-select" name="serviceType" required>
+            <select class="form-select" name="serviceType" required onchange="handleServiceTypeChanged()" oninput="handleServiceTypeChanged()">
               <option value="">Select a service...</option>
               <optgroup label="Services">
                 <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
@@ -939,9 +939,23 @@
   // Load booked times when page loads
   loadBookedTimeSlots();
 
+  function getServiceTypeSelect() {
+    return document.querySelector('#bookingForm select[name="serviceType"]');
+  }
+
+  let lastServiceTypeValue = '';
+
+  function syncServiceTypeValue() {
+    const serviceValue = getSelectedServiceName();
+    if (serviceValue !== lastServiceTypeValue) {
+      handleServiceTypeChanged();
+    }
+  }
+
   function handleServiceTypeChanged() {
-    const serviceSelect = document.querySelector('select[name="serviceType"]');
-    const serviceValue = serviceSelect ? serviceSelect.value : '';
+    const serviceSelect = getServiceTypeSelect();
+    const serviceValue = serviceSelect ? String(serviceSelect.value || '').trim() : '';
+    lastServiceTypeValue = serviceValue;
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
     if (!selectedDate) selectedServiceMode = '';
@@ -987,10 +1001,13 @@
   }
 
   // Update booking summary and calendar when the main service is selected.
-  const serviceTypeSelect = document.querySelector('select[name="serviceType"]');
+  const serviceTypeSelect = getServiceTypeSelect();
   if (serviceTypeSelect) {
-    serviceTypeSelect.addEventListener('change', handleServiceTypeChanged);
-    serviceTypeSelect.addEventListener('input', handleServiceTypeChanged);
+    ['change', 'input', 'blur'].forEach(eventName => {
+      serviceTypeSelect.addEventListener(eventName, handleServiceTypeChanged);
+    });
+    serviceTypeSelect.addEventListener('pointerup', () => setTimeout(syncServiceTypeValue, 0));
+    serviceTypeSelect.addEventListener('touchend', () => setTimeout(syncServiceTypeValue, 0), { passive: true });
   }
 
   document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
@@ -1008,6 +1025,11 @@
   });
 
   document.getElementById('bookingForm').addEventListener('change', (event) => {
+    if (event.target && event.target.matches('select[name="serviceType"]')) {
+      handleServiceTypeChanged();
+      return;
+    }
+
     if (event.target && event.target.matches('input[name="addOns"], input[name="additionalServices"]')) {
       updateSelectedServicePrice();
       if (event.target.matches('input[name="additionalServices"]') && selectedDate) {
@@ -1070,8 +1092,8 @@
   }
 
   function getSelectedServiceName() {
-    const select = document.querySelector('select[name="serviceType"]');
-    return select ? select.value : '';
+    const select = getServiceTypeSelect();
+    return select ? String(select.value || '').trim() : '';
   }
 
   function getSelectedAdditionalServices() {
