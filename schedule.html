@@ -925,18 +925,24 @@
   }
 
   function getCheckedPackageNames() {
-    return getCheckedPackageInputs().map(input => input.value);
+    return Array.from(selectedPackageNames);
   }
 
   let lastServiceTypeValue = '';
   let selectedMainServiceName = '';
+  let selectedPackageNames = new Set();
+
+  function syncSelectedPackagesFromDom() {
+    selectedPackageNames = new Set(getCheckedPackageInputs().map(input => input.value));
+  }
 
   function readMainServiceValue() {
     const checkedPackageNames = getCheckedPackageNames();
     if (selectedMainServiceName && checkedPackageNames.includes(selectedMainServiceName)) {
       return selectedMainServiceName;
     }
-    return checkedPackageNames[0] || '';
+    selectedMainServiceName = checkedPackageNames[0] || '';
+    return selectedMainServiceName;
   }
 
   function syncServiceTypeValue() {
@@ -954,11 +960,18 @@
     const changedPackage = event && event.target && event.target.matches && event.target.matches('#bookingForm input[name="additionalServices"]')
       ? event.target
       : null;
-    if (changedPackage && changedPackage.checked && !selectedMainServiceName) {
-      selectedMainServiceName = changedPackage.value;
-    }
-    if (changedPackage && !changedPackage.checked && selectedMainServiceName === changedPackage.value) {
-      selectedMainServiceName = '';
+    if (changedPackage) {
+      if (changedPackage.checked) {
+        selectedPackageNames.add(changedPackage.value);
+        if (!selectedMainServiceName) selectedMainServiceName = changedPackage.value;
+      } else {
+        selectedPackageNames.delete(changedPackage.value);
+        if (selectedMainServiceName === changedPackage.value) {
+          selectedMainServiceName = selectedPackageNames.values().next().value || '';
+        }
+      }
+    } else {
+      syncSelectedPackagesFromDom();
     }
     const serviceValue = readMainServiceValue();
     selectedMainServiceName = serviceValue;
@@ -1103,12 +1116,12 @@
 
   function getSelectedAdditionalServices() {
     const selectedService = getSelectedServiceName();
-    return getCheckedPackageInputs().filter(input => input.value !== selectedService).map(input => ({
-      serviceName: input.value,
-      price: getServiceNumericPrice(input.value, getSelectedVehicleType()),
+    return getCheckedPackageNames().filter(serviceName => serviceName !== selectedService).map(serviceName => ({
+      serviceName,
+      price: getServiceNumericPrice(serviceName, getSelectedVehicleType()),
       serviceTag: getCurrentServiceTag(),
       serviceType: 'standard',
-      display: getServicePrice(input.value),
+      display: getServicePrice(serviceName),
     }));
   }
 
@@ -1339,19 +1352,9 @@
     document.getElementById('summaryDate').textContent = dayName;
     document.getElementById('bookingSummary').style.display = 'block';
 
-    // Keep all services visible and update mobile/shop guidance for this day.
-    filterServicesByDay(dayOfWeek);
-
     updateAddressFieldVisibility();
-
     renderCalendar();
     renderTimeSlots(dayOfWeek, date);
-    loadBookedTimeSlots().then(() => {
-      if (selectedDate && selectedDate.toDateString() === date.toDateString()) {
-        renderCalendar();
-        renderTimeSlots(dayOfWeek, date);
-      }
-    });
   }
 
   function renderTimeSlots(dayOfWeek, date) {
@@ -1939,6 +1942,7 @@
       const match = getPackageInputs().find(input => input.value === want);
       if (!match) return;
       match.checked = true;
+      selectedPackageNames = new Set([want]);
       selectedMainServiceName = want;
       handleServiceTypeChanged({ target: match });
     } catch (e) {}
