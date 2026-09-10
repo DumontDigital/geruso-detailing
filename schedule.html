@@ -151,6 +151,7 @@
     .add-on-option:first-of-type { border-top: none; padding-top: 0; }
     .add-on-option input { margin-top: 3px; accent-color: var(--primary); }
     .add-on-option strong { color: var(--text); }
+    .package-role { display: inline-flex; align-items: center; margin-left: 8px; padding: 2px 8px; border: 1px solid rgba(0,255,65,0.55); border-radius: 999px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     .mobile-water-note {
       margin-top: 10px;
       padding: 12px 14px;
@@ -423,28 +424,10 @@
             </select>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Service Type</label>
-            <select class="form-select" name="serviceType" required onchange="handleServiceTypeChanged(event)" oninput="handleServiceTypeChanged(event)">
-              <option value="">Select a service...</option>
-              <optgroup label="Services">
-                <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
-                <option value="Interior Detailing">Interior Detailing - Starting from $100</option>
-                <option value="Car Wash">Car Wash - Starting from $95</option>
-                <option value="Premium Wash">Premium Wash - Starting from $130</option>
-                <option value="Premium Package">Premium Package - Starting from $175</option>
-                <option value="Premium Plus">Premium Plus - Starting from $245</option>
-                <option value="Ultra Premium">Ultra Premium - $335</option>
-                <option value="Ceramic Coating">Ceramic Coating - Starting from $600</option>
-                <option value="Full Vehicle Polish">Full Vehicle Polish - Starting from $350</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <div class="form-group" id="additionalServicesGroup" style="display: none;">
-            <label class="form-label">Additional Packages (Optional)</label>
+          <div class="form-group" id="additionalServicesGroup">
+            <label class="form-label">Service Packages</label>
             <div class="add-on-box">
-              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
+              <div class="add-on-help">Choose one package first. That package controls the calendar. You can check more packages to combine them in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
               <div id="additionalServicesList"></div>
             </div>
           </div>
@@ -749,13 +732,7 @@
   }
 
   function updateServiceOptionPrices() {
-    const serviceSelect = document.querySelector('select[name="serviceType"]');
-    if (!serviceSelect) return;
-
-    ['Full Motorcycle Service', 'Interior Detailing', 'Car Wash', 'Premium Wash', 'Premium Package', 'Premium Plus', 'Ultra Premium', 'Ceramic Coating', 'Full Vehicle Polish'].forEach((serviceName) => {
-      const option = serviceSelect.querySelector(`option[value="${serviceName}"]`);
-      if (option) option.textContent = getServiceOptionLabel(serviceName);
-    });
+    updateAdditionalServicesList();
   }
 
   // Get current time in Eastern Time
@@ -939,36 +916,51 @@
   // Load booked times when page loads
   loadBookedTimeSlots();
 
-  function getServiceTypeSelect() {
-    return document.querySelector('#bookingForm select[name="serviceType"]');
+  function getPackageInputs() {
+    return Array.from(document.querySelectorAll('#bookingForm input[name="additionalServices"]'));
+  }
+
+  function getCheckedPackageInputs() {
+    return getPackageInputs().filter(input => input.checked);
+  }
+
+  function getCheckedPackageNames() {
+    return getCheckedPackageInputs().map(input => input.value);
   }
 
   let lastServiceTypeValue = '';
   let selectedMainServiceName = '';
 
   function readMainServiceValue() {
-    const select = getServiceTypeSelect();
-    return select ? String(select.value || '').trim() : '';
+    const checkedPackageNames = getCheckedPackageNames();
+    if (selectedMainServiceName && checkedPackageNames.includes(selectedMainServiceName)) {
+      return selectedMainServiceName;
+    }
+    return checkedPackageNames[0] || '';
   }
 
   function syncServiceTypeValue() {
     const serviceValue = readMainServiceValue();
     if (serviceValue !== lastServiceTypeValue || serviceValue !== selectedMainServiceName) {
-      handleServiceTypeChanged({ target: getServiceTypeSelect() });
+      handleServiceTypeChanged();
     }
   }
 
   function startServiceTypeSync() {
     syncServiceTypeValue();
-    window.clearInterval(window.__gerusoServiceTypeSync);
-    window.__gerusoServiceTypeSync = window.setInterval(syncServiceTypeValue, 250);
   }
 
   function handleServiceTypeChanged(event) {
-    const serviceSelect = event && event.target && event.target.matches && event.target.matches('#bookingForm select[name="serviceType"]')
+    const changedPackage = event && event.target && event.target.matches && event.target.matches('#bookingForm input[name="additionalServices"]')
       ? event.target
-      : getServiceTypeSelect();
-    const serviceValue = serviceSelect ? String(serviceSelect.value || '').trim() : '';
+      : null;
+    if (changedPackage && changedPackage.checked && !selectedMainServiceName) {
+      selectedMainServiceName = changedPackage.value;
+    }
+    if (changedPackage && !changedPackage.checked && selectedMainServiceName === changedPackage.value) {
+      selectedMainServiceName = '';
+    }
+    const serviceValue = readMainServiceValue();
     selectedMainServiceName = serviceValue;
     lastServiceTypeValue = serviceValue;
     const summaryElement = document.getElementById('summaryService');
@@ -989,14 +981,12 @@
       // Hide address field if no service selected
       const addressFieldGroup = document.getElementById('addressFieldGroup');
       const locationNoteGroup = document.getElementById('locationNoteGroup');
-      const additionalServicesGroup = document.getElementById('additionalServicesGroup');
       addressFieldGroup.style.display = 'none';
       locationNoteGroup.style.display = 'none';
-      if (additionalServicesGroup) additionalServicesGroup.style.display = 'none';
     }
 
     if (!serviceValue) {
-      clearSelectedDate('Select a service to see available dates');
+      clearSelectedDate('Select a package to see available dates');
     } else if (selectedDate) {
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
       if (!isServiceAvailableOnDay(serviceValue, dayOfWeek)) {
@@ -1015,18 +1005,8 @@
     renderCalendar();
   }
 
-  // Update booking summary and calendar when the main service is selected.
-  const serviceTypeSelect = getServiceTypeSelect();
-  if (serviceTypeSelect) {
-    ['change', 'input', 'blur'].forEach(eventName => {
-      serviceTypeSelect.addEventListener(eventName, handleServiceTypeChanged);
-    });
-    serviceTypeSelect.addEventListener('pointerup', () => setTimeout(syncServiceTypeValue, 0));
-    serviceTypeSelect.addEventListener('touchend', () => setTimeout(syncServiceTypeValue, 0), { passive: true });
-  }
-
   document.addEventListener('change', (event) => {
-    if (event.target && event.target.matches('#bookingForm select[name="serviceType"]')) {
+    if (event.target && event.target.matches('#bookingForm input[name="additionalServices"]')) {
       handleServiceTypeChanged(event);
     }
   }, true);
@@ -1052,18 +1032,16 @@
   });
 
   document.getElementById('bookingForm').addEventListener('change', (event) => {
-    if (event.target && event.target.matches('select[name="serviceType"]')) {
-      handleServiceTypeChanged(event);
-      return;
-    }
-
     if (event.target && event.target.matches('input[name="addOns"], input[name="additionalServices"]')) {
       updateSelectedServicePrice();
-      if (event.target.matches('input[name="additionalServices"]') && selectedDate) {
-        const dayOfWeek = getSelectedDayOfWeek();
-        clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
+      if (event.target.matches('input[name="additionalServices"]')) {
+        if (selectedDate) {
+          const dayOfWeek = getSelectedDayOfWeek();
+          clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
         renderCalendar();
-        renderTimeSlots(dayOfWeek, selectedDate);
+        updateAddressFieldVisibility();
       }
     }
   });
@@ -1124,7 +1102,8 @@
   }
 
   function getSelectedAdditionalServices() {
-    return Array.from(document.querySelectorAll('input[name="additionalServices"]:checked')).map(input => ({
+    const selectedService = getSelectedServiceName();
+    return getCheckedPackageInputs().filter(input => input.value !== selectedService).map(input => ({
       serviceName: input.value,
       price: getServiceNumericPrice(input.value, getSelectedVehicleType()),
       serviceTag: getCurrentServiceTag(),
@@ -1134,10 +1113,12 @@
   }
 
   function getSelectedPackageNames() {
+    const selectedService = getSelectedServiceName();
+    if (!selectedService) return [];
     return [
-      getSelectedServiceName(),
-      ...Array.from(document.querySelectorAll('input[name="additionalServices"]:checked')).map(input => input.value)
-    ].filter(Boolean);
+      selectedService,
+      ...getCheckedPackageNames().filter(serviceName => serviceName !== selectedService)
+    ];
   }
 
   function hasLongDetailServiceSelected() {
@@ -1194,37 +1175,20 @@
     const selectedService = getSelectedServiceName();
     if (!group || !list) return;
 
-    if (!selectedService) {
-      group.style.display = 'none';
-      list.innerHTML = '';
-      return;
-    }
-
     group.style.display = 'block';
-    const selectedValues = new Set(getSelectedAdditionalServices().map(item => item.serviceName));
+    const selectedValues = new Set(getCheckedPackageNames());
     list.innerHTML = COMBINABLE_SERVICE_NAMES
-      .filter(serviceName => serviceName !== selectedService)
       .map(serviceName => {
         const checked = selectedValues.has(serviceName) ? 'checked' : '';
+        const roleLabel = selectedService === serviceName ? '<span class="package-role">Main</span>' : '';
         return `
           <label class="add-on-option">
             <input type="checkbox" name="additionalServices" value="${serviceName}" ${checked}>
-            <span><strong>${serviceName}</strong> - ${getServicePrice(serviceName)}</span>
+            <span><strong>${serviceName}</strong>${roleLabel} - ${getServicePrice(serviceName)}</span>
           </label>
         `;
       }).join('');
 
-    list.querySelectorAll('input[name="additionalServices"]').forEach(input => {
-      input.addEventListener('change', () => {
-        if (selectedDate) {
-          const dayOfWeek = getSelectedDayOfWeek();
-          clearSelectedTime(hasLongDetailServiceSelected() ? getLongDetailTimeMessage(dayOfWeek) : '');
-          renderTimeSlots(dayOfWeek, selectedDate);
-        }
-        updateSelectedServicePrice();
-        renderCalendar();
-      });
-    });
   }
 
   function getSupportedDaysForService(serviceName) {
@@ -1346,15 +1310,7 @@
   // Service options should always stay usable. The selected service controls
   // which calendar days light up green.
   function filterServicesByDay(dayOfWeek) {
-    const select = document.querySelector('select[name="serviceType"]');
-    if (!select) return;
-
-    Array.from(select.options).forEach(opt => {
-      if (!opt.value) { opt.hidden = false; opt.disabled = false; return; } // placeholder
-      opt.hidden = false;
-      opt.disabled = false;
-    });
-    select.disabled = false;
+    updateAdditionalServicesList();
     updateAddressFieldVisibility();
   }
 
@@ -1362,7 +1318,7 @@
     const selectedService = getSelectedServiceName();
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     if (!selectedService) {
-      showMessage('Please select a service type first', 'error');
+      showMessage('Please select a service package first', 'error');
       return;
     }
     if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
@@ -1649,9 +1605,9 @@
       return;
     }
 
-    const serviceType = document.querySelector('select[name="serviceType"]').value;
+    const serviceType = getSelectedServiceName();
     if (!serviceType) {
-      showMessage('Please select a service type', 'error');
+      showMessage('Please select a service package', 'error');
       return;
     }
     const vehicleType = document.querySelector('select[name="vehicleType"]').value;
@@ -1915,7 +1871,7 @@
     const mobileAreaHelp = document.getElementById('mobileAreaHelp');
     const locationNoteTitle = document.getElementById('locationNoteTitle');
     const locationNoteText = document.getElementById('locationNoteText');
-    const selectedService = document.querySelector('select[name="serviceType"]').value;
+    const selectedService = getSelectedServiceName();
     const dayOfWeek = getSelectedDayOfWeek();
 
     console.log('[Booking] Updating address field for service mode:', selectedServiceMode, 'day:', dayOfWeek);
@@ -1955,33 +1911,31 @@
   }
 
   // ========================================
-  // KEEP SERVICE DROPDOWN DEFAULT
+  // KEEP PACKAGE PICKER DEFAULT
   // ========================================
   function loadCartOnPageLoad() {
-    const serviceDropdown = document.querySelector('select[name="serviceType"]');
-    if (!serviceDropdown) return;
-    serviceDropdown.disabled = false;
-    if (!new URLSearchParams(window.location.search).get('service')) {
-      serviceDropdown.value = '';
+    updateAdditionalServicesList();
+    if (!new URLSearchParams(window.location.search).get('service') && !getCheckedPackageNames().length) {
+      selectedMainServiceName = '';
       handleServiceTypeChanged();
     }
   }
 
 
   // Pre-select service when arriving from /services.html?service=XYZ
-  // This auto-fills the dropdown, fires the existing change handler to
+  // This checks the matching package, fires the existing change handler to
   // toggle the address/shop guidance.
   function applyServiceFromUrl() {
     try {
       const params = new URLSearchParams(window.location.search);
       const want = params.get('service');
       if (!want) return;
-      const sel = document.querySelector('select[name="serviceType"]');
-      if (!sel) return;
-      const match = Array.from(sel.options).find(o => o.value === want);
+      updateAdditionalServicesList();
+      const match = getPackageInputs().find(input => input.value === want);
       if (!match) return;
-      sel.value = want;
-      handleServiceTypeChanged();
+      match.checked = true;
+      selectedMainServiceName = want;
+      handleServiceTypeChanged({ target: match });
     } catch (e) {}
   }
 
