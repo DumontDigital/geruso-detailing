@@ -425,7 +425,7 @@
 
           <div class="form-group">
             <label class="form-label">Service Type</label>
-            <select class="form-select" name="serviceType" required onchange="handleServiceTypeChanged()" oninput="handleServiceTypeChanged()">
+            <select class="form-select" name="serviceType" required onchange="handleServiceTypeChanged(event)" oninput="handleServiceTypeChanged(event)">
               <option value="">Select a service...</option>
               <optgroup label="Services">
                 <option value="Full Motorcycle Service">Full Motorcycle Service - $70</option>
@@ -944,11 +944,17 @@
   }
 
   let lastServiceTypeValue = '';
+  let selectedMainServiceName = '';
+
+  function readMainServiceValue() {
+    const select = getServiceTypeSelect();
+    return select ? String(select.value || '').trim() : '';
+  }
 
   function syncServiceTypeValue() {
-    const serviceValue = getSelectedServiceName();
-    if (serviceValue !== lastServiceTypeValue) {
-      handleServiceTypeChanged();
+    const serviceValue = readMainServiceValue();
+    if (serviceValue !== lastServiceTypeValue || serviceValue !== selectedMainServiceName) {
+      handleServiceTypeChanged({ target: getServiceTypeSelect() });
     }
   }
 
@@ -958,9 +964,12 @@
     window.__gerusoServiceTypeSync = window.setInterval(syncServiceTypeValue, 250);
   }
 
-  function handleServiceTypeChanged() {
-    const serviceSelect = getServiceTypeSelect();
+  function handleServiceTypeChanged(event) {
+    const serviceSelect = event && event.target && event.target.matches && event.target.matches('#bookingForm select[name="serviceType"]')
+      ? event.target
+      : getServiceTypeSelect();
     const serviceValue = serviceSelect ? String(serviceSelect.value || '').trim() : '';
+    selectedMainServiceName = serviceValue;
     lastServiceTypeValue = serviceValue;
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
@@ -1018,7 +1027,7 @@
 
   document.addEventListener('change', (event) => {
     if (event.target && event.target.matches('#bookingForm select[name="serviceType"]')) {
-      handleServiceTypeChanged();
+      handleServiceTypeChanged(event);
     }
   }, true);
 
@@ -1044,7 +1053,7 @@
 
   document.getElementById('bookingForm').addEventListener('change', (event) => {
     if (event.target && event.target.matches('select[name="serviceType"]')) {
-      handleServiceTypeChanged();
+      handleServiceTypeChanged(event);
       return;
     }
 
@@ -1110,8 +1119,8 @@
   }
 
   function getSelectedServiceName() {
-    const select = getServiceTypeSelect();
-    return select ? String(select.value || '').trim() : '';
+    selectedMainServiceName = readMainServiceValue();
+    return selectedMainServiceName;
   }
 
   function getSelectedAdditionalServices() {
@@ -1132,7 +1141,7 @@
   }
 
   function hasLongDetailServiceSelected() {
-    return LONG_MOBILE_SERVICE_NAMES.has(getSelectedServiceName());
+    return getSelectedPackageNames().some(serviceName => LONG_MOBILE_SERVICE_NAMES.has(serviceName));
   }
 
   function parseTimeToMinutes(timeString) {
