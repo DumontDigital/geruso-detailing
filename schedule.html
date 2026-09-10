@@ -952,6 +952,12 @@
     }
   }
 
+  function startServiceTypeSync() {
+    syncServiceTypeValue();
+    window.clearInterval(window.__gerusoServiceTypeSync);
+    window.__gerusoServiceTypeSync = window.setInterval(syncServiceTypeValue, 250);
+  }
+
   function handleServiceTypeChanged() {
     const serviceSelect = getServiceTypeSelect();
     const serviceValue = serviceSelect ? String(serviceSelect.value || '').trim() : '';
@@ -1009,6 +1015,18 @@
     serviceTypeSelect.addEventListener('pointerup', () => setTimeout(syncServiceTypeValue, 0));
     serviceTypeSelect.addEventListener('touchend', () => setTimeout(syncServiceTypeValue, 0), { passive: true });
   }
+
+  document.addEventListener('change', (event) => {
+    if (event.target && event.target.matches('#bookingForm select[name="serviceType"]')) {
+      handleServiceTypeChanged();
+    }
+  }, true);
+
+  window.addEventListener('pageshow', startServiceTypeSync);
+  window.addEventListener('focus', startServiceTypeSync);
+
+  window.handleServiceTypeChanged = handleServiceTypeChanged;
+  window.syncServiceTypeValue = syncServiceTypeValue;
 
   document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
     updateServiceOptionPrices();
@@ -1999,6 +2017,7 @@
       loadCartOnPageLoad();
       applyServiceFromUrl();
       applyAddOnFromUrl();
+      startServiceTypeSync();
     });
   } else {
     setupServiceModeControls();
@@ -2006,6 +2025,7 @@
     loadCartOnPageLoad();
     applyServiceFromUrl();
     applyAddOnFromUrl();
+    startServiceTypeSync();
   }
 
   // Auto-refresh time slots to update past times in real-time
