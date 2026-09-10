@@ -412,19 +412,6 @@
             <input type="tel" class="form-input" name="customerPhone" placeholder="(401) 555-0000" required>
           </div>
 
-          <div class="form-group" id="addressFieldGroup" style="display: none;">
-            <label class="form-label">Service Address <span style="color: var(--error);">*</span></label>
-            <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" placeholder="123 Main St, Providence, RI" autocomplete="street-address">
-            <div class="mobile-water-note"><strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.</div>
-          </div>
-
-          <div class="form-group" id="locationNoteGroup" style="display: none;">
-            <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
-              <strong style="color: var(--primary);" id="locationNoteTitle">Shop Service</strong><br>
-              <span id="locationNoteText"><span class="location-policy-line">Specialty detailing: weekends only by appointment. No&nbsp;walk-ins.</span><br>313 Lynne Lane, Mapleville, Rhode Island 02938<br>(Specialty detailing location)</span>
-            </div>
-          </div>
-
           <div class="form-group">
             <label class="form-label">Vehicle Type</label>
             <select class="form-select" name="vehicleType" required>
@@ -521,6 +508,37 @@
                 <span>313 Lynne Lane, Mapleville, Rhode Island</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="form-group" id="addressFieldGroup" style="display: none;">
+          <label class="form-label">Service Address <span style="color: var(--error);">*</span></label>
+          <input type="text" class="form-input" id="serviceAddressInput" name="serviceAddress" form="bookingForm" placeholder="123 Main St" autocomplete="street-address">
+          <div class="mobile-location-grid">
+            <div>
+              <label class="form-label" for="serviceStateSelect">State <span style="color: var(--error);">*</span></label>
+              <select class="form-select" id="serviceStateSelect" name="serviceState" form="bookingForm">
+                <option value="">Select state...</option>
+                <option value="RI">Rhode Island</option>
+                <option value="MA">Massachusetts</option>
+                <option value="CT">Connecticut</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="serviceZipInput">ZIP Code <span style="color: var(--error);">*</span></label>
+              <input type="text" class="form-input" id="serviceZipInput" name="serviceZip" form="bookingForm" placeholder="02938" inputmode="numeric" maxlength="5" autocomplete="postal-code">
+            </div>
+          </div>
+          <div class="mobile-water-note">
+            <strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.
+            <span class="mobile-area-note" id="mobileAreaHelp"><strong>Mobile service area:</strong> Rhode Island, Worcester-area MA towns, and northeast CT towns.</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="locationNoteGroup" style="display: none;">
+          <div style="background: rgba(0,255,65,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text-muted); text-align: center;">
+            <strong style="color: var(--primary);" id="locationNoteTitle">Geruso Location</strong><br>
+            <span id="locationNoteText">Service at 313 Lynne Lane, Mapleville, Rhode Island 02938<br><span class="location-policy-line">By appointment only. No&nbsp;walk-ins.</span></span>
           </div>
         </div>
 
@@ -805,11 +823,17 @@
   }
 
   function getMobileServiceAreaMessage(state) {
-    const cleanState = String(state || '').trim().toUpperCase();
-    if (cleanState === 'RI') return 'Rhode Island mobile service area. Enter your 5-digit RI ZIP code.';
-    if (cleanState === 'MA') return 'Select Worcester-area MA towns only.';
-    if (cleanState === 'CT') return 'Select northeast CT towns only.';
-    return 'Rhode Island, select Worcester-area MA towns, and select northeast CT towns.';
+    const cleanState = String(state || '').toUpperCase();
+    if (cleanState === 'MA') {
+      return 'MA towns: Worcester, Shrewsbury, Northborough, Westborough, Grafton, Millbury, Auburn, Oxford, Sutton, Northbridge, Upton, Uxbridge, Douglas, Webster.';
+    }
+    if (cleanState === 'CT') {
+      return 'CT towns: Putnam, Thompson, Woodstock, Pomfret, Brooklyn, Killingly, Danielson, Dayville, Plainfield, Sterling, Canterbury, Moosup.';
+    }
+    if (cleanState === 'RI') {
+      return 'Mobile service is available throughout Rhode Island.';
+    }
+    return 'Mobile service area: Rhode Island, Worcester-area MA towns, and northeast CT towns.';
   }
   const LONG_MOBILE_SERVICE_NAMES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
   const COMBINABLE_SERVICE_NAMES = [
@@ -1061,7 +1085,7 @@
   }
 
   function hasLongDetailServiceSelected() {
-    return getSelectedPackageNames().some(name => LONG_MOBILE_SERVICE_NAMES.has(name));
+    return LONG_MOBILE_SERVICE_NAMES.has(getSelectedServiceName());
   }
 
   function parseTimeToMinutes(timeString) {
