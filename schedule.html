@@ -939,9 +939,9 @@
   // Load booked times when page loads
   loadBookedTimeSlots();
 
-  // Update booking summary when service is selected
-  document.querySelector('select[name="serviceType"]').addEventListener('change', (e) => {
-    const serviceValue = e.target.value;
+  function handleServiceTypeChanged() {
+    const serviceSelect = document.querySelector('select[name="serviceType"]');
+    const serviceValue = serviceSelect ? serviceSelect.value : '';
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
     if (!selectedDate) selectedServiceMode = '';
@@ -984,7 +984,14 @@
 
     // Recalculate green days from the selected service rules.
     renderCalendar();
-  });
+  }
+
+  // Update booking summary and calendar when the main service is selected.
+  const serviceTypeSelect = document.querySelector('select[name="serviceType"]');
+  if (serviceTypeSelect) {
+    serviceTypeSelect.addEventListener('change', handleServiceTypeChanged);
+    serviceTypeSelect.addEventListener('input', handleServiceTypeChanged);
+  }
 
   document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
     updateServiceOptionPrices();
@@ -1624,6 +1631,16 @@
       return;
     }
 
+    if (needsMobileAddress && (!serviceState || !serviceZip)) {
+      showMessage('Please choose a state and enter a ZIP code for mobile service', 'error');
+      return;
+    }
+
+    if (needsMobileAddress && !isMobileServiceAreaAllowed(serviceState, serviceZip)) {
+      showMessage(getMobileServiceAreaMessage(serviceState), 'error');
+      return;
+    }
+
     // Geruso Location appointments use the shop address.
     const finalAddress = needsMobileAddress ? `${serviceAddress}, ${serviceState} ${serviceZip}` : SHOP_ADDRESS;
 
@@ -1897,7 +1914,7 @@
     serviceDropdown.disabled = false;
     if (!new URLSearchParams(window.location.search).get('service')) {
       serviceDropdown.value = '';
-      serviceDropdown.dispatchEvent(new Event('change'));
+      handleServiceTypeChanged();
     }
   }
 
@@ -1915,7 +1932,7 @@
       const match = Array.from(sel.options).find(o => o.value === want);
       if (!match) return;
       sel.value = want;
-      sel.dispatchEvent(new Event('change'));
+      handleServiceTypeChanged();
     } catch (e) {}
   }
 
@@ -1955,8 +1972,7 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       setupMobileLocationFields();
-      setupMobileLocationFields();
-    setupServiceModeControls();
+      setupServiceModeControls();
       updateAddressFieldVisibility();
       loadCartOnPageLoad();
       applyServiceFromUrl();
