@@ -941,12 +941,16 @@
   }
 
   function readMainServiceValue() {
-    const checkedServiceNames = getCheckedPackageInputs().map(input => input.value);
-    if (selectedMainServiceName && checkedServiceNames.includes(selectedMainServiceName)) {
+    if (selectedMainServiceName && selectedPackageNames.has(selectedMainServiceName)) {
       return selectedMainServiceName;
     }
 
-    selectedMainServiceName = checkedServiceNames[0] || '';
+    syncSelectedPackagesFromDom();
+    if (selectedMainServiceName && selectedPackageNames.has(selectedMainServiceName)) {
+      return selectedMainServiceName;
+    }
+
+    selectedMainServiceName = getCheckedPackageNames()[0] || '';
     return selectedMainServiceName || '';
   }
 
@@ -967,14 +971,27 @@
       : null;
 
     const previousService = selectedMainServiceName;
-    syncSelectedPackagesFromDom();
-    if (changedPackage && changedPackage.checked && !previousService) {
-      selectedMainServiceName = changedPackage.value;
-    } else if (changedPackage && !changedPackage.checked && previousService === changedPackage.value) {
-      selectedMainServiceName = getCheckedPackageInputs().map(input => input.value)[0] || '';
+
+    if (changedPackage) {
+      if (changedPackage.checked) {
+        selectedPackageNames.add(changedPackage.value);
+        if (!selectedMainServiceName) {
+          selectedMainServiceName = changedPackage.value;
+        }
+      } else {
+        selectedPackageNames.delete(changedPackage.value);
+        if (previousService === changedPackage.value) {
+          selectedMainServiceName = getCheckedPackageNames()[0] || '';
+        }
+      }
     } else {
       selectedMainServiceName = readMainServiceValue();
     }
+
+    if (selectedMainServiceName && !selectedPackageNames.has(selectedMainServiceName)) {
+      selectedMainServiceName = getCheckedPackageNames()[0] || '';
+    }
+
     lastServiceTypeValue = selectedMainServiceName;
 
     const summaryElement = document.getElementById('summaryService');
