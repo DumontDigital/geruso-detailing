@@ -424,10 +424,17 @@
             </select>
           </div>
 
+          <div class="form-group" id="serviceTypeGroup">
+            <label class="form-label">Service Type</label>
+            <select class="form-select" name="serviceType" id="serviceTypeSelect" required>
+              <option value="">Select a service...</option>
+            </select>
+          </div>
+
           <div class="form-group" id="additionalServicesGroup">
-            <label class="form-label">Service Packages</label>
+            <label class="form-label">Additional Packages (Optional)</label>
             <div class="add-on-box">
-              <div class="add-on-help">Choose one package first. That package controls the calendar. You can check more packages to combine them in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
+              <div class="add-on-help">You can combine packages in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
               <div id="additionalServicesList"></div>
             </div>
           </div>
@@ -732,6 +739,7 @@
   }
 
   function updateServiceOptionPrices() {
+    renderServiceTypeSelect();
     updateAdditionalServicesList();
   }
 
@@ -920,6 +928,10 @@
     return Array.from(document.querySelectorAll('#bookingForm input[name="additionalServices"]'));
   }
 
+  function getServiceTypeSelect() {
+    return document.getElementById('serviceTypeSelect') || document.querySelector('#bookingForm select[name="serviceType"]');
+  }
+
   function getCheckedPackageInputs() {
     return getPackageInputs().filter(input => input.checked);
   }
@@ -933,21 +945,26 @@
   let selectedPackageNames = new Set();
 
   function syncSelectedPackagesFromDom() {
-    selectedPackageNames = new Set(getCheckedPackageInputs().map(input => input.value));
+    selectedPackageNames = new Set(
+      getCheckedPackageInputs()
+        .map(input => input.value)
+        .filter(serviceName => serviceName !== selectedMainServiceName)
+    );
   }
 
   function readMainServiceValue() {
-    const checkedPackageNames = getCheckedPackageNames();
-    if (selectedMainServiceName && checkedPackageNames.includes(selectedMainServiceName)) {
+    const serviceSelect = getServiceTypeSelect();
+    if (serviceSelect) {
+      selectedMainServiceName = serviceSelect.value || '';
       return selectedMainServiceName;
     }
-    selectedMainServiceName = checkedPackageNames[0] || '';
-    return selectedMainServiceName;
+
+    return selectedMainServiceName || '';
   }
 
   function syncServiceTypeValue() {
     const serviceValue = readMainServiceValue();
-    if (serviceValue !== lastServiceTypeValue || serviceValue !== selectedMainServiceName) {
+    if (serviceValue !== lastServiceTypeValue) {
       handleServiceTypeChanged();
     }
   }
@@ -957,61 +974,67 @@
   }
 
   function handleServiceTypeChanged(event) {
+    const serviceSelect = getServiceTypeSelect();
+    const changedServiceSelect = !!(event && event.target && event.target.matches && event.target.matches('#bookingForm select[name="serviceType"]'));
     const changedPackage = event && event.target && event.target.matches && event.target.matches('#bookingForm input[name="additionalServices"]')
       ? event.target
       : null;
+
+    const previousService = selectedMainServiceName;
+    selectedMainServiceName = serviceSelect ? (serviceSelect.value || '') : (selectedMainServiceName || '');
+
     if (changedPackage) {
       if (changedPackage.checked) {
         selectedPackageNames.add(changedPackage.value);
-        if (!selectedMainServiceName) selectedMainServiceName = changedPackage.value;
       } else {
         selectedPackageNames.delete(changedPackage.value);
-        if (selectedMainServiceName === changedPackage.value) {
-          selectedMainServiceName = selectedPackageNames.values().next().value || '';
-        }
       }
     } else {
       syncSelectedPackagesFromDom();
     }
-    const serviceValue = readMainServiceValue();
-    selectedMainServiceName = serviceValue;
-    lastServiceTypeValue = serviceValue;
+
+    if (selectedMainServiceName) selectedPackageNames.delete(selectedMainServiceName);
+    lastServiceTypeValue = selectedMainServiceName;
+
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
-    if (!selectedDate) selectedServiceMode = '';
-    updateServiceModeIndicator(serviceValue);
     updateAdditionalServicesList();
 
-    if (serviceValue) {
-      summaryElement.textContent = serviceValue;
+    if (selectedMainServiceName) {
+      summaryElement.textContent = selectedMainServiceName;
       updateSelectedServicePrice();
 
-      updateAddressFieldVisibility();
+      if (changedServiceSelect && previousService !== selectedMainServiceName) {
+        clearSelectedDate('Select an available day for this service');
+      }
+
+      if (selectedDate) {
+        const dayOfWeek = getSelectedDayOfWeek();
+        if (!isServiceAvailableOnDay(selectedMainServiceName, dayOfWeek)) {
+          clearSelectedDate('Choose a date that supports this service');
+        } else {
+          syncServiceModeFromDay(dayOfWeek);
+          updateServiceModeIndicator(selectedMainServiceName);
+          updateAddressFieldVisibility();
+          selectedTime = null;
+          document.getElementById('summaryTime').textContent = 'Not selected';
+          renderTimeSlots(dayOfWeek, selectedDate);
+        }
+      } else {
+        selectedServiceMode = '';
+        updateServiceModeIndicator(selectedMainServiceName);
+        updateAddressFieldVisibility();
+      }
     } else {
       summaryElement.textContent = 'Not selected';
       priceElement.textContent = 'Not selected';
+      clearSelectedDate('Select a service to see available dates');
 
       // Hide address field if no service selected
       const addressFieldGroup = document.getElementById('addressFieldGroup');
       const locationNoteGroup = document.getElementById('locationNoteGroup');
-      addressFieldGroup.style.display = 'none';
-      locationNoteGroup.style.display = 'none';
-    }
-
-    if (!serviceValue) {
-      clearSelectedDate('Select a package to see available dates');
-    } else if (selectedDate) {
-      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()];
-      if (!isServiceAvailableOnDay(serviceValue, dayOfWeek)) {
-        clearSelectedDate('Choose a date that supports this service');
-      } else {
-        syncServiceModeFromDay(dayOfWeek);
-        updateServiceModeIndicator(serviceValue);
-        updateAddressFieldVisibility();
-        selectedTime = null;
-        document.getElementById('summaryTime').textContent = 'Not selected';
-        renderTimeSlots(dayOfWeek, selectedDate);
-      }
+      if (addressFieldGroup) addressFieldGroup.style.display = 'none';
+      if (locationNoteGroup) locationNoteGroup.style.display = 'none';
     }
 
     // Recalculate green days from the selected service rules.
@@ -1019,7 +1042,7 @@
   }
 
   document.addEventListener('change', (event) => {
-    if (event.target && event.target.matches('#bookingForm input[name="additionalServices"]')) {
+    if (event.target && event.target.matches('#bookingForm select[name="serviceType"], #bookingForm input[name="additionalServices"]')) {
       handleServiceTypeChanged(event);
     }
   }, true);
@@ -1045,8 +1068,12 @@
   });
 
   document.getElementById('bookingForm').addEventListener('change', (event) => {
-    if (event.target && event.target.matches('input[name="addOns"], input[name="additionalServices"]')) {
+    if (event.target && event.target.matches('select[name="serviceType"], input[name="addOns"], input[name="additionalServices"]')) {
       updateSelectedServicePrice();
+      if (event.target.matches('select[name="serviceType"]')) {
+        handleServiceTypeChanged(event);
+        return;
+      }
       if (event.target.matches('input[name="additionalServices"]')) {
         if (selectedDate) {
           const dayOfWeek = getSelectedDayOfWeek();
@@ -1182,6 +1209,40 @@
     }
   }
 
+  function renderServiceTypeSelect() {
+    const select = getServiceTypeSelect();
+    if (!select) return;
+
+    const previousValue = select.value || selectedMainServiceName || '';
+    select.innerHTML = `
+      <option value="">Select a service...</option>
+      ${COMBINABLE_SERVICE_NAMES.map(serviceName => `
+        <option value="${serviceName}">${getServiceOptionLabel(serviceName)}</option>
+      `).join('')}
+    `;
+
+    if (COMBINABLE_SERVICE_NAMES.includes(previousValue)) {
+      select.value = previousValue;
+    }
+    selectedMainServiceName = select.value || '';
+    bindServiceTypeSelect();
+  }
+
+  function bindServiceTypeSelect() {
+    const select = getServiceTypeSelect();
+    if (!select || select.dataset.serviceCalendarBound === 'true') return;
+
+    select.dataset.serviceCalendarBound = 'true';
+    const refreshFromMainService = () => {
+      selectedMainServiceName = select.value || '';
+      handleServiceTypeChanged({ target: select });
+      updateSelectedServicePrice();
+    };
+
+    select.addEventListener('change', refreshFromMainService);
+    select.addEventListener('input', refreshFromMainService);
+  }
+
   function updateAdditionalServicesList() {
     const group = document.getElementById('additionalServicesGroup');
     const list = document.getElementById('additionalServicesList');
@@ -1189,15 +1250,18 @@
     if (!group || !list) return;
 
     group.style.display = 'block';
-    const selectedValues = new Set(getCheckedPackageNames());
+    if (selectedService) selectedPackageNames.delete(selectedService);
+    const selectedValues = new Set(getCheckedPackageNames().filter(serviceName => serviceName !== selectedService));
+    const disabled = selectedService ? '' : 'disabled';
+    const optionalServiceNames = COMBINABLE_SERVICE_NAMES.filter(serviceName => serviceName !== selectedService);
     list.innerHTML = COMBINABLE_SERVICE_NAMES
+      .filter(serviceName => optionalServiceNames.includes(serviceName))
       .map(serviceName => {
         const checked = selectedValues.has(serviceName) ? 'checked' : '';
-        const roleLabel = selectedService === serviceName ? '<span class="package-role">Main</span>' : '';
         return `
           <label class="add-on-option">
-            <input type="checkbox" name="additionalServices" value="${serviceName}" ${checked}>
-            <span><strong>${serviceName}</strong>${roleLabel} - ${getServicePrice(serviceName)}</span>
+            <input type="checkbox" name="additionalServices" value="${serviceName}" ${checked} ${disabled}>
+            <span><strong>${serviceName}</strong> - ${getServicePrice(serviceName)}</span>
           </label>
         `;
       }).join('');
@@ -1331,7 +1395,7 @@
     const selectedService = getSelectedServiceName();
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
     if (!selectedService) {
-      showMessage('Please select a service package first', 'error');
+      showMessage('Please select a service first', 'error');
       return;
     }
     if (!isServiceAvailableOnDay(selectedService, dayOfWeek)) {
@@ -1615,7 +1679,7 @@
 
     const serviceType = getSelectedServiceName();
     if (!serviceType) {
-      showMessage('Please select a service package', 'error');
+      showMessage('Please select a service', 'error');
       return;
     }
     const vehicleType = document.querySelector('select[name="vehicleType"]').value;
@@ -1922,8 +1986,10 @@
   // KEEP PACKAGE PICKER DEFAULT
   // ========================================
   function loadCartOnPageLoad() {
+    renderServiceTypeSelect();
     updateAdditionalServicesList();
-    if (!new URLSearchParams(window.location.search).get('service') && !getCheckedPackageNames().length) {
+    const serviceSelect = getServiceTypeSelect();
+    if (!new URLSearchParams(window.location.search).get('service') && !(serviceSelect && serviceSelect.value)) {
       selectedMainServiceName = '';
       handleServiceTypeChanged();
     }
@@ -1931,18 +1997,26 @@
 
 
   // Pre-select service when arriving from /services.html?service=XYZ
-  // This checks the matching package, fires the existing change handler to
+  // This selects the matching service, fires the existing change handler to
   // toggle the address/shop guidance.
   function applyServiceFromUrl() {
     try {
       const params = new URLSearchParams(window.location.search);
       const want = params.get('service');
       if (!want) return;
-      updateAdditionalServicesList();
+      renderServiceTypeSelect();
+      const serviceSelect = getServiceTypeSelect();
+      if (serviceSelect && COMBINABLE_SERVICE_NAMES.includes(want)) {
+        serviceSelect.value = want;
+        selectedMainServiceName = want;
+        selectedPackageNames.delete(want);
+        handleServiceTypeChanged({ target: serviceSelect });
+        return;
+      }
       const match = getPackageInputs().find(input => input.value === want);
       if (!match) return;
       match.checked = true;
-      selectedPackageNames = new Set([want]);
+      selectedPackageNames = new Set();
       selectedMainServiceName = want;
       handleServiceTypeChanged({ target: match });
     } catch (e) {}
