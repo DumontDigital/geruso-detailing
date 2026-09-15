@@ -769,6 +769,7 @@
   let bookedTimeSlots = {}; // Store booked times: { 'YYYY-MM-DD HH:00': true }
   let bookedAppointments = []; // Store full appointment windows for overlap checks.
   let blockedDates = {}; // Store fully blocked days: { 'YYYY-MM-DD': true }
+  let bookedSlotsRequest = null;
 
   const SHOP_ADDRESS = '313 Lynne Lane, Mapleville, Rhode Island 02938';
   const MOBILE_SERVICE_DAYS = ['Thu', 'Fri'];
@@ -878,39 +879,50 @@
 
   // Fetch booked time slots on page load
   async function loadBookedTimeSlots() {
-    try {
-      console.log('[Calendar] Loading booked time slots...');
-      const response = await fetch('/api/bookings/public/booked-slots');
-      if (!response.ok) {
-        console.warn('[Calendar] Failed to load booked slots, status:', response.status);
-        return;
-      }
+    if (bookedSlotsRequest) return bookedSlotsRequest;
 
-      const data = await response.json();
+    bookedSlotsRequest = (async () => {
+      try {
+        console.log('[Calendar] Loading booked time slots...');
+        const response = await fetch('/api/bookings/public/booked-slots', { cache: 'no-store' });
+        if (!response.ok) {
+          console.warn('[Calendar] Failed to load booked slots, status:', response.status);
+          return;
+        }
 
-      // Clear previous booked slots
-      bookedTimeSlots = {};
-      bookedAppointments = [];
-      blockedDates = {};
+        const data = await response.json();
 
-      // Build a map of booked times
-      if (data.bookedSlots) {
-        bookedTimeSlots = data.bookedSlots;
-        console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
+        // Clear previous booked slots
+        bookedTimeSlots = {};
+        bookedAppointments = [];
+        blockedDates = {};
+
+        // Build a map of booked times
+        if (data.bookedSlots) {
+          bookedTimeSlots = data.bookedSlots;
+          console.log('[Calendar] Loaded', Object.keys(bookedTimeSlots).length, 'booked slots');
+        }
+        if (Array.isArray(data.bookedAppointments)) {
+          bookedAppointments = data.bookedAppointments;
+        }
+        if (data.blockedDates) {
+          blockedDates = data.blockedDates;
+        }
+        // Re-render so days that are now fully booked get grayed out.
+        if (typeof renderCalendar === 'function') {
+          try { renderCalendar(); } catch (e) { /* renderCalendar may not exist yet */ }
+        }
+        if (selectedDate) {
+          renderTimeSlots(getSelectedDayOfWeek(), selectedDate);
+        }
+      } catch (error) {
+        console.warn('[Calendar] Could not load booked slots:', error);
+      } finally {
+        bookedSlotsRequest = null;
       }
-      if (Array.isArray(data.bookedAppointments)) {
-        bookedAppointments = data.bookedAppointments;
-      }
-      if (data.blockedDates) {
-        blockedDates = data.blockedDates;
-      }
-      // Re-render so days that are now fully booked get grayed out.
-      if (typeof renderCalendar === 'function') {
-        try { renderCalendar(); } catch (e) { /* renderCalendar may not exist yet */ }
-      }
-    } catch (error) {
-      console.warn('[Calendar] Could not load booked slots:', error);
-    }
+    })();
+
+    return bookedSlotsRequest;
   }
 
   // Load booked times when page loads
@@ -925,32 +937,25 @@
   }
 
   function getCheckedPackageNames() {
-    return Array.from(selectedPackageNames);
+    return getCheckedPackageInputs().map(input => input.value);
   }
 
   let lastServiceTypeValue = '';
   let selectedMainServiceName = '';
-  let selectedPackageNames = new Set();
 
   function syncSelectedPackagesFromDom() {
     const checkedServiceNames = getCheckedPackageInputs().map(input => input.value);
-    selectedPackageNames = new Set(checkedServiceNames);
     if (!checkedServiceNames.includes(selectedMainServiceName)) {
       selectedMainServiceName = checkedServiceNames[0] || '';
     }
+    return checkedServiceNames;
   }
 
   function readMainServiceValue() {
-    if (selectedMainServiceName && selectedPackageNames.has(selectedMainServiceName)) {
-      return selectedMainServiceName;
-    }
-
-    syncSelectedPackagesFromDom();
-    if (selectedMainServiceName && selectedPackageNames.has(selectedMainServiceName)) {
-      return selectedMainServiceName;
-    }
-
-    selectedMainServiceName = getCheckedPackageNames()[0] || '';
+    const checkedServiceNames = syncSelectedPackagesFromDom();
+    selectedMainServiceName = checkedServiceNames.includes(selectedMainServiceName)
+      ? selectedMainServiceName
+      : (checkedServiceNames[0] || '');
     return selectedMainServiceName || '';
   }
 
@@ -971,32 +976,21 @@
       : null;
 
     const previousService = selectedMainServiceName;
+    const checkedServiceNames = getCheckedPackageNames();
 
-    if (changedPackage) {
-      if (changedPackage.checked) {
-        selectedPackageNames.add(changedPackage.value);
-        if (!selectedMainServiceName) {
-          selectedMainServiceName = changedPackage.value;
-        }
-      } else {
-        selectedPackageNames.delete(changedPackage.value);
-        if (previousService === changedPackage.value) {
-          selectedMainServiceName = getCheckedPackageNames()[0] || '';
-        }
-      }
-    } else {
-      selectedMainServiceName = readMainServiceValue();
-    }
-
-    if (selectedMainServiceName && !selectedPackageNames.has(selectedMainServiceName)) {
-      selectedMainServiceName = getCheckedPackageNames()[0] || '';
+    if (changedPackage && changedPackage.checked && !previousService) {
+      selectedMainServiceName = changedPackage.value;
+    } else if (changedPackage && !changedPackage.checked && previousService === changedPackage.value) {
+      selectedMainServiceName = checkedServiceNames[0] || '';
+    } else if (!checkedServiceNames.includes(selectedMainServiceName)) {
+      selectedMainServiceName = checkedServiceNames[0] || '';
     }
 
     lastServiceTypeValue = selectedMainServiceName;
 
     const summaryElement = document.getElementById('summaryService');
     const priceElement = document.getElementById('summaryPrice');
-    updateAdditionalServicesList();
+    updatePackageRoleBadges();
 
     if (selectedMainServiceName) {
       summaryElement.textContent = getSelectedPackageNames().join(' + ');
@@ -1040,7 +1034,6 @@
   }
 
   window.addEventListener('pageshow', startServiceTypeSync);
-  window.addEventListener('focus', startServiceTypeSync);
 
   window.handleServiceTypeChanged = handleServiceTypeChanged;
   window.syncServiceTypeValue = syncServiceTypeValue;
@@ -1048,7 +1041,6 @@
   document.querySelector('select[name="vehicleType"]').addEventListener('change', () => {
     updateServiceOptionPrices();
     updateSelectedServicePrice();
-    updateAdditionalServicesList();
     if (selectedDate) renderTimeSlots(getSelectedDayOfWeek(), selectedDate);
   });
   updateServiceOptionPrices();
@@ -1196,15 +1188,15 @@
   function updateAdditionalServicesList() {
     const group = document.getElementById('additionalServicesGroup');
     const list = document.getElementById('additionalServicesList');
-    const selectedService = getSelectedServiceName();
     if (!group || !list) return;
 
-    group.style.display = 'block';
     const selectedValues = new Set(getCheckedPackageNames());
+    if (selectedMainServiceName) selectedValues.add(selectedMainServiceName);
+    group.style.display = 'block';
     list.innerHTML = COMBINABLE_SERVICE_NAMES
       .map(serviceName => {
         const checked = selectedValues.has(serviceName) ? 'checked' : '';
-        const roleLabel = selectedService === serviceName ? '<span class="package-role">Main</span>' : '';
+        const roleLabel = selectedMainServiceName === serviceName ? '<span class="package-role">Main</span>' : '';
         return `
           <label class="add-on-option">
             <input type="checkbox" name="additionalServices" value="${serviceName}" ${checked}>
@@ -1213,6 +1205,25 @@
         `;
       }).join('');
 
+  }
+
+  function updatePackageRoleBadges() {
+    getPackageInputs().forEach(input => {
+      const text = input.nextElementSibling;
+      if (!text) return;
+      const existingBadge = text.querySelector('.package-role');
+      const isMain = input.checked && input.value === selectedMainServiceName;
+
+      if (isMain && !existingBadge) {
+        const badge = document.createElement('span');
+        badge.className = 'package-role';
+        badge.textContent = 'Main';
+        const strong = text.querySelector('strong');
+        if (strong) strong.insertAdjacentElement('afterend', badge);
+      } else if (!isMain && existingBadge) {
+        existingBadge.remove();
+      }
+    });
   }
 
   function getSupportedDaysForService(serviceName) {
@@ -1363,9 +1374,12 @@
     document.getElementById('summaryDate').textContent = dayName;
     document.getElementById('bookingSummary').style.display = 'block';
 
-    updateAddressFieldVisibility();
-    renderCalendar();
+    // Times are calculated locally and should appear in the same click. The
+    // booked-slot request runs independently and refreshes these buttons when
+    // its response arrives; selecting a day never waits on the backend.
     renderTimeSlots(dayOfWeek, date);
+    renderCalendar();
+    updateAddressFieldVisibility();
   }
 
   function renderTimeSlots(dayOfWeek, date) {
@@ -1878,6 +1892,16 @@
     updateServiceModeIndicator(getSelectedServiceName());
   }
 
+  function setMobileLocationRequired(isRequired) {
+    const serviceAddressInput = document.getElementById('serviceAddressInput');
+    const serviceStateSelect = document.getElementById('serviceStateSelect');
+    const serviceZipInput = document.getElementById('serviceZipInput');
+
+    if (serviceAddressInput) serviceAddressInput.required = isRequired;
+    if (serviceStateSelect) serviceStateSelect.required = isRequired;
+    if (serviceZipInput) serviceZipInput.required = isRequired;
+  }
+
   // ========================================
   // UPDATE ADDRESS FIELD VISIBILITY
   // ========================================
@@ -1936,7 +1960,6 @@
     updateAdditionalServicesList();
     if (!new URLSearchParams(window.location.search).get('service') && getCheckedPackageInputs().length === 0) {
       selectedMainServiceName = '';
-      selectedPackageNames = new Set();
       handleServiceTypeChanged();
     }
   }
@@ -1956,7 +1979,6 @@
       getPackageInputs().forEach(input => {
         input.checked = input.value === want;
       });
-      selectedPackageNames = new Set([want]);
       selectedMainServiceName = want;
       handleServiceTypeChanged({ target: match });
     } catch (e) {}

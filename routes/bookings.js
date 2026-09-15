@@ -12,17 +12,20 @@ const router = express.Router();
 router.get('/public/booked-slots', async (req, res) => {
   try {
     console.log('[Bookings API] GET /public/booked-slots called');
+    res.set('Cache-Control', 'no-store, max-age=0');
 
-    const result = await pool.query(
-      `SELECT booking_date, booking_time, service_type, service_address FROM bookings
-       WHERE (status IN ('confirmed', 'paid', 'completed') OR payment_status IN ('paid', 'pay_later'))
-       AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
-      []
-    );
-    const blockedResult = await pool.query(
-      `SELECT blocked_date, blocked_time FROM blocked_dates`,
-      []
-    );
+    const [result, blockedResult] = await Promise.all([
+      pool.query(
+        `SELECT booking_date, booking_time, service_type, service_address FROM bookings
+         WHERE (status IN ('confirmed', 'paid', 'completed') OR payment_status IN ('paid', 'pay_later'))
+         AND NOT (customer_name = 'Available Slot' AND customer_email = 'booking.test@gmail.com')`,
+        []
+      ),
+      pool.query(
+        `SELECT blocked_date, blocked_time FROM blocked_dates`,
+        []
+      )
+    ]);
 
     // Transform results into a map for easy lookup: { 'YYYY-MM-DD HH:MM': true }
     const bookedSlots = {};
