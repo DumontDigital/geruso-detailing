@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
 const { verifyToken } = require('../middleware/auth');
+const holidayClosures = require('../js/holiday-closures');
 
 const router = express.Router();
 
@@ -61,6 +62,12 @@ router.get('/public/booked-slots', async (req, res) => {
         blockedDates[dateStr] = true;
       }
     });
+    const currentYear = new Date().getUTCFullYear();
+    Object.assign(blockedDates, holidayClosures.getClosuresForYears([
+      currentYear,
+      currentYear + 1,
+      currentYear + 2
+    ]));
 
     console.log('[Bookings API] Returning', result.rows.length, 'real customer booked slots (excluding',
       result.rowCount > 0 ? 'any placeholders' : 'placeholders', ')');
@@ -72,6 +79,7 @@ router.get('/public/booked-slots', async (req, res) => {
 });
 
 async function isSlotBlocked(bookingDate, bookingTime) {
+  if (holidayClosures.getClosureReason(bookingDate)) return true;
   const normalizedBookingTime = normalizeBookingTime(bookingTime);
   const result = await pool.query(
     `SELECT id, blocked_time FROM blocked_dates

@@ -213,6 +213,7 @@ var URLSearchParams = class {
 const html = readFile('schedule.html');
 const match = html.match(/<script>([\s\S]*?)<\/script>/i);
 assert(match, 'Could not find the schedule inline script');
+eval(readFile('js/holiday-closures.js'));
 eval(match[1]);
 
 const form = document.getElementById('bookingForm');
@@ -223,6 +224,11 @@ form.dispatch('change', carWash);
 
 assert(document.packageInputs.includes(carWash), 'Service click replaced the active checkbox DOM');
 assert(document.getElementById('summaryService').textContent === 'Car Wash', 'Service summary did not update immediately');
+
+const october24 = document.getElementById('calendarGrid').children.find(day => day.textContent === 24);
+const october31 = document.getElementById('calendarGrid').children.find(day => day.textContent === 31);
+assert(october24 && october24.disabled, 'October 24 was not blocked');
+assert(october31 && october31.disabled, 'October 31 was not blocked');
 
 const availableDays = document.getElementById('calendarGrid').children.filter(day => day.classList.contains('available'));
 assert(availableDays.length > 0, 'Service click did not activate calendar days');
@@ -245,3 +251,4 @@ assert(ceramicDays.length > 0, 'Promoting the next package disabled the current 
 print('PASS service click activates the current month immediately');
 print('PASS date click renders time slots without waiting for the backend');
 print('PASS combined and promoted packages refresh calendar state immediately');
+print('PASS October 24 and October 31 stay blocked');
