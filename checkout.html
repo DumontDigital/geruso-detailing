@@ -92,6 +92,24 @@
       font-weight: 800;
       text-decoration: none;
     }
+    .residence-appointment-notice {
+      display: none;
+      margin: 2px 0 18px;
+      padding: 16px;
+      border: 1px solid rgba(250,204,21,0.5);
+      border-radius: 10px;
+      background: rgba(250,204,21,0.09);
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .residence-appointment-notice.show { display: block; }
+    .residence-appointment-notice strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #fde047;
+      font-size: 15px;
+    }
     .stripe-panel {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -267,6 +285,11 @@
             </div>
           </div>
 
+          <div class="residence-appointment-notice" id="residenceAppointmentNotice" role="note">
+            <strong>Please plan for drop-off and pickup</strong>
+            This appointment takes place at the Geruso residence, which does not have a customer waiting area. Detailing can take several hours, so please arrange a ride after drop-off and back for pickup.
+          </div>
+
           <div class="stripe-panel pay-later-panel">
             <div class="stripe-mark">$</div>
             <div class="stripe-copy">
@@ -348,6 +371,7 @@
           customer.email = details.email || '';
           customer.phone = details.phone || '';
           customer.serviceAddress = details.serviceAddress || '';
+          customer.serviceLocation = details.serviceLocation || '';
           customer.bookingId = details.bookingId || '';
         }
       } catch (e) {}
@@ -478,12 +502,16 @@
       if (customer.phone) document.getElementById('customerPhone').value = customer.phone;
       const serviceAddressInput = document.getElementById('serviceAddress');
       const serviceAddressNote = document.getElementById('serviceAddressNote');
+      const residenceNotice = document.getElementById('residenceAppointmentNotice');
       const lockedAddress = customer.serviceAddress || '313 Lynne Lane, Mapleville, Rhode Island 02938';
+      const isResidenceAppointment = /geruso|location/i.test(customer.serviceLocation || '') || /313\s+Lynne\s+Lane/i.test(lockedAddress);
       serviceAddressInput.value = lockedAddress;
-      if (/313\s+Lynne\s+Lane/i.test(lockedAddress)) {
+      if (isResidenceAppointment) {
         serviceAddressNote.textContent = 'This is a Geruso Location appointment. Please go to 313 Lynne Lane, Mapleville, Rhode Island 02938 by appointment only. No walk-ins.';
+        residenceNotice.classList.add('show');
       } else {
         serviceAddressNote.textContent = 'This mobile service address is locked from your booking so the appointment location stays correct.';
+        residenceNotice.classList.remove('show');
       }
     }
 
