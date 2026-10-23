@@ -52,7 +52,9 @@
       font-weight: 900;
     }
     .membership-note strong { display: block; margin-bottom: 4px; color: #f4f4f4; font-size: 15px; }
-    .membership-note p { margin: 0; }
+    .membership-note-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .membership-note-list li { position: relative; padding-left: 14px; }
+    .membership-note-list li::before { content: ''; position: absolute; left: 0; top: 0.65em; width: 5px; height: 5px; border-radius: 50%; background: #00f44b; }
     .checkout-panel { display: none; margin-top: 28px; padding: 26px; background: #171a18; border: 1px solid #00f44b; border-radius: 8px; }
     .checkout-panel.open { display: block; }
     .checkout-panel h2 { margin: 0 0 6px; }
@@ -118,7 +120,10 @@
           <span class="membership-note-mark" aria-hidden="true">i</span>
           <div>
             <strong>Before you start</strong>
-            <p>Maintenance memberships are designed to keep your vehicle fresh after its initial detail. Select a plan and continue to secure Stripe Checkout to start recurring service.</p>
+            <ul class="membership-note-list">
+              <li>Designed to keep your vehicle fresh after its initial detail</li>
+              <li>Select a plan, then continue to secure Stripe Checkout to start recurring service</li>
+            </ul>
           </div>
         </div>
         <section id="checkoutPanel" class="checkout-panel" aria-live="polite">

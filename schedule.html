@@ -56,33 +56,31 @@
     .section-heading { font-size: clamp(32px, 4vw, 52px); font-weight: 700; line-height: 1.2; color: var(--text); margin-bottom: 24px; }
     .section-sub { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.8; margin-bottom: 32px; }
     .schedule-overview {
-      max-width: 980px;
-      margin: 0 0 38px;
-      padding: 24px;
+      margin: 0 0 30px;
+      padding: 18px;
       border: 1px solid rgba(0,255,65,0.22);
       border-radius: 14px;
       background:
         radial-gradient(520px 180px at 0 0, rgba(0,255,65,0.09), transparent 62%),
         var(--light-bg2);
     }
-    .schedule-overview-heading { margin-bottom: 16px; }
-    .schedule-overview-heading strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 18px; }
-    .schedule-overview-heading span { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+    .schedule-overview-heading { margin-bottom: 12px; }
+    .schedule-overview-heading strong { display: block; color: var(--text); font-size: 16px; }
     .schedule-bullets {
       margin: 0;
       padding: 0;
       list-style: none;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
       color: var(--text-muted);
       font-size: 14px;
       line-height: 1.6;
     }
     .schedule-bullets li {
       position: relative;
-      min-height: 64px;
-      padding: 13px 14px 13px 38px;
+      min-height: 58px;
+      padding: 11px 12px 11px 34px;
       border: 1px solid var(--border);
       border-radius: 10px;
       background: rgba(5,7,5,0.68);
@@ -90,8 +88,8 @@
     .schedule-bullets li::before {
       content: '';
       position: absolute;
-      left: 17px;
-      top: 20px;
+      left: 14px;
+      top: 18px;
       width: 8px;
       height: 8px;
       border-radius: 50%;
@@ -176,6 +174,10 @@
       font-size: 13px;
       line-height: 1.65;
     }
+    .guidance-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .guidance-list li { position: relative; padding-left: 14px; }
+    .guidance-list li::before { content: ''; position: absolute; left: 0; top: 0.58em; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+    .guidance-list strong { color: var(--text); }
     .add-on-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 14px; }
     .add-on-option:first-of-type { border-top: none; padding-top: 0; }
     .add-on-option input { margin-top: 3px; accent-color: var(--primary); }
@@ -191,7 +193,10 @@
       font-size: 13px;
       line-height: 1.65;
     }
-    .mobile-water-note strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 14px; }
+    .mobile-water-note strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 13px; }
+    .mobile-note-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .mobile-note-item { padding: 12px; border: 1px solid rgba(0,255,65,0.18); border-radius: 8px; background: rgba(0,0,0,0.18); }
+    .mobile-note-item span { display: block; }
 
     .mobile-location-grid {
       display: grid;
@@ -200,15 +205,7 @@
       margin-top: 12px;
     }
 
-    .mobile-area-note {
-      display: block;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(0,255,65,0.2);
-      color: var(--text-muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
+    .mobile-area-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
     .mobile-area-note strong { color: var(--text); }
     .location-policy-line { white-space: nowrap; }
 
@@ -222,7 +219,10 @@
       font-size: 14px;
       line-height: 1.65;
     }
-    .booking-step-note strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 15px; }
+    .booking-step-note strong { color: var(--text); }
+    .booking-step-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 0; padding: 0; list-style: none; counter-reset: booking-step; }
+    .booking-step-list li { counter-increment: booking-step; display: grid; grid-template-columns: 24px 1fr; gap: 9px; align-items: start; }
+    .booking-step-list li::before { content: counter(booking-step); display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #000; font-size: 11px; font-weight: 900; }
     .location-appointment-note {
       padding: 20px;
       background: rgba(0,255,65,0.075);
@@ -276,6 +276,7 @@
       .booking-container { grid-template-columns: 1fr; gap: 40px; }
       .booking-final-actions { margin: 0; max-width: none; }
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
+      .schedule-bullets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 700px) {
@@ -326,6 +327,8 @@
       .form-textarea { font-size: 16px; min-height: 48px; }
       .service-mode-lock { grid-template-columns: 1fr; }
       .mobile-location-grid { grid-template-columns: 1fr; }
+      .mobile-note-grid,
+      .booking-step-list { grid-template-columns: 1fr; }
       .add-on-box { padding: 12px; }
       .add-on-option { align-items: center; }
       .booking-step-note,
@@ -401,7 +404,6 @@
     <div class="schedule-overview" role="note" aria-labelledby="scheduleOverviewTitle">
       <div class="schedule-overview-heading">
         <strong id="scheduleOverviewTitle">Before you choose a date</strong>
-        <span>Use these appointment details to choose the location and day that work for you.</span>
       </div>
       <ul class="schedule-bullets" aria-label="Scheduling details">
         <li>Geruso Location: 313 Lynne Lane, Mapleville, Rhode Island 02938.</li>
@@ -452,7 +454,10 @@
         <div id="messageBox"></div>
 
         <div class="booking-step-note">
-          <strong>Start here:</strong> Fill out your information and choose a service first. Then select an available day and time on the calendar.
+          <ol class="booking-step-list" aria-label="How to book">
+            <li><span><strong>Choose your service</strong><br>Fill out your information and select a package.</span></li>
+            <li><span><strong>Pick your appointment</strong><br>Select an available day and time on the calendar.</span></li>
+          </ol>
         </div>
 
         <form id="bookingForm">
@@ -492,7 +497,13 @@
           <div class="form-group" id="additionalServicesGroup">
             <label class="form-label">Service Packages</label>
             <div class="add-on-box">
-              <div class="add-on-help">Choose one package to start. The first checked package controls the calendar, and you can check more packages to combine them in the same appointment. Ceramic Coating or Full Vehicle Polish only show 12:00 PM and 1:00 PM on Thursday/Friday, or 6:30 AM and 7:30 AM on Saturday/Sunday, because they take 6+ hours.</div>
+              <div class="add-on-help">
+                <ul class="guidance-list">
+                  <li>Choose one package to start; the first checked package controls the calendar.</li>
+                  <li>Check more packages to combine them in the same appointment.</li>
+                  <li><strong>6+ hour services:</strong> Ceramic Coating and Full Vehicle Polish show 12:00 PM or 1:00 PM Thursday/Friday, and 6:30 AM or 7:30 AM Saturday/Sunday.</li>
+                </ul>
+              </div>
               <div id="additionalServicesList"></div>
             </div>
           </div>
@@ -500,7 +511,12 @@
           <div class="form-group">
             <label class="form-label">Optional Add-Ons</label>
             <div class="add-on-box">
-              <div class="add-on-help">Add-ons can be included with your main detail and charged together at checkout. For stain removal or custom requests, use Special Requests so we can confirm the final price.</div>
+              <div class="add-on-help">
+                <ul class="guidance-list">
+                  <li>Add-ons stay with your main detail and are charged together at checkout.</li>
+                  <li>For stains or custom work, use Special Requests so we can confirm the final price.</li>
+                </ul>
+              </div>
               <label class="add-on-option">
                 <input type="checkbox" name="addOns" value="Engine Bay Cleaning" data-price="75">
                 <span><strong>Engine Bay Cleaning</strong> - $75</span>
@@ -578,8 +594,16 @@
             </div>
           </div>
           <div class="mobile-water-note">
-            <strong>Mobile service note:</strong> Please have water access available at the service address so we can provide the best possible detail.
-            <span class="mobile-area-note" id="mobileAreaHelp"><strong>Mobile service area:</strong> Rhode Island, Worcester-area MA towns, and northeast CT towns.</span>
+            <div class="mobile-note-grid">
+              <div class="mobile-note-item">
+                <strong>Water access</strong>
+                <span>Please have water available at the service address for the best possible detail.</span>
+              </div>
+              <div class="mobile-note-item mobile-area-note" id="mobileAreaHelp">
+                <strong>Mobile service area</strong>
+                <span>Rhode Island, Worcester-area MA towns, and northeast CT towns.</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -877,7 +901,7 @@
     if (cleanState === 'RI') {
       return 'Mobile service is available throughout Rhode Island.';
     }
-    return 'Mobile service area: Rhode Island, Worcester-area MA towns, and northeast CT towns.';
+    return 'Rhode Island, Worcester-area MA towns, and northeast CT towns.';
   }
   const LONG_MOBILE_SERVICE_NAMES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
   const COMBINABLE_SERVICE_NAMES = [
@@ -2090,7 +2114,7 @@
     if (serviceStateSelect) {
       serviceStateSelect.addEventListener('change', () => {
         if (mobileAreaHelp) {
-          mobileAreaHelp.innerHTML = `<strong>Mobile service area:</strong> ${getMobileServiceAreaMessage(serviceStateSelect.value)}`;
+          mobileAreaHelp.innerHTML = `<strong>Mobile service area</strong><span>${getMobileServiceAreaMessage(serviceStateSelect.value)}</span>`;
         }
       });
     }

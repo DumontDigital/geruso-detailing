@@ -81,15 +81,9 @@
     .service-card .btn { width: 100%; text-align: center; }
     .service-guidance {
       max-width: 1440px;
-      margin: 0 auto 34px;
-      padding: 26px;
-      border: 1px solid rgba(0,255,65,0.22);
-      border-radius: 16px;
-      background:
-        radial-gradient(600px 220px at 0 0, rgba(0,255,65,0.09), transparent 60%),
-        var(--light-bg2);
+      margin: 0 auto 28px;
     }
-    .service-guidance-header { max-width: 720px; margin-bottom: 20px; }
+    .service-guidance-header { max-width: 720px; margin-bottom: 14px; }
     .service-guidance-eyebrow {
       display: block;
       margin-bottom: 7px;
@@ -99,30 +93,28 @@
       letter-spacing: 1.6px;
       text-transform: uppercase;
     }
-    .service-guidance h2 { margin-bottom: 8px; color: var(--text); font-size: clamp(22px, 3vw, 30px); }
-    .service-guidance-header p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
-    .service-notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .service-guidance h2 { margin-bottom: 0; color: var(--text); font-size: clamp(21px, 2.5vw, 28px); }
+    .service-notes-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .service-note {
       display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: 14px;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 11px;
       align-items: start;
-      min-height: 150px;
       margin: 0;
-      padding: 20px;
-      background: rgba(5,10,6,0.72);
+      padding: 16px;
+      background: var(--light-bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       color: var(--text-muted);
-      line-height: 1.7;
-      font-size: 14px;
+      line-height: 1.5;
+      font-size: 12px;
     }
     .service-note-number {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 42px;
-      height: 42px;
+      width: 34px;
+      height: 34px;
       border: 1px solid rgba(0,255,65,0.35);
       border-radius: 10px;
       background: rgba(0,255,65,0.08);
@@ -131,9 +123,15 @@
       font-weight: 900;
       letter-spacing: 0.08em;
     }
-    .service-note strong { display: block; margin-bottom: 5px; color: var(--text); font-size: 15px; }
-    .service-note p { margin: 0; }
+    .service-note strong { display: block; margin-bottom: 7px; color: var(--text); font-size: 14px; }
+    .service-note-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .service-note-list li { position: relative; padding-left: 13px; }
+    .service-note-list li::before { content: ''; position: absolute; left: 0; top: 0.58em; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
     .service-note a { color: var(--primary); font-weight: 800; }
+
+    @media (max-width: 1100px) {
+      .service-notes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
 
     .quote-section {
       background: linear-gradient(135deg, rgba(0,255,65,0.08) 0%, rgba(0,255,65,0.02) 100%);
@@ -168,11 +166,10 @@
       .service-card .features { gap: 2px 7px; margin-bottom: 8px; }
       .service-card .features li { font-size: 9px; line-height: 1.2; padding: 1px 0; }
       .service-card .btn { padding: 10px 7px; font-size: 11px; }
-      .service-guidance { margin-bottom: 24px; padding: 20px 16px; border-radius: 12px; }
-      .service-guidance-header { margin-bottom: 16px; }
-      .service-guidance-header p { font-size: 13px; }
+      .service-guidance { margin-bottom: 22px; }
+      .service-guidance-header { margin-bottom: 13px; }
       .service-notes-grid { grid-template-columns: 1fr; gap: 10px; }
-      .service-note { min-height: 0; padding: 17px 15px; font-size: 13px; line-height: 1.65; }
+      .service-note { padding: 15px; font-size: 13px; line-height: 1.55; }
     }
     @media (max-width: 390px) {
       .services-grid { grid-template-columns: 1fr !important; }
@@ -196,35 +193,50 @@
       <div class="service-guidance-header">
         <span class="service-guidance-eyebrow">Good to know</span>
         <h2 id="serviceGuidanceTitle">Before you choose a service</h2>
-        <p>Everything you need to know about appointment locations, add-ons, mobile service, and ongoing maintenance is organized below.</p>
       </div>
       <div class="service-notes-grid">
         <article class="service-note">
           <span class="service-note-number" aria-hidden="true">01</span>
           <div>
             <strong>Service location</strong>
-            <p>Every main service can be booked as Mobile or at Geruso Location. Geruso Location is 313 Lynne Lane, Mapleville, Rhode Island 02938 by appointment only. No walk-ins.</p>
+            <ul class="service-note-list">
+              <li>Every main service: Mobile or Geruso Location</li>
+              <li>313 Lynne Lane, Mapleville, Rhode Island 02938</li>
+              <li>Appointment only · No walk-ins</li>
+            </ul>
           </div>
         </article>
         <article class="service-note">
           <span class="service-note-number" aria-hidden="true">02</span>
           <div>
             <strong>Add-ons</strong>
-            <p>Customers can book one main detail and add extras like engine bay cleaning, pet hair/odor treatment, or headlight restoration during scheduling. Add-ons are added to the same cart and charged at checkout. For stain removal or custom requests, include a note when booking so we can confirm the final price.</p>
+            <ul class="service-note-list">
+              <li>Start with one main detail</li>
+              <li>Add engine bay, pet hair/odor, or headlights</li>
+              <li>One cart and checkout</li>
+              <li>Stains/custom work: leave a booking note for final pricing</li>
+            </ul>
           </div>
         </article>
         <article class="service-note">
           <span class="service-note-number" aria-hidden="true">03</span>
           <div>
             <strong>Mobile service note</strong>
-            <p>For mobile detailing appointments, please have water access available at the service address so we can provide the best possible detail.</p>
+            <ul class="service-note-list">
+              <li>Water access needed at the service address</li>
+              <li>Helps us provide the best possible detail</li>
+            </ul>
           </div>
         </article>
         <article class="service-note">
           <span class="service-note-number" aria-hidden="true">04</span>
           <div>
             <strong>Maintenance plans</strong>
-            <p>Want to keep the car clean instead of waiting for a big detail? Choose biweekly maintenance at $100 per visit or monthly maintenance at $150. <a href="/memberships.html">Start a maintenance plan</a>.</p>
+            <ul class="service-note-list">
+              <li>Biweekly: $100 per visit</li>
+              <li>Monthly: $150</li>
+              <li><a href="/memberships.html">Start a maintenance plan</a></li>
+            </ul>
           </div>
         </article>
       </div>

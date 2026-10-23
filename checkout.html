@@ -94,6 +94,9 @@
       font-size: 14px;
       font-weight: 800;
     }
+    .locked-details-actions { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+    .locked-details-actions li { position: relative; padding-left: 12px; }
+    .locked-details-actions li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
     .locked-details-note a {
       color: var(--primary);
       font-weight: 800;
@@ -119,7 +122,8 @@
       color: #fde047;
       font-size: 16px;
     }
-    .residence-appointment-notice p { margin: 0; max-width: 62ch; }
+    .residence-notice-points { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .residence-notice-points li { padding: 10px 11px; border: 1px solid rgba(250,204,21,0.2); border-radius: 8px; background: rgba(0,0,0,0.18); color: var(--text-muted); font-size: 13px; line-height: 1.5; }
     .residence-notice-label {
       display: inline-flex;
       margin-bottom: 11px;
@@ -322,6 +326,7 @@
       .order-summary { padding: 18px; }
       .locked-details-note,
       .residence-appointment-notice { padding: 16px; }
+      .residence-notice-points { grid-template-columns: 1fr; }
       .checkout-header h1 { font-size: 32px; }
       .checkout-header p { font-size: 14px; }
       .stripe-panel { grid-template-columns: 40px minmax(0, 1fr); padding: 14px; gap: 12px; }
@@ -349,7 +354,10 @@
         <h2>Customer Details</h2>
         <div class="locked-details-note" role="note">
           <span class="notice-eyebrow">Your booking details are protected</span>
-          These details are locked for payment. Need to fix something? Go back to <a href="/schedule.html">Schedule</a>, edit the booking, then return to checkout.
+          <ul class="locked-details-actions">
+            <li>Details are locked for payment</li>
+            <li>Need a change? Return to <a href="/schedule.html">Schedule</a>, edit the booking, then come back</li>
+          </ul>
         </div>
         <form id="checkoutForm">
           <div class="field-grid">
@@ -377,7 +385,11 @@
           <div class="residence-appointment-notice" id="residenceAppointmentNotice" role="note">
             <span class="residence-notice-label">Residence appointment</span>
             <strong>Please plan for drop-off and pickup</strong>
-            <p>This appointment takes place at the Geruso residence, which does not have a customer waiting area. Detailing can take several hours, so please arrange a ride after drop-off and back for pickup.</p>
+            <ul class="residence-notice-points">
+              <li>Service takes place at the Geruso residence</li>
+              <li>No customer waiting area; detailing may take several hours</li>
+              <li>Arrange a ride after drop-off and back for pickup</li>
+            </ul>
           </div>
 
           <div class="stripe-panel pay-later-panel">
