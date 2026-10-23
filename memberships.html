@@ -25,7 +25,34 @@
     .plan ul { min-height: 130px; margin: 20px 0 26px; padding-left: 22px; color: #c8cbc8; line-height: 1.75; }
     .plan button, .checkout-form button { width: 100%; padding: 15px 18px; border: 2px solid #00f44b; border-radius: 7px; background: #00f44b; color: #061009; font-size: 16px; font-weight: 800; cursor: pointer; }
     .plan button:hover, .checkout-form button:hover { background: #10d948; }
-    .membership-note { margin: 22px 0 0; padding: 16px 18px; background: #101d14; border: 1px solid #18753a; border-radius: 7px; color: #b8c3ba; line-height: 1.55; }
+    .membership-note {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 15px;
+      align-items: start;
+      margin: 24px 0 0;
+      padding: 20px;
+      background: #101d14;
+      border: 1px solid #18753a;
+      border-radius: 10px;
+      color: #b8c3ba;
+      line-height: 1.7;
+    }
+    .membership-note-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #238a48;
+      border-radius: 10px;
+      background: rgba(0,244,75,0.07);
+      color: #00f44b;
+      font-size: 17px;
+      font-weight: 900;
+    }
+    .membership-note strong { display: block; margin-bottom: 4px; color: #f4f4f4; font-size: 15px; }
+    .membership-note p { margin: 0; }
     .checkout-panel { display: none; margin-top: 28px; padding: 26px; background: #171a18; border: 1px solid #00f44b; border-radius: 8px; }
     .checkout-panel.open { display: block; }
     .checkout-panel h2 { margin: 0 0 6px; }
@@ -44,6 +71,7 @@
       .membership-content { padding: 28px 16px 52px; }
       .plans, .checkout-form { grid-template-columns: 1fr; }
       .plan ul { min-height: 0; }
+      .membership-note { padding: 17px 15px; }
     }
   </style>
 </head>
@@ -86,7 +114,13 @@
             <button type="button" onclick="selectPlan('monthly', 'Monthly Maintenance')">Choose Monthly</button>
           </article>
         </div>
-        <p class="membership-note">Maintenance memberships are designed to keep your vehicle fresh after its initial detail. Select a plan and continue to secure Stripe Checkout to start recurring service.</p>
+        <div class="membership-note" role="note">
+          <span class="membership-note-mark" aria-hidden="true">i</span>
+          <div>
+            <strong>Before you start</strong>
+            <p>Maintenance memberships are designed to keep your vehicle fresh after its initial detail. Select a plan and continue to secure Stripe Checkout to start recurring service.</p>
+          </div>
+        </div>
         <section id="checkoutPanel" class="checkout-panel" aria-live="polite">
           <h2>Start <span id="selectedPlanName">Your Membership</span></h2>
           <p>Enter your contact details, then continue to Stripe to securely activate recurring billing.</p>

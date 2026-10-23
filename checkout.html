@@ -69,23 +69,30 @@
     }
     .locked-field-note {
       margin-top: 8px;
-      padding: 10px 12px;
-      border: 1px solid rgba(0,255,65,0.28);
-      border-radius: 8px;
-      background: rgba(0,255,65,0.07);
+      padding: 12px 14px;
+      border-left: 3px solid rgba(0,255,65,0.45);
+      border-radius: 0 8px 8px 0;
+      background: rgba(0,255,65,0.055);
       color: var(--text-muted);
       font-size: 12px;
-      line-height: 1.45;
+      line-height: 1.6;
     }
     .locked-details-note {
-      margin: -6px 0 18px;
-      padding: 11px 13px;
-      border: 1px solid rgba(0,255,65,0.28);
-      border-radius: 8px;
-      background: rgba(0,255,65,0.07);
+      margin: -4px 0 24px;
+      padding: 18px;
+      border: 1px solid rgba(0,255,65,0.22);
+      border-radius: 10px;
+      background: rgba(0,255,65,0.06);
       color: var(--text-muted);
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.65;
+    }
+    .notice-eyebrow {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
     }
     .locked-details-note a {
       color: var(--primary);
@@ -94,21 +101,36 @@
     }
     .residence-appointment-notice {
       display: none;
-      margin: 2px 0 18px;
-      padding: 16px;
+      margin: 4px 0 24px;
+      padding: 20px;
       border: 1px solid rgba(250,204,21,0.5);
-      border-radius: 10px;
-      background: rgba(250,204,21,0.09);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(250,204,21,0.11), rgba(250,204,21,0.045)),
+        var(--light-bg);
       color: var(--text-muted);
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.7;
     }
     .residence-appointment-notice.show { display: block; }
     .residence-appointment-notice strong {
       display: block;
       margin-bottom: 5px;
       color: #fde047;
-      font-size: 15px;
+      font-size: 16px;
+    }
+    .residence-appointment-notice p { margin: 0; max-width: 62ch; }
+    .residence-notice-label {
+      display: inline-flex;
+      margin-bottom: 11px;
+      padding: 4px 9px;
+      border: 1px solid rgba(250,204,21,0.38);
+      border-radius: 999px;
+      color: #fde68a;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
     .stripe-panel {
       border: 1px solid var(--border);
@@ -264,7 +286,16 @@
       font-weight: 800;
     }
     .checkout-actions { margin-top: 22px; display: grid; gap: 10px; }
-    .checkout-note { color: var(--text-light); font-size: 12px; text-align: center; }
+    .checkout-note {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.025);
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: left;
+    }
     .message {
       display: none;
       margin-top: 16px;
@@ -289,6 +320,8 @@
       .field-grid { grid-template-columns: 1fr; }
       .checkout-panel,
       .order-summary { padding: 18px; }
+      .locked-details-note,
+      .residence-appointment-notice { padding: 16px; }
       .checkout-header h1 { font-size: 32px; }
       .checkout-header p { font-size: 14px; }
       .stripe-panel { grid-template-columns: 40px minmax(0, 1fr); padding: 14px; gap: 12px; }
@@ -314,7 +347,8 @@
     <div class="checkout-wrap">
       <section class="checkout-panel">
         <h2>Customer Details</h2>
-        <div class="locked-details-note">
+        <div class="locked-details-note" role="note">
+          <span class="notice-eyebrow">Your booking details are protected</span>
           These details are locked for payment. Need to fix something? Go back to <a href="/schedule.html">Schedule</a>, edit the booking, then return to checkout.
         </div>
         <form id="checkoutForm">
@@ -341,8 +375,9 @@
           </div>
 
           <div class="residence-appointment-notice" id="residenceAppointmentNotice" role="note">
+            <span class="residence-notice-label">Residence appointment</span>
             <strong>Please plan for drop-off and pickup</strong>
-            This appointment takes place at the Geruso residence, which does not have a customer waiting area. Detailing can take several hours, so please arrange a ride after drop-off and back for pickup.
+            <p>This appointment takes place at the Geruso residence, which does not have a customer waiting area. Detailing can take several hours, so please arrange a ride after drop-off and back for pickup.</p>
           </div>
 
           <div class="stripe-panel pay-later-panel">
