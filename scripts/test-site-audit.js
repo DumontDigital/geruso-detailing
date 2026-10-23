@@ -129,7 +129,11 @@ for (const vehicleType of ['Car', 'Motorcycle', 'SUV', 'Truck']) {
 assert(scheduleHtml.includes("params.get('service')"), 'Schedule does not read service booking links');
 assert(scheduleHtml.includes("params.get('addOn')"), 'Schedule does not read add-on booking links');
 assert(checkoutHtml.includes("GerusoPromoCodes.calculateTotals"), 'Checkout promo total calculation is not wired');
+assert(checkoutHtml.includes('id="toggleAdditionalServices"'), 'Checkout add-another-service control is missing');
+assert(checkoutHtml.includes("getElementById('checkoutServiceOptions').addEventListener('change'"), 'Checkout service checkboxes are not wired');
+assert(!checkoutHtml.includes('>Keep Shopping<'), 'Checkout still sends customers backward with Keep Shopping');
 assert(cartRoute.includes('promoCodes.calculateTotals'), 'Backend promo validation is not wired');
+assert(cartRoute.includes('service_type = $3'), 'Backend does not save checkout service additions to the booking');
 
 const contactHtml = fs.readFileSync(path.join(root, 'contact.html'), 'utf8');
 const membershipsHtml = fs.readFileSync(path.join(root, 'memberships.html'), 'utf8');

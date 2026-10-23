@@ -27,18 +27,23 @@ class FakeElement {
 
   addEventListener(type, listener) { this.listeners[type] = listener; }
   setAttribute(name, value) { this[name] = value; }
+  matches(selector) { return selector === '[data-checkout-service]' && this.dataset.checkoutService !== undefined; }
+  scrollIntoView() {}
 }
 
 function runCheckout(details) {
   const ids = [
     'summaryItems', 'summarySubtotal', 'summaryDiscountRow', 'summaryDiscountLabel',
     'summaryDiscount', 'summaryTotal', 'promoCode', 'applyPromoCode', 'promoMessage',
+    'toggleAdditionalServices', 'additionalServicesPanel', 'checkoutServiceOptions',
+    'addServicesFeedback', 'continueToConfirmation',
     'checkoutSubmitBtn', 'checkoutMessage',
     'customerName', 'customerEmail', 'customerPhone', 'serviceAddress',
     'serviceAddressNote', 'residenceAppointmentNotice', 'checkoutForm'
   ];
   const elements = {};
   ids.forEach(id => { elements[id] = new FakeElement(); });
+  elements.additionalServicesPanel.hidden = true;
 
   const document = {
     getElementById(id) { return elements[id]; },
@@ -85,7 +90,8 @@ assert(
 const mobile = runCheckout({
   name: 'Customer',
   serviceLocation: 'Mobile',
-  serviceAddress: '100 Main Street, Providence, RI 02903'
+  serviceAddress: '100 Main Street, Providence, RI 02903',
+  vehicleType: 'SUV'
 });
 assert(
   !mobile.residenceAppointmentNotice.classList.contains('show'),
@@ -100,6 +106,20 @@ assert(mobile.summaryDiscount.textContent === '-$19.00', 'Checkout discount is i
 assert(mobile.summaryTotal.textContent === '$76.00', 'Checkout discounted total is incorrect');
 assert(!mobile.summaryDiscountRow.hidden, 'Checkout discount row stayed hidden');
 
+mobile.toggleAdditionalServices.listeners.click();
+assert(!mobile.additionalServicesPanel.hidden, 'Add-another-service panel did not open');
+assert(mobile.checkoutServiceOptions.innerHTML.includes('$155.00'), 'SUV pricing was not shown for Premium Wash');
+const premiumWash = new FakeElement();
+premiumWash.value = 'Premium Wash';
+premiumWash.checked = true;
+premiumWash.dataset.checkoutService = '';
+mobile.checkoutServiceOptions.listeners.change({ target: premiumWash });
+assert(mobile.summarySubtotal.textContent === '$250.00', 'Adding SUV-priced Premium Wash did not update the subtotal');
+assert(mobile.summaryDiscount.textContent === '-$50.00', 'Promo discount did not recalculate after adding a service');
+assert(mobile.summaryTotal.textContent === '$200.00', 'Adding Premium Wash did not update the discounted total');
+assert(mobile.addServicesFeedback.textContent.includes('1 additional service'), 'Added-service confirmation was not shown');
+
 print('PASS residence checkout shows the drop-off and ride notice');
 print('PASS mobile checkout keeps the residence notice hidden');
 print('PASS checkout applies WMD and displays the discounted total');
+print('PASS checkout adds another service and recalculates promo totals');

@@ -21,6 +21,12 @@ const SERVICE_CATALOG = {
   'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
   'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
 };
+const ADD_ON_SERVICE_NAMES = new Set([
+  'Engine Bay Cleaning',
+  'Pet Hair / Odor Elimination',
+  'Headlight Restoration',
+]);
+const LONG_SERVICE_NAMES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
 
 function normalizeCartItems(items) {
   if (!Array.isArray(items)) return [];
@@ -36,9 +42,9 @@ function normalizeCartItems(items) {
       const allowedPrices = [catalogItem.price, catalogItem.suvPrice, catalogItem.truckPrice].filter(Boolean);
       const price = allowedPrices.includes(requestedPrice) ? requestedPrice : catalogItem.price;
       const requestedTag = String(item.serviceTag || item.tag || '').trim().toUpperCase();
-      const tag = ['MOBILE', 'LOCATION ONLY', 'EXTRA FEE'].includes(requestedTag)
-        ? requestedTag
-        : catalogItem.tag;
+      const tag = ADD_ON_SERVICE_NAMES.has(name)
+        ? 'EXTRA FEE'
+        : (['MOBILE', 'LOCATION ONLY'].includes(requestedTag) ? requestedTag : catalogItem.tag);
       return {
         name,
         quantity,
@@ -55,6 +61,16 @@ function validateCartItems(cartItems) {
 
 function calculateCartSubtotal(cartItems) {
   return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+}
+
+function getUniqueServiceNames(cartItems, includeAddOns) {
+  return [...new Set(cartItems
+    .filter(item => ADD_ON_SERVICE_NAMES.has(item.name) === includeAddOns)
+    .map(item => item.name))];
+}
+
+function getLongServiceNames(serviceNames) {
+  return serviceNames.filter(name => LONG_SERVICE_NAMES.has(name));
 }
 
 function money(value) {
@@ -123,36 +139,85 @@ router.post('/pay-later', async (req, res) => {
       return res.status(400).json({ error: 'A scheduled booking is required before choosing pay after service.' });
     }
 
+    const selectedMainServiceNames = getUniqueServiceNames(cartItems, false);
+    const selectedAddOnNames = getUniqueServiceNames(cartItems, true);
+    if (selectedMainServiceNames.length === 0) {
+      return res.status(400).json({ error: 'Keep at least one main detailing service in your appointment.' });
+    }
+
+    const existingBookingResult = await pool.query(
+      `SELECT * FROM bookings WHERE id = $1 AND status <> 'cancelled'`,
+      [bookingId]
+    );
+    if (existingBookingResult.rowCount === 0) {
+      return res.status(404).json({ error: 'This booking could not be found. Please schedule again.' });
+    }
+
+    const existingBooking = existingBookingResult.rows[0];
+    const originallyScheduledLongServices = getLongServiceNames(
+      String(existingBooking.service_type || '').split(' + ').map(name => name.trim())
+    );
+    const newlyAddedLongService = getLongServiceNames(selectedMainServiceNames)
+      .find(name => !originallyScheduledLongServices.includes(name));
+    if (newlyAddedLongService) {
+      return res.status(400).json({
+        error: `${newlyAddedLongService} needs a six-hour appointment window. Please add it on the Schedule page so the correct time can be reserved.`,
+      });
+    }
+
+    const bookingServiceType = selectedMainServiceNames.join(' + ');
+    const selectionParts = [`Main services: ${selectedMainServiceNames.join(', ')}`];
+    if (selectedAddOnNames.length > 0) selectionParts.push(`Add-ons: ${selectedAddOnNames.join(', ')}`);
+    const checkoutSelectionNote = `Checkout selection: ${selectionParts.join(' | ')}`;
+
     const bookingResult = await pool.query(
-      `WITH existing AS (
-         SELECT payment_status FROM bookings WHERE id = $3 AND status <> 'cancelled'
-       )
-       UPDATE bookings
-       SET payment_status = $1, status = $2, updated_at = CURRENT_TIMESTAMP
-       FROM existing
-       WHERE bookings.id = $3 AND bookings.status <> 'cancelled'
-       RETURNING bookings.*, existing.payment_status AS previous_payment_status`,
-      ['pay_later', 'confirmed', bookingId]
+      `UPDATE bookings
+       SET payment_status = $1,
+           status = $2,
+           service_type = $3,
+           notes = CONCAT_WS(
+             E'\\n',
+             NULLIF(BTRIM(regexp_replace(
+               COALESCE(notes, ''),
+               E'(^|\\n)((Combined packages|Add-ons requested|Checkout selection):|Venue discount code )[^\\n]*',
+               '',
+               'g'
+             )), ''),
+             $4
+           ),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5 AND status <> 'cancelled'
+       RETURNING *`,
+      ['pay_later', 'confirmed', bookingServiceType, checkoutSelectionNote, bookingId]
     );
 
     if (bookingResult.rowCount === 0) {
       return res.status(404).json({ error: 'This booking could not be found. Please schedule again.' });
     }
 
-    let booking = bookingResult.rows[0];
+    let booking = {
+      ...bookingResult.rows[0],
+      previous_payment_status: existingBooking.payment_status,
+    };
     if (promo) {
       const promoMarker = `Venue discount code ${promo.code}`;
       const promoNote = `${promoMarker} — ${promo.percentOff}% off. Subtotal: ${money(totals.subtotal)}. Discount: -${money(totals.discount)}. Total after discount: ${money(totals.total)}.`;
       const promoBookingResult = await pool.query(
         `UPDATE bookings
-         SET notes = CASE
-           WHEN COALESCE(notes, '') ILIKE '%' || $2 || '%' THEN notes
-           ELSE CONCAT_WS(E'\\n', NULLIF(notes, ''), $1)
-         END,
+         SET notes = CONCAT_WS(
+           E'\\n',
+           NULLIF(BTRIM(regexp_replace(
+             COALESCE(notes, ''),
+             E'(^|\\n)Venue discount code [^\\n]*',
+             '',
+             'g'
+           )), ''),
+           $1
+         ),
          updated_at = CURRENT_TIMESTAMP
-         WHERE id = $3 AND status <> 'cancelled'
+         WHERE id = $2 AND status <> 'cancelled'
          RETURNING *`,
-        [promoNote, promoMarker, bookingId]
+        [promoNote, bookingId]
       );
       if (promoBookingResult.rows.length > 0) {
         booking = {

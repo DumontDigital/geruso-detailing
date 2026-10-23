@@ -226,6 +226,83 @@
     .summary-name { color: var(--text); font-weight: 700; }
     .summary-meta { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
     .summary-price { color: var(--text); font-weight: 800; white-space: nowrap; }
+    .add-services {
+      margin-top: 18px;
+      border: 1px solid rgba(0,255,65,0.28);
+      border-radius: 10px;
+      background: rgba(0,255,65,0.04);
+      overflow: hidden;
+    }
+    .add-services-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      padding: 16px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+    .add-services-toggle strong { display: block; margin-bottom: 3px; font-size: 15px; }
+    .add-services-toggle small { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.45; }
+    .add-services-toggle-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(0,255,65,0.35);
+      border-radius: 50%;
+      color: var(--primary);
+      font-size: 20px;
+      font-weight: 500;
+      transition: transform 0.2s;
+      flex: 0 0 auto;
+    }
+    .add-services-toggle[aria-expanded="true"] .add-services-toggle-icon { transform: rotate(45deg); }
+    .add-services-panel { padding: 0 16px 16px; border-top: 1px solid rgba(0,255,65,0.16); }
+    .add-services-help { margin: 14px 0 12px; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+    .checkout-service-options { display: grid; gap: 14px; }
+    .checkout-service-group { display: grid; gap: 8px; }
+    .checkout-service-group-title { color: var(--text-light); font-size: 10px; font-weight: 850; letter-spacing: 0.1em; text-transform: uppercase; }
+    .checkout-service-option {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--light-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .checkout-service-option:hover { border-color: rgba(0,255,65,0.45); }
+    .checkout-service-option.selected { border-color: rgba(0,255,65,0.48); background: rgba(0,255,65,0.075); }
+    .checkout-service-option.unavailable { cursor: not-allowed; opacity: 0.62; }
+    .checkout-service-option input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .checkout-service-option-name { color: var(--text); font-size: 13px; font-weight: 750; line-height: 1.3; }
+    .checkout-service-option-meta { display: block; margin-top: 3px; color: var(--text-light); font-size: 11px; line-height: 1.35; }
+    .checkout-service-option-price { color: var(--primary); font-size: 13px; font-weight: 850; white-space: nowrap; }
+    .add-services-feedback { min-height: 17px; margin-top: 10px; color: #8ff0be; font-size: 12px; line-height: 1.4; }
+    .continue-to-confirmation {
+      display: none;
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      background: rgba(0,255,65,0.09);
+      color: var(--primary);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
     .promo-box {
       margin-top: 18px;
       padding: 16px;
@@ -335,6 +412,7 @@
       .summary-price { grid-column: 2; justify-self: start; }
       .promo-row { grid-template-columns: 1fr; }
       .promo-apply { min-height: 44px; }
+      .continue-to-confirmation { display: block; }
       .summary-total { font-size: 18px; }
     }
   </style>
@@ -403,7 +481,6 @@
           <div id="checkoutMessage" class="message"></div>
           <div class="checkout-actions">
             <button class="btn btn-primary" id="checkoutSubmitBtn" type="submit">Confirm Booking</button>
-            <a class="btn btn-outline" href="/services.html">Keep Shopping</a>
             <div class="checkout-note">Pay-after-service bookings are confirmed now and paid after the appointment.</div>
           </div>
         </form>
@@ -412,6 +489,21 @@
       <aside class="order-summary">
         <h2>Order Summary</h2>
         <div id="summaryItems"></div>
+        <section class="add-services" aria-labelledby="addServicesTitle">
+          <button class="add-services-toggle" id="toggleAdditionalServices" type="button" aria-expanded="false" aria-controls="additionalServicesPanel">
+            <span>
+              <strong id="addServicesTitle">Add another service</strong>
+              <small>Build it into this appointment—no need to start over.</small>
+            </span>
+            <span class="add-services-toggle-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="add-services-panel" id="additionalServicesPanel" hidden>
+            <p class="add-services-help">Check any service you want to add. Your order total updates immediately. Six-hour services must be chosen while scheduling so the correct time can be reserved.</p>
+            <div class="checkout-service-options" id="checkoutServiceOptions"></div>
+            <div class="add-services-feedback" id="addServicesFeedback" aria-live="polite"></div>
+            <button class="continue-to-confirmation" id="continueToConfirmation" type="button">Review details and confirm below ↓</button>
+          </div>
+        </section>
         <div class="promo-box">
           <label for="promoCode">Venue discount code</label>
           <div class="promo-row">
@@ -457,6 +549,12 @@
       'Pet Hair / Odor Elimination': { price: 50, tag: 'EXTRA FEE' },
       'Headlight Restoration': { price: 50, tag: 'EXTRA FEE' },
     };
+    const CHECKOUT_ADD_ON_SERVICES = new Set([
+      'Engine Bay Cleaning',
+      'Pet Hair / Odor Elimination',
+      'Headlight Restoration',
+    ]);
+    const CHECKOUT_LONG_SERVICES = new Set(['Ceramic Coating', 'Full Vehicle Polish']);
 
     function getStoredCart() {
       try {
@@ -494,6 +592,7 @@
           customer.serviceAddress = details.serviceAddress || '';
           customer.serviceLocation = details.serviceLocation || '';
           customer.bookingId = details.bookingId || '';
+          customer.vehicleType = details.vehicleType || '';
         }
       } catch (e) {}
 
@@ -526,6 +625,7 @@
     let cart = getStoredCart();
     let selectedPaymentMethod = 'pay_later';
     let appliedPromoCode = '';
+    const originallyBookedServiceNames = new Set(cart.items.map(item => item.serviceName));
 
     function saveCart() {
       localStorage.setItem(CHECKOUT_CART_STORAGE_KEY, JSON.stringify(cart));
@@ -565,6 +665,7 @@
       cart.items.splice(index, 1);
       saveCart();
       renderSummary();
+      renderCheckoutServiceOptions();
     }
 
     function renderSummary() {
@@ -619,6 +720,118 @@
       if (submitBtn) submitBtn.disabled = false;
       getPaymentOptionButtons().forEach(button => { button.disabled = false; });
     }
+
+    function getCheckoutServicePrice(serviceName) {
+      const service = SERVICE_CATALOG[serviceName] || {};
+      const vehicleType = String(getCustomerFromStorage().vehicleType || '').toLowerCase();
+      if (vehicleType === 'suv' && service.suvPrice) return service.suvPrice;
+      if (vehicleType === 'truck' && service.truckPrice) return service.truckPrice;
+      return service.price || 0;
+    }
+
+    function getCheckoutServiceOptions() {
+      const vehicleType = String(getCustomerFromStorage().vehicleType || '').toLowerCase();
+      return Object.keys(SERVICE_CATALOG).filter(serviceName => {
+        const isAddOn = CHECKOUT_ADD_ON_SERVICES.has(serviceName);
+        if (serviceName === 'Full Motorcycle Service') return vehicleType === 'motorcycle';
+        if (vehicleType === 'motorcycle' && !isAddOn) return false;
+        return true;
+      });
+    }
+
+    function renderCheckoutServiceOptions() {
+      const options = document.getElementById('checkoutServiceOptions');
+      if (!options) return;
+
+      const renderOption = serviceName => {
+        const selected = cart.items.some(item => item.serviceName === serviceName);
+        const originallyBooked = originallyBookedServiceNames.has(serviceName);
+        const isAddOn = CHECKOUT_ADD_ON_SERVICES.has(serviceName);
+        const isLongService = CHECKOUT_LONG_SERVICES.has(serviceName);
+        const canAddLongService = !isLongService || originallyBooked;
+        const disabled = (selected && originallyBooked) || !canAddLongService;
+        let meta = isAddOn ? 'Optional add-on' : 'Adds to this appointment';
+        if (selected && originallyBooked) meta = 'Already selected · Remove from the order above';
+        if (!selected && originallyBooked) meta = 'Originally booked · Check to restore';
+        if (!canAddLongService) meta = '6+ hours · Add during scheduling to reserve enough time';
+
+        return `
+          <label class="checkout-service-option${selected ? ' selected' : ''}${disabled ? ' unavailable' : ''}">
+            <input type="checkbox" data-checkout-service value="${escapeHtml(serviceName)}" ${selected ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+            <span>
+              <span class="checkout-service-option-name">${escapeHtml(serviceName)}</span>
+              <span class="checkout-service-option-meta">${escapeHtml(meta)}</span>
+            </span>
+            <span class="checkout-service-option-price">${money(getCheckoutServicePrice(serviceName))}</span>
+          </label>
+        `;
+      };
+
+      const serviceNames = getCheckoutServiceOptions();
+      const mainServices = serviceNames.filter(name => !CHECKOUT_ADD_ON_SERVICES.has(name));
+      const addOns = serviceNames.filter(name => CHECKOUT_ADD_ON_SERVICES.has(name));
+      options.innerHTML = `
+        <div class="checkout-service-group">
+          <div class="checkout-service-group-title">Detailing services</div>
+          ${mainServices.map(renderOption).join('')}
+        </div>
+        <div class="checkout-service-group">
+          <div class="checkout-service-group-title">Optional add-ons</div>
+          ${addOns.map(renderOption).join('')}
+        </div>
+      `;
+
+      const selectedCount = cart.items.filter(item => !originallyBookedServiceNames.has(item.serviceName)).length;
+      const feedback = document.getElementById('addServicesFeedback');
+      if (feedback && selectedCount > 0) {
+        feedback.textContent = `${selectedCount} additional service${selectedCount === 1 ? '' : 's'} added to this appointment.`;
+      } else if (feedback) {
+        feedback.textContent = '';
+      }
+    }
+
+    document.getElementById('toggleAdditionalServices').addEventListener('click', () => {
+      const toggle = document.getElementById('toggleAdditionalServices');
+      const panel = document.getElementById('additionalServicesPanel');
+      const shouldOpen = panel.hidden;
+      panel.hidden = !shouldOpen;
+      toggle.setAttribute('aria-expanded', String(shouldOpen));
+    });
+
+    document.getElementById('checkoutServiceOptions').addEventListener('change', event => {
+      const input = event.target;
+      if (!input || !input.matches || !input.matches('[data-checkout-service]')) return;
+      const serviceName = input.value;
+      const service = SERVICE_CATALOG[serviceName];
+      if (!service) return;
+
+      if (input.checked && !cart.items.some(item => item.serviceName === serviceName)) {
+        const isAddOn = CHECKOUT_ADD_ON_SERVICES.has(serviceName);
+        const customer = getCustomerFromStorage();
+        const isLocationAppointment = /geruso|location/i.test(customer.serviceLocation || '')
+          || /313\s+Lynne\s+Lane/i.test(customer.serviceAddress || '');
+        cart.items.push({
+          id: `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          serviceName,
+          price: getCheckoutServicePrice(serviceName),
+          serviceTag: isAddOn ? 'EXTRA FEE' : (isLocationAppointment ? 'LOCATION ONLY' : 'MOBILE'),
+          serviceType: isAddOn ? 'add-on' : 'standard',
+          quantity: 1,
+          addedAt: new Date().toISOString(),
+        });
+      } else if (!input.checked) {
+        cart.items = cart.items.filter(item => item.serviceName !== serviceName);
+      }
+
+      saveCart();
+      renderSummary();
+      renderCheckoutServiceOptions();
+      if (typeof updateNavCartBadge === 'function') updateNavCartBadge();
+    });
+
+    document.getElementById('continueToConfirmation').addEventListener('click', () => {
+      document.getElementById('checkoutForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     document.getElementById('summaryItems').addEventListener('click', (event) => {
       const removeButton = event.target.closest('[data-remove-index]');
@@ -754,6 +967,7 @@
     hydrateCustomerFields();
     setPaymentMethod('pay_later');
     renderSummary();
+    renderCheckoutServiceOptions();
   </script>
 </body>
 </html>
