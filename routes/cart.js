@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db');
 const { initializeStripe } = require('../stripe');
 const { sendBookingConfirmation, sendOwnerNotification } = require('../email');
+const promoCodes = require('../js/promo-codes');
 
 const router = express.Router();
 
@@ -52,6 +53,14 @@ function validateCartItems(cartItems) {
   return '';
 }
 
+function calculateCartSubtotal(cartItems) {
+  return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+}
+
+function money(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
 function buildBookingEmailData(booking, paymentConfirmed = false) {
   return {
     customerName: booking.customer_name,
@@ -89,8 +98,10 @@ async function sendCustomerBookingEmail(booking) {
 
 router.post('/pay-later', async (req, res) => {
   try {
-    const { items, customer = {} } = req.body;
+    const { items, customer = {}, promoCode = '' } = req.body;
     const cartItems = normalizeCartItems(items);
+    const normalizedPromoCode = promoCodes.normalizePromoCode(promoCode);
+    const promo = normalizedPromoCode ? promoCodes.getPromo(normalizedPromoCode) : null;
 
     if (cartItems.length === 0) {
       return res.status(400).json({ error: 'Your cart is empty or contains unavailable services.' });
@@ -100,6 +111,12 @@ router.post('/pay-later', async (req, res) => {
     if (validationError) {
       return res.status(400).json({ error: validationError });
     }
+
+    if (normalizedPromoCode && !promo) {
+      return res.status(400).json({ error: 'That discount code is not valid. Please check it and try again.' });
+    }
+
+    const totals = promoCodes.calculateTotals(calculateCartSubtotal(cartItems), normalizedPromoCode);
 
     const bookingId = String(customer.bookingId || '').trim();
     if (!bookingId) {
@@ -122,7 +139,29 @@ router.post('/pay-later', async (req, res) => {
       return res.status(404).json({ error: 'This booking could not be found. Please schedule again.' });
     }
 
-    const booking = bookingResult.rows[0];
+    let booking = bookingResult.rows[0];
+    if (promo) {
+      const promoMarker = `Venue discount code ${promo.code}`;
+      const promoNote = `${promoMarker} — ${promo.percentOff}% off. Subtotal: ${money(totals.subtotal)}. Discount: -${money(totals.discount)}. Total after discount: ${money(totals.total)}.`;
+      const promoBookingResult = await pool.query(
+        `UPDATE bookings
+         SET notes = CASE
+           WHEN COALESCE(notes, '') ILIKE '%' || $2 || '%' THEN notes
+           ELSE CONCAT_WS(E'\\n', NULLIF(notes, ''), $1)
+         END,
+         updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3 AND status <> 'cancelled'
+         RETURNING *`,
+        [promoNote, promoMarker, bookingId]
+      );
+      if (promoBookingResult.rows.length > 0) {
+        booking = {
+          ...promoBookingResult.rows[0],
+          previous_payment_status: booking.previous_payment_status,
+        };
+      }
+    }
+
     if (String(booking.previous_payment_status || '').toLowerCase() !== 'pay_later') {
       await sendOwnerBookingEmail(booking, false);
     }
@@ -134,6 +173,11 @@ router.post('/pay-later', async (req, res) => {
       paymentStatus: 'pay_later',
       bookingId,
       orderId,
+      promoCode: promo ? promo.code : null,
+      discountPercent: promo ? promo.percentOff : 0,
+      subtotal: totals.subtotal,
+      discount: totals.discount,
+      total: totals.total,
       customerEmailSent: !!customerEmailResult.success,
       customerEmailError: customerEmailResult.success ? null : customerEmailResult.error,
       successUrl: `/success?pay_later=true&booking_id=${encodeURIComponent(bookingId)}&order_id=${encodeURIComponent(orderId)}`,

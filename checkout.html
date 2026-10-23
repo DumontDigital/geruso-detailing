@@ -200,6 +200,59 @@
     .summary-name { color: var(--text); font-weight: 700; }
     .summary-meta { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
     .summary-price { color: var(--text); font-weight: 800; white-space: nowrap; }
+    .promo-box {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--light-bg);
+    }
+    .promo-box label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .promo-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+    .promo-row input {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #050505;
+      color: var(--text);
+      font: inherit;
+      padding: 12px 13px;
+      text-transform: uppercase;
+      outline: none;
+    }
+    .promo-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,255,65,0.12); }
+    .promo-apply {
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      background: rgba(0,255,65,0.1);
+      color: var(--primary);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      padding: 0 16px;
+    }
+    .promo-apply:hover,
+    .promo-apply:focus-visible { background: var(--primary); color: #050505; outline: none; }
+    .promo-message { min-height: 18px; margin-top: 8px; color: var(--text-muted); font-size: 12px; }
+    .promo-message.success { color: #8ff0be; }
+    .promo-message.error { color: #ff9b9b; }
+    .summary-breakdown {
+      display: grid;
+      gap: 9px;
+      margin-top: 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .summary-breakdown-row { display: flex; justify-content: space-between; gap: 16px; }
+    .summary-discount { color: #8ff0be; }
     .summary-total {
       display: flex;
       justify-content: space-between;
@@ -242,6 +295,8 @@
       .stripe-mark { width: 40px; height: 40px; }
       .summary-item { grid-template-columns: 32px minmax(0, 1fr); }
       .summary-price { grid-column: 2; justify-self: start; }
+      .promo-row { grid-template-columns: 1fr; }
+      .promo-apply { min-height: 44px; }
       .summary-total { font-size: 18px; }
     }
   </style>
@@ -310,6 +365,24 @@
       <aside class="order-summary">
         <h2>Order Summary</h2>
         <div id="summaryItems"></div>
+        <div class="promo-box">
+          <label for="promoCode">Venue discount code</label>
+          <div class="promo-row">
+            <input id="promoCode" name="promoCode" autocomplete="off" autocapitalize="characters" maxlength="24" placeholder="Enter code">
+            <button class="promo-apply" id="applyPromoCode" type="button">Apply</button>
+          </div>
+          <div class="promo-message" id="promoMessage" aria-live="polite">Have a code from one of our venue partners? Enter it here.</div>
+        </div>
+        <div class="summary-breakdown">
+          <div class="summary-breakdown-row">
+            <span>Subtotal</span>
+            <span id="summarySubtotal">$0.00</span>
+          </div>
+          <div class="summary-breakdown-row summary-discount" id="summaryDiscountRow" hidden>
+            <span id="summaryDiscountLabel">Discount</span>
+            <span id="summaryDiscount">-$0.00</span>
+          </div>
+        </div>
         <div class="summary-total">
           <span>Total</span>
           <span id="summaryTotal">$0.00</span>
@@ -319,6 +392,7 @@
   </main>
 
   <script src="/js/customer-shell.js"></script>
+  <script src="/js/promo-codes.js"></script>
   <script>
     const CHECKOUT_CART_STORAGE_KEY = 'gerusoCart';
     const CHECKOUT_DETAILS_STORAGE_KEY = 'gerusoCheckoutDetails';
@@ -404,6 +478,7 @@
 
     let cart = getStoredCart();
     let selectedPaymentMethod = 'pay_later';
+    let appliedPromoCode = '';
 
     function saveCart() {
       localStorage.setItem(CHECKOUT_CART_STORAGE_KEY, JSON.stringify(cart));
@@ -447,11 +522,17 @@
 
     function renderSummary() {
       const summaryItems = document.getElementById('summaryItems');
+      const summarySubtotal = document.getElementById('summarySubtotal');
+      const summaryDiscountRow = document.getElementById('summaryDiscountRow');
+      const summaryDiscountLabel = document.getElementById('summaryDiscountLabel');
+      const summaryDiscount = document.getElementById('summaryDiscount');
       const summaryTotal = document.getElementById('summaryTotal');
       const submitBtn = document.getElementById('checkoutSubmitBtn');
 
       if (!cart.items.length) {
         summaryItems.innerHTML = '<div class="empty-cart">Your cart is empty.</div>';
+        summarySubtotal.textContent = '$0.00';
+        summaryDiscountRow.hidden = true;
         summaryTotal.textContent = '$0.00';
         if (submitBtn) submitBtn.disabled = true;
         getPaymentOptionButtons().forEach(button => { button.disabled = true; });
@@ -478,7 +559,16 @@
           </div>
         `;
       }).join('');
-      summaryTotal.textContent = money(total);
+      const totals = GerusoPromoCodes.calculateTotals(total, appliedPromoCode);
+      summarySubtotal.textContent = money(totals.subtotal);
+      if (totals.promo) {
+        summaryDiscountLabel.textContent = `${totals.promo.code} (${totals.promo.percentOff}% off)`;
+        summaryDiscount.textContent = `-${money(totals.discount)}`;
+        summaryDiscountRow.hidden = false;
+      } else {
+        summaryDiscountRow.hidden = true;
+      }
+      summaryTotal.textContent = money(totals.total);
       if (submitBtn) submitBtn.disabled = false;
       getPaymentOptionButtons().forEach(button => { button.disabled = false; });
     }
@@ -487,6 +577,47 @@
       const removeButton = event.target.closest('[data-remove-index]');
       if (!removeButton) return;
       removeCheckoutItem(Number(removeButton.dataset.removeIndex));
+    });
+
+    function setPromoMessage(text, type) {
+      const message = document.getElementById('promoMessage');
+      message.textContent = text;
+      message.className = `promo-message${type ? ` ${type}` : ''}`;
+    }
+
+    function applyPromoCode() {
+      const input = document.getElementById('promoCode');
+      const normalizedCode = GerusoPromoCodes.normalizePromoCode(input.value);
+
+      if (!normalizedCode) {
+        appliedPromoCode = '';
+        input.value = '';
+        setPromoMessage('Have a code from one of our venue partners? Enter it here.', '');
+        renderSummary();
+        return true;
+      }
+
+      const promo = GerusoPromoCodes.getPromo(normalizedCode);
+      if (!promo) {
+        appliedPromoCode = '';
+        input.value = normalizedCode;
+        setPromoMessage('That discount code is not valid. Please check it and try again.', 'error');
+        renderSummary();
+        return false;
+      }
+
+      appliedPromoCode = promo.code;
+      input.value = promo.code;
+      setPromoMessage(`${promo.code} applied — ${promo.percentOff}% off.`, 'success');
+      renderSummary();
+      return true;
+    }
+
+    document.getElementById('applyPromoCode').addEventListener('click', applyPromoCode);
+    document.getElementById('promoCode').addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      applyPromoCode();
     });
 
     function showMessage(text, type) {
@@ -536,6 +667,7 @@
           body: JSON.stringify({
             items: cart.items,
             customer: getCheckoutCustomerPayload(form),
+            promoCode: appliedPromoCode,
           }),
         });
         const data = await response.json();
@@ -560,6 +692,11 @@
       event.preventDefault();
       if (!cart.items.length) {
         showMessage('Your cart is empty. Add a service before checkout.', 'error');
+        return;
+      }
+
+      if (!applyPromoCode()) {
+        showMessage('Please correct the discount code before confirming your booking.', 'error');
         return;
       }
 

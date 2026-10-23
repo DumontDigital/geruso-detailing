@@ -18,6 +18,9 @@ class FakeElement {
     this.textContent = '';
     this.innerHTML = '';
     this.disabled = false;
+    this.hidden = false;
+    this.className = '';
+    this.dataset = {};
     this.classList = new FakeClassList();
     this.listeners = {};
   }
@@ -28,7 +31,9 @@ class FakeElement {
 
 function runCheckout(details) {
   const ids = [
-    'summaryItems', 'summaryTotal', 'checkoutSubmitBtn', 'checkoutMessage',
+    'summaryItems', 'summarySubtotal', 'summaryDiscountRow', 'summaryDiscountLabel',
+    'summaryDiscount', 'summaryTotal', 'promoCode', 'applyPromoCode', 'promoMessage',
+    'checkoutSubmitBtn', 'checkoutMessage',
     'customerName', 'customerEmail', 'customerPhone', 'serviceAddress',
     'serviceAddressNote', 'residenceAppointmentNotice', 'checkoutForm'
   ];
@@ -58,6 +63,7 @@ function runCheckout(details) {
   const html = readFile('checkout.html');
   const match = html.match(/<script>([\s\S]*?)<\/script>/i);
   assert(match, 'Could not find checkout inline script');
+  eval(readFile('js/promo-codes.js'));
   eval(match[1]);
   return elements;
 }
@@ -86,5 +92,14 @@ assert(
   'Residence notice appeared for a mobile booking'
 );
 
+mobile.promoCode.value = 'wmd';
+mobile.applyPromoCode.listeners.click();
+assert(mobile.promoMessage.textContent === 'WMD applied — 20% off.', 'Checkout did not confirm WMD');
+assert(mobile.summarySubtotal.textContent === '$95.00', 'Checkout subtotal is incorrect');
+assert(mobile.summaryDiscount.textContent === '-$19.00', 'Checkout discount is incorrect');
+assert(mobile.summaryTotal.textContent === '$76.00', 'Checkout discounted total is incorrect');
+assert(!mobile.summaryDiscountRow.hidden, 'Checkout discount row stayed hidden');
+
 print('PASS residence checkout shows the drop-off and ride notice');
 print('PASS mobile checkout keeps the residence notice hidden');
+print('PASS checkout applies WMD and displays the discounted total');
