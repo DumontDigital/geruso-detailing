@@ -216,6 +216,16 @@ assert(match, 'Could not find the schedule inline script');
 eval(readFile('js/holiday-closures.js'));
 eval(match[1]);
 
+const repairedAddress = getSavedMobileAddress({
+  serviceAddress: '5 Aurora Ave, RI 02905, RI 02905, RI 02905'
+});
+assert(repairedAddress.address === '5 Aurora Ave', 'Saved street address still contains repeated state and ZIP values');
+assert(repairedAddress.state === 'RI' && repairedAddress.zip === '02905', 'Saved state and ZIP were not recovered');
+assert(
+  buildMobileServiceAddress('5 Aurora Ave, RI 02905', 'RI', '02905') === '5 Aurora Ave, RI 02905',
+  'Building a mobile address duplicated its state and ZIP suffix'
+);
+
 const form = document.getElementById('bookingForm');
 const carWash = document.packageInputs.find(input => input.value === 'Car Wash');
 assert(carWash, 'Car Wash package was not rendered');
@@ -252,3 +262,4 @@ print('PASS service click activates the current month immediately');
 print('PASS date click renders time slots without waiting for the backend');
 print('PASS combined and promoted packages refresh calendar state immediately');
 print('PASS October 24 and October 31 stay blocked');
+print('PASS saved mobile addresses do not duplicate the state and ZIP');

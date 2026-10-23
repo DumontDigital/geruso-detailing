@@ -134,6 +134,9 @@ assert(checkoutHtml.includes("getElementById('checkoutServiceOptions').addEventL
 assert(!checkoutHtml.includes('>Keep Shopping<'), 'Checkout still sends customers backward with Keep Shopping');
 assert(cartRoute.includes('promoCodes.calculateTotals'), 'Backend promo validation is not wired');
 assert(cartRoute.includes('service_type = $3'), 'Backend does not save checkout service additions to the booking');
+assert(cartRoute.includes('service_address = $5'), 'Backend does not repair duplicated service addresses during confirmation');
+assert(scheduleHtml.includes('buildMobileServiceAddress(serviceAddress, serviceState, serviceZip)'), 'Schedule does not prevent state and ZIP suffixes from being duplicated');
+assert(checkoutHtml.includes("normalizeServiceAddress(customer.serviceAddress"), 'Checkout does not clean a duplicated saved service address before display');
 
 const contactHtml = fs.readFileSync(path.join(root, 'contact.html'), 'utf8');
 const membershipsHtml = fs.readFileSync(path.join(root, 'memberships.html'), 'utf8');

@@ -77,6 +77,27 @@ function money(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
+function removeGeneratedBookingNotes(notes) {
+  return String(notes || '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line
+      && !/^(Combined packages|Add-ons requested|Checkout selection):/i.test(line)
+      && !/^Venue discount code /i.test(line))
+    .join('\n');
+}
+
+function normalizeServiceAddress(value) {
+  const parts = String(value || '')
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  return parts
+    .filter((part, index) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+    .join(', ');
+}
+
 function buildBookingEmailData(booking, paymentConfirmed = false) {
   return {
     customerName: booking.customer_name,
@@ -169,26 +190,21 @@ router.post('/pay-later', async (req, res) => {
     const selectionParts = [`Main services: ${selectedMainServiceNames.join(', ')}`];
     if (selectedAddOnNames.length > 0) selectionParts.push(`Add-ons: ${selectedAddOnNames.join(', ')}`);
     const checkoutSelectionNote = `Checkout selection: ${selectionParts.join(' | ')}`;
+    const preservedNotes = removeGeneratedBookingNotes(existingBooking.notes);
+    const updatedNotes = [preservedNotes, checkoutSelectionNote].filter(Boolean).join('\n');
+    const normalizedServiceAddress = normalizeServiceAddress(existingBooking.service_address);
 
     const bookingResult = await pool.query(
       `UPDATE bookings
        SET payment_status = $1,
            status = $2,
            service_type = $3,
-           notes = CONCAT_WS(
-             E'\\n',
-             NULLIF(BTRIM(regexp_replace(
-               COALESCE(notes, ''),
-               E'(^|\\n)((Combined packages|Add-ons requested|Checkout selection):|Venue discount code )[^\\n]*',
-               '',
-               'g'
-             )), ''),
-             $4
-           ),
+           notes = $4,
+           service_address = $5,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5 AND status <> 'cancelled'
+       WHERE id = $6 AND status <> 'cancelled'
        RETURNING *`,
-      ['pay_later', 'confirmed', bookingServiceType, checkoutSelectionNote, bookingId]
+      ['pay_later', 'confirmed', bookingServiceType, updatedNotes, normalizedServiceAddress, bookingId]
     );
 
     if (bookingResult.rowCount === 0) {
@@ -202,22 +218,16 @@ router.post('/pay-later', async (req, res) => {
     if (promo) {
       const promoMarker = `Venue discount code ${promo.code}`;
       const promoNote = `${promoMarker} — ${promo.percentOff}% off. Subtotal: ${money(totals.subtotal)}. Discount: -${money(totals.discount)}. Total after discount: ${money(totals.total)}.`;
+      const notesWithPromo = [removeGeneratedBookingNotes(booking.notes), checkoutSelectionNote, promoNote]
+        .filter(Boolean)
+        .join('\n');
       const promoBookingResult = await pool.query(
         `UPDATE bookings
-         SET notes = CONCAT_WS(
-           E'\\n',
-           NULLIF(BTRIM(regexp_replace(
-             COALESCE(notes, ''),
-             E'(^|\\n)Venue discount code [^\\n]*',
-             '',
-             'g'
-           )), ''),
-           $1
-         ),
+         SET notes = $1,
          updated_at = CURRENT_TIMESTAMP
          WHERE id = $2 AND status <> 'cancelled'
          RETURNING *`,
-        [promoNote, bookingId]
+        [notesWithPromo, bookingId]
       );
       if (promoBookingResult.rows.length > 0) {
         booking = {

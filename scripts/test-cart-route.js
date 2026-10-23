@@ -59,6 +59,22 @@ async function testAdditionalServicesUpdateBooking() {
             status: 'pending',
             customer_name: 'Customer',
             customer_email: 'customer@example.com',
+            service_address: '5 Aurora Ave, RI 02905, RI 02905, RI 02905',
+          }],
+        };
+      }
+      if (sql.includes('SET notes = $1')) {
+        return {
+          rowCount: 1,
+          rows: [{
+            id: 'booking-1',
+            service_type: 'Car Wash + Premium Wash',
+            notes: params[0],
+            service_address: '5 Aurora Ave, RI 02905',
+            payment_status: 'pay_later',
+            status: 'confirmed',
+            customer_name: 'Customer',
+            customer_email: 'customer@example.com',
           }],
         };
       }
@@ -69,6 +85,7 @@ async function testAdditionalServicesUpdateBooking() {
             id: 'booking-1',
             service_type: params[2],
             notes: params[3],
+            service_address: params[4],
             payment_status: 'pay_later',
             status: 'confirmed',
             customer_name: 'Customer',
@@ -90,16 +107,21 @@ async function testAdditionalServicesUpdateBooking() {
         { serviceName: 'Premium Wash', price: 130, serviceTag: 'MOBILE' },
         { serviceName: 'Engine Bay Cleaning', price: 75, serviceTag: 'EXTRA FEE' },
       ],
+      promoCode: 'WMD',
     },
   }, response);
 
   assert(response.statusCode === 200, `Expected successful checkout, received ${response.statusCode}`);
   assert(response.body.success === true, 'Checkout did not return success');
-  assert(response.body.subtotal === 300 && response.body.total === 300, 'Additional-service total is incorrect');
+  assert(response.body.subtotal === 300 && response.body.discount === 60 && response.body.total === 240, 'WMD checkout total is incorrect');
   assert(calls[1].params[2] === 'Car Wash + Premium Wash', 'Booking service_type was not updated with both main services');
   assert(calls[1].params[3].includes('Add-ons: Engine Bay Cleaning'), 'Booking note did not include the add-on');
+  assert(calls[1].params[4] === '5 Aurora Ave, RI 02905', 'Repeated state and ZIP were not removed from the booking address');
+  assert(calls[2].params[0].includes('Venue discount code WMD — 20% off.'), 'WMD was not saved with the booking');
   assert(emailCapture.owner.serviceType === 'Car Wash + Premium Wash', 'Owner email did not receive updated services');
+  assert(emailCapture.owner.serviceAddress === '5 Aurora Ave, RI 02905', 'Owner email did not receive the repaired booking address');
   assert(emailCapture.customer.notes.includes('Checkout selection:'), 'Customer email did not receive the checkout selection');
+  assert(emailCapture.customer.notes.includes('Venue discount code WMD'), 'Customer email did not receive the WMD discount');
 }
 
 async function testLongServiceRequiresScheduling() {
@@ -136,7 +158,7 @@ async function testLongServiceRequiresScheduling() {
 (async () => {
   await testAdditionalServicesUpdateBooking();
   await testLongServiceRequiresScheduling();
-  console.log('PASS checkout additions update booking services, add-ons, totals, and emails');
+  console.log('PASS checkout additions update booking services, add-ons, totals, address, and emails');
   console.log('PASS six-hour services cannot bypass scheduling requirements');
 })().catch(error => {
   console.error(error.stack || error.message);

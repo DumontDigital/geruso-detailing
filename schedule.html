@@ -880,6 +880,46 @@
     return String(value || '').replace(/\D/g, '').slice(0, 5);
   }
 
+  function normalizeServiceAddress(value) {
+    const parts = String(value || '')
+      .split(',')
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    return parts
+      .filter((part, index) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+      .join(', ');
+  }
+
+  function getSavedMobileAddress(details) {
+    const normalizedAddress = normalizeServiceAddress(details.serviceAddress);
+    let state = String(details.serviceState || '').trim().toUpperCase();
+    let zip = normalizeZip(details.serviceZip);
+
+    if (!state || !zip) {
+      const savedSuffix = normalizedAddress.match(/(?:^|,)\s*(RI|MA|CT)\s+(\d{5})\s*$/i);
+      if (savedSuffix) {
+        state = state || savedSuffix[1].toUpperCase();
+        zip = zip || savedSuffix[2];
+      }
+    }
+
+    const stateZip = [state, zip].filter(Boolean).join(' ').toLowerCase();
+    const addressParts = normalizedAddress.split(',').map(part => part.trim()).filter(Boolean);
+    while (stateZip && addressParts.length && addressParts[addressParts.length - 1].toLowerCase() === stateZip) {
+      addressParts.pop();
+    }
+
+    return { address: addressParts.join(', '), state, zip };
+  }
+
+  function buildMobileServiceAddress(address, state, zip) {
+    const savedAddress = getSavedMobileAddress({ serviceAddress: address, serviceState: state, serviceZip: zip });
+    return [savedAddress.address, [savedAddress.state, savedAddress.zip].filter(Boolean).join(' ')]
+      .filter(Boolean)
+      .join(', ');
+  }
+
   function isMobileServiceAreaAllowed(state, zip) {
     const cleanState = String(state || '').trim().toUpperCase();
     const cleanZip = normalizeZip(zip);
@@ -1632,6 +1672,8 @@
         email: details.customerEmail || '',
         phone: details.customerPhone || '',
         serviceAddress: details.serviceAddress || '',
+        serviceState: details.serviceState || '',
+        serviceZip: details.serviceZip || '',
         serviceLocation: details.serviceLocation || '',
         serviceType: details.serviceType || '',
         bookingDate: details.bookingDate || '',
@@ -1653,7 +1695,10 @@
       if (details.email) document.querySelector('input[name="customerEmail"]').value = details.email;
       if (details.phone) document.querySelector('input[name="customerPhone"]').value = details.phone;
       if (details.serviceAddress && !/313\s+Lynne\s+Lane/i.test(details.serviceAddress)) {
-        document.getElementById('serviceAddressInput').value = details.serviceAddress;
+        const mobileAddress = getSavedMobileAddress(details);
+        document.getElementById('serviceAddressInput').value = mobileAddress.address;
+        if (mobileAddress.state) document.getElementById('serviceStateSelect').value = mobileAddress.state;
+        if (mobileAddress.zip) document.getElementById('serviceZipInput').value = mobileAddress.zip;
       }
     } catch (error) {
       console.warn('[Booking] Could not restore saved customer details:', error);
@@ -1790,7 +1835,9 @@
     }
 
     // Geruso Location appointments use the shop address.
-    const finalAddress = needsMobileAddress ? `${serviceAddress}, ${serviceState} ${serviceZip}` : SHOP_ADDRESS;
+    const finalAddress = needsMobileAddress
+      ? buildMobileServiceAddress(serviceAddress, serviceState, serviceZip)
+      : SHOP_ADDRESS;
 
     // Build booking data with all required fields
     // Reuse dateStr computed above (YYYY-MM-DD in local timezone, no UTC conversion)
